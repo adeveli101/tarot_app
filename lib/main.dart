@@ -4,12 +4,13 @@ import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/tarot_fortune_reading_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tarot_fal/tarot_screen_gemini.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // .env dosyasını yükle
-  await dotenv.load();
+  await dotenv.load(fileName: ".env");
 
   runApp(const MyApp());
 }

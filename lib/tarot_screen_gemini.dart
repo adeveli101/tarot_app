@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../models/tarot_card.dart';
 import 'data/tarot_bloc.dart';
 
 class TarotScreen extends StatelessWidget {

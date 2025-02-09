@@ -693,8 +693,12 @@ class SpreadSelectionSheet extends StatelessWidget {
   Widget _buildSpreadTile(BuildContext context, String title, String description, int cardCount, TarotEvent event) {
     return InkWell(
       onTap: () {
-        Navigator.pop(context);
-        context.read<TarotBloc>().add(event);
+        Navigator.pop(context); // Alttaki sheet'i kapat
+        context.read<TarotBloc>().add(event); // Bloğa event'i ekle
+        Navigator.push( // ResultScreen'e geçiş yap
+          context,
+          MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -729,8 +733,7 @@ class SpreadSelectionSheet extends StatelessWidget {
         ),
       ),
     );
-  }
-}
+  }}
 
 class ReadingResultScreen extends StatefulWidget {
   const ReadingResultScreen({super.key});

@@ -8,7 +8,5 @@ class AssetsRes {
 
   static const String PLUGIN_NAME = 'tarot_fal';
   static const String PLUGIN_VERSION = '1.0.0+1';
-  static const String TAROT_LOADING = 'assets/animations/tarot_loading.json';
-  static const String TAROT_SHUFFLE = 'assets/animations/tarot_shuffle.json';
   static const String TAROT_CARDS = 'assets/tarot_cards.json';
 }

@@ -83,51 +83,67 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
   final TarotRepository repository;
   final GeminiService geminiService = GeminiService();
   String _promptTemplate = '''
-    ✨ Tarot Falı - Gizemli Yolların Kılavuzu ✨
+ÖNEMLİ: Aşağıdaki formata kesinlikle UYGUN cevap verin. Başka hiçbir ilave bilgi eklemeyin.  
+Tüm bölümler tamamen Türkçe, akıcı, yaratıcı ve seçilen kategoriye özgü detayları içermelidir.  
+Önemli bir kart veya özel bir durum söz konusu olduğunda, ekstra açıklama ve destekleyici yorumlar ekleyebilirsiniz.
 
-    Bu fal, [KATEGORİ] konusunda [AÇILIM_TİPİ] açılımı ile derin bir içgörü sunmaktadır. Ruhunuzun derinliklerine yolculuk yaparken, kartların gizemli mesajlarını birlikte yorumlayalım.
+✨ Tarot Falı - Gizemli Yolların Kılavuzu ✨  
+Bu fal, [KATEGORİ] konusunda [AÇILIM_TİPİ] açılımı ile kişisel ve derin içgörüler sunmaktadır. Ruhunuzun derinliklerine inmeye ve kartların size özel mesajlarını keşfetmeye hazır olun!
 
-    ---
+---
 
-    ### Kartların İlahi Dansı
+### Kartların İlahi Senfonisi
 
-    [KART_1_POZİSYON]: [KART_1_ADI]
-    - Anlamı: [KART_1_ANLAMI]
-    - Mistik Yorum: [KART_1_MİSTİK_YORUM]
+[KART_1_POZİSYON]: [KART_1_ADI]  
+- Anlamı: [KART_1_ANLAMI]  
+- Mistik Yorum: [KART_1_MİSTİK_YORUM]  
+- **Kategoriye Özel Yorum:** [KART_1_KATEGORI_YORUM]  
 
-    [KART_2_POZİSYON]: [KART_2_ADI]
-    - Anlamı: [KART_2_ANLAMI]
-    - Mistik Yorum: [KART_2_MİSTİK_YORUM]
+[KART_2_POZİSYON]: [KART_2_ADI]  
+- Anlamı: [KART_2_ANLAMI]  
+- Mistik Yorum: [KART_2_MİSTİK_YORUM]  
+- **Kategoriye Özel Yorum:** [KART_2_KATEGORI_YORUM]  
 
-    [KART_3_POZİSYON]: [KART_3_ADI]
-    - Anlamı: [KART_3_ANLAMI]
-    - Mistik Yorum: [KART_3_MİSTİK_YORUM]
+[KART_3_POZİSYON]: [KART_3_ADI]  
+- Anlamı: [KART_3_ANLAMI]  
+- Mistik Yorum: [KART_3_MİSTİK_YORUM]  
+- **Kategoriye Özel Yorum:** [KART_3_KATEGORI_YORUM]  
 
-    ... (Gerekirse daha fazla kart için aynı format)
+... (Gerekirse daha fazla kart ekleyin. Her kart için kategoriye özgü detaylı yorumlar verin.)
 
-    ---
+---
 
-    ### Birleşik Kaderin Yansıması
+### Birleşik Kaderin Yansımaları
 
-    Bu kartların bir araya gelmesi, [KATEGORİ] yolculuğunuzda önemli bir dönüm noktasını işaret ediyor. [GENEL_ANALİZ]
-    Kartların birleşik enerjisi, ruhunuzun derinliklerindeki mesajları açığa çıkarıyor.
+Bu kartların birleşik enerjisi, [KATEGORİ] alanındaki yolculuğunuzda kritik bir dönüm noktasını simgeliyor.  
+- **Genel Analiz:** [GENEL_ANALİZ]  
+- **Kartların Birlikte Değerlendirilmesi:** [KARTLARIN_BERABER_DEĞERLENDİRİLMESİ]  
+- **Özel Not:** Seçilen kategoriye ilişkin ekstra açıklamalar ve öngörüler.
 
-    *   **Kartların Beraber Değerlendirilmesi:** [KARTLARIN_BERABER_DEĞERLENDİRİLMESİ]
+---
 
-    ---
+### Derinlemesine Genel Yorum
 
-    ### Genel Yorum (Detaylı)
+Kartların sembolleri ve enerjileri, [KATEGORİ] alanındaki mevcut durumunuza ışık tutar.  
+[DETAYLI_GENEL_YORUM]
 
-    [DETAYLI_GENEL_YORUM]
+---
 
-    ---
+### Yol Gösterici Fısıltılar & Öneriler
 
-    ### Yol Gösterici Fısıltılar
+Yakın geleceğiniz için katmanlı ve özgün öneriler sunun:  
+- **Zaman Çizelgesi & Öneriler:** [YAKIN_GELECEK_ÖNERİLER]  
+- **Dikkat Edilmesi Gerekenler:** [DİKKAT_EDİLMESİ_GEREKEN_NOKTALAR]  
+- **Kategoriye Özel İpuçları:** [KATEGORI_ÖNERİLER]
 
-    Yakın geleceğiniz için şu önerilere kulak verin: [YAKIN_GELECEK_ÖNERİLER]
+---
 
-    Dikkat etmeniz gereken potansiyel tuzaklar: [DİKKAT_EDİLMESİ_GEREKEN_NOKTALAR]
-  ''';
+Talimatlar:  
+1. Tüm açıklamalar özgün, detaylı ve yaratıcı olmalıdır.  
+2. Her bölüm, seçilen kategoriye (örneğin; aşk, kariyer, sağlık vb.) özgü öğeler içermelidir.  
+3. Yanıt, sadece verilen alanları dolduracak ve ek bilgi içermeyecektir.  
+4. Kartların sembolik değerleri, enerjileri ve aralarındaki etkileşimler, derinlemesine yorumlanmalıdır.
+''';
 
   TarotBloc({required this.repository}) : super(TarotInitial()) {
     on<LoadTarotCards>(_onLoadTarotCards);
