@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
-
 import 'package:tarot_fal/tarot_fortune_reading_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'data/tarot_bloc.dart';
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  // .env dosyasını yükle
+  await dotenv.load();
+
   runApp(const MyApp());
 }
 
@@ -18,33 +22,18 @@ class MyApp extends StatelessWidget {
     return BlocProvider(
       create: (context) => TarotBloc(
         repository: TarotRepository(),
-      )..add(LoadTarotCards()),
+      ),
       child: MaterialApp(
         title: 'Tarot Falı',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData.dark().copyWith(
-          primaryColor: Colors.purple[700],
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepPurple,
+            brightness: Brightness.dark,
+          ),
           scaffoldBackgroundColor: Colors.grey[900],
-          cardColor: Colors.grey[850],
-          colorScheme: ColorScheme.dark(
-            primary: Colors.purple[700]!,
-            secondary: Colors.amber,
-          ),
-          appBarTheme: AppBarTheme(
-            backgroundColor: Colors.grey[900],
-            elevation: 0,
-          ),
-          bottomSheetTheme: BottomSheetThemeData(
-            backgroundColor: Colors.transparent,
-            modalBackgroundColor: Colors.transparent,
-          ),
+          fontFamily: 'Arial',
         ),
-        builder: (context, child) {
-          return BlocProvider.value(
-            value: BlocProvider.of<TarotBloc>(context),
-            child: child!,
-          );
-        },
         home: const TarotReadingScreen(),
       ),
     );

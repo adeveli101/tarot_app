@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
+import 'package:tarot_fal/data/tarot_repository.dart';
+import 'package:tarot_fal/models/tarot_card.dart';
 
 import 'data/tarot_bloc.dart';
-import 'data/tarot_repository.dart';
-import 'models/tarot_card.dart';
 
 class TarotReadingScreen extends StatefulWidget {
   const TarotReadingScreen({super.key});
@@ -29,8 +29,46 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                 child: Lottie.asset('assets/animations/tarot_loading.json'),
               );
             }
+            if (state is FalYorumuLoaded) {
+              return  Stack(
+                  children: [
+                    _buildFortuneTellingPage(state.yorum),
+                    _buildCloseButton(context)
+                  ]
+              );
+            }
             return _buildMainContent();
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFortuneTellingPage(String yorum) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child:  Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.black.withOpacity(0.8),
+                Colors.deepPurple.withOpacity(0.7),
+              ]
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+
+        padding: const EdgeInsets.all(16),
+
+        child: Text(
+          yorum,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+          ),
+          textAlign: TextAlign.start,
         ),
       ),
     );
@@ -42,9 +80,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       children: [
         _buildBackground(),
         _buildBackground(),
-
         _buildGradientOverlay(),
-
         SafeArea(
           child: Column(
             children: [
@@ -52,7 +88,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
               const SizedBox(height: 140),
               _buildMainCard(),
               const SizedBox(height: 20),
-
               _buildBottomInfo(),
               const SizedBox(height: 20),
             ],
@@ -69,7 +104,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
         Lottie.asset(
           'assets/animations/tarot_shuffle.json',
           fit: BoxFit.contain,
-
         ),
         Container(
           decoration: BoxDecoration(
@@ -110,7 +144,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
   Widget _buildGradientOverlay() {
     return Stack(
       children: [
-        // Sağdan ve soldan ortaya gradient
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -126,8 +159,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
             ),
           ),
         ),
-
-        // Ortadaki parlama efekti
         Center(
           child: Container(
             width: 100,
@@ -138,7 +169,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                 colors: [
                   Colors.red.withOpacity(0.7),
                   Colors.yellow.withOpacity(0.2),
-
                   Colors.transparent,
                 ],
                 stops: const [0.1, 0.3, 1.0],
@@ -150,17 +180,14 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
     );
   }
 
-
   Widget _buildTitle() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Column(
         children: [
-          // Ana başlık
           Stack(
             alignment: Alignment.center,
             children: [
-              // Arka plan ışıma efekti
               Container(
                 width: 280,
                 height: 280,
@@ -175,8 +202,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
                   ),
                 ),
               ),
-
-              // Tarot yazısı
               ShaderMask(
                 shaderCallback: (bounds) => LinearGradient(
                   begin: Alignment.topLeft,
@@ -209,10 +234,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 130),
-
-          // Alt başlık
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: BoxDecoration(
@@ -248,7 +270,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 35),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(90),
-
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -259,7 +280,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       ),
     );
   }
-
 
   Widget _buildStartButton() {
     return Container(
@@ -310,7 +330,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
     );
   }
 
-
   Widget _buildBottomInfo() {
     return Container(
       margin: const EdgeInsets.only(top: 20),
@@ -341,8 +360,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
     );
   }
 
-
-
   void _showCategorySheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -355,13 +372,22 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
     );
   }
 
+  Widget _buildCloseButton(BuildContext context) {
+    return Positioned(top:
+
+    40, right:
+
+    16, child:
+
+    IconButton(icon:
+
+    const Icon(Icons.close, color:
+
+    Colors.white), onPressed:
+
+        () => Navigator.of(context).pop(),),);}
 }
 
-
-
-
-
-///Selection 1
 class CategorySelectionSheet extends StatelessWidget {
   const CategorySelectionSheet({super.key});
 
@@ -525,7 +551,7 @@ class CategorySelectionSheet extends StatelessWidget {
                     fontSize: 22,
                     fontWeight: FontWeight.w300,
                     color: Colors.white,
-                    fontFamily: 'Georgia', // Daha farklı bir yazı tipi
+                    fontFamily: 'Georgia',
                   ),
                 ),
               ],
@@ -535,8 +561,8 @@ class CategorySelectionSheet extends StatelessWidget {
               description,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[300], // Daha yumuşak bir renk
-                fontFamily: 'Arial', // Farklı bir yazı tipi
+                color: Colors.grey[300],
+                fontFamily: 'Arial',
               ),
             ),
           ],
@@ -546,15 +572,10 @@ class CategorySelectionSheet extends StatelessWidget {
   }
 }
 
-
-///Selection 2
 class SpreadSelectionSheet extends StatelessWidget {
   final String category;
 
-  const SpreadSelectionSheet({
-    super.key,
-    required this.category,
-  });
+  const SpreadSelectionSheet({super.key, required this.category});
 
   @override
   Widget build(BuildContext context) {
@@ -674,16 +695,6 @@ class SpreadSelectionSheet extends StatelessWidget {
       onTap: () {
         Navigator.pop(context);
         context.read<TarotBloc>().add(event);
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BlocProvider.value(
-              value: BlocProvider.of<TarotBloc>(context),
-              child: const ReadingResultScreen(),
-            ),
-          ),
-        );
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -721,16 +732,12 @@ class SpreadSelectionSheet extends StatelessWidget {
   }
 }
 
-
-///readingResultScreen
 class ReadingResultScreen extends StatefulWidget {
   const ReadingResultScreen({super.key});
 
   @override
   State<ReadingResultScreen> createState() => _ReadingResultScreenState();
 }
-
-
 
 class _ReadingResultScreenState extends State<ReadingResultScreen> {
   late PageController _pageController;
@@ -772,12 +779,22 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
         ),
         child: BlocBuilder<TarotBloc, TarotState>(
           builder: (context, state) {
+            if (state is TarotLoading) {
+              return Center(
+                child: Lottie.asset(
+                  'assets/animations/tarot_loading.json',
+                  width: 200,
+                  height: 200,
+                ),
+              );
+            }
+
+
             if (state is SingleCardDrawn) {
               return Stack(
                 children: [
-                  _buildCardPage('Tek Kart Yorumu', state.card, null), // Only two arguments
-                  _buildCloseButton(context),
-
+                  _buildCardPage('Tek Kart Yorumu', state.card, null),
+                  _buildCloseButton(context)
                 ],
               );
             }
@@ -788,25 +805,30 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                   PageView.builder(
                     controller: _pageController,
                     itemCount: state.spread.length,
-                    itemBuilder: (context, index) => _buildCardPage(
-                      state.spread.keys.elementAt(index),
-                      state.spread.values.elementAt(index),
-                      state, // Pass SpreadDrawn state here
-                    ),
+                    itemBuilder: (context, index) =>
+                        _buildCardPage(
+                          state.spread.keys.elementAt(index),
+                          state.spread.values.elementAt(index),
+                          state,
+                        ),
                   ),
-                  _buildPageIndicator(state.spread.length),
-
-                  _buildCloseButton(context),
+                  _buildCloseButton(context)
                 ],
               );
             }
 
+            if (state is FalYorumuLoaded) {
+              return Stack(
+                children: [
+                  _buildFortuneTellingPage(state.yorum),
+                  _buildCloseButton(context)
+                ],
+              );
+            }
+
+
             return Center(
-              child: Lottie.asset(
-                'assets/animations/tarot_loading.json',
-                width: 200,
-                height: 200,
-              ),
+              child: Text("Bir hata oluştu"),
             );
           },
         ),
@@ -899,9 +921,9 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          // Call the new page indicator method here
-          if (state != null) _buildPageIndicator(state.spread.length), // Integrate the page indicator
-          const SizedBox(height: 20), // Spacing before card name
+          if (state != null) _buildPageIndicator(state.spread.length),
+          // Spacing before card name
+          const SizedBox(height: 20),
           Text(
             card.name,
             style: const TextStyle(
@@ -923,26 +945,22 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
     );
   }
 
-// New method to build page indicators
   Widget _buildPageIndicator(int pageCount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children:
-      List.generate(pageCount, (index) => Container(
-        margin:
-        const EdgeInsets.symmetric(horizontal: 4), // Spacing between dots
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color:
-          _currentPage == index ? Colors.deepOrangeAccent : Colors.white54, // Active vs inactive color
-        ),
-      )),
+      children: List.generate(pageCount, (index) =>
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color:
+              _currentPage == index ? Colors.deepOrangeAccent : Colors.white54,
+            ),
+          )),
     );
   }
-
-
 
   Widget _buildKeywords(List<String> keywords) {
     return Column(
@@ -952,7 +970,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
           'Anahtar Kelimeler:',
           style: TextStyle(
             fontSize: 18,
-            color: Colors.yellowAccent, // Sarı tonu
+            color: Colors.yellowAccent,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -961,12 +979,13 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
           spacing: 4,
           runSpacing: 4,
           children:
-          keywords.map((keyword) => Chip(
-            label: Text(keyword),
-            backgroundColor: Colors.orange[700],
-            labelStyle:
-            const TextStyle(color: Colors.white),
-          )).toList(),
+          keywords.map((keyword) =>
+              Chip(
+                label: Text(keyword),
+                backgroundColor: Colors.orange[700],
+                labelStyle:
+                const TextStyle(color: Colors.white),
+              )).toList(),
         ),
       ],
     );
@@ -983,84 +1002,86 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
             Colors.deepPurple.withOpacity(0.7),
           ],
         ),
-        borderRadius: BorderRadius.circular(12), // Rounded corners for the container
+        borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16), // Padding around the container
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Anlamlar:',
             style: TextStyle(
-              fontSize: 20, // Increased font size for better visibility
-              color: Colors.yellowAccent, // White for header
+              fontSize: 20,
+              color: Colors.yellowAccent,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Arial', // Change to a more readable font
+              fontFamily: 'Arial',
             ),
           ),
           Card(
-            color: Colors.transparent, // Transparent background for the card
-            elevation: 0, // No shadow for a flat look
+            color: Colors.transparent,
+            elevation: 0,
             child: Padding(
-              padding: const EdgeInsets.all(16), // Padding around content
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.thumb_up, color: Colors.green[400]), // Icon for positive meanings
+                      Icon(Icons.thumb_up, color: Colors.green[400]),
                       const SizedBox(width: 8),
                       Text(
                         'Olumlu:',
                         style: TextStyle(
                           color: Colors.green[400],
                           fontWeight: FontWeight.bold,
-                          fontSize: 22, // Increased font size for better visibility
-                          fontFamily: 'Arial', // Change to a more readable font
+                          fontSize: 22,
+                          fontFamily: 'Arial',
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4), // Spacing
-                  ...card.meanings.light.map((meaning) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      '* $meaning', // Bullet point for each meaning
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 18, // Increased font size for better visibility
-                        fontFamily: 'Arial', // Change to a more readable font
-                      ),
-                    ),
-                  )),
-                  const SizedBox(height: 12), // Spacing
+                  const SizedBox(height: 4),
+                  ...card.meanings.light.map((meaning) =>
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          '* $meaning',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 18,
+                            fontFamily: 'Arial',
+                          ),
+                        ),
+                      )),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      Icon(Icons.thumb_down, color: Colors.red[400]), // Icon for negative meanings
+                      Icon(Icons.thumb_down, color: Colors.red[400]),
                       const SizedBox(width: 8),
                       Text(
                         'Olumsuz:',
                         style: TextStyle(
                           color: Colors.red[400],
                           fontWeight: FontWeight.bold,
-                          fontSize: 22, // Increased font size for better visibility
-                          fontFamily: 'Arial', // Change to a more readable font
+                          fontSize: 22,
+                          fontFamily: 'Arial',
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4), // Spacing
-                  ...card.meanings.shadow.map((meaning) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      '* $meaning', // Bullet point for each meaning
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 18, // Increased font size for better visibility
-                        fontFamily: 'Arial', // Change to a more readable font
-                      ),
-                    ),
-                  )),
+                  const SizedBox(height: 4),
+                  ...card.meanings.shadow.map((meaning) =>
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          '* $meaning',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 18,
+                            fontFamily: 'Arial',
+                          ),
+                        ),
+                      )),
                 ],
               ),
             ),
@@ -1081,55 +1102,85 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
             Colors.black.withOpacity(0.7),
           ],
         ),
-        borderRadius: BorderRadius.circular(12), // Rounded corners for the container
+        borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16), // Padding around the container
+      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Fal Yorumu:',
             style: TextStyle(
-              fontSize: 20, // Increased font size for better visibility
-              color: Colors.yellowAccent, // Yellow for header
+              fontSize: 20,
+              color: Colors.yellowAccent,
               fontWeight: FontWeight.bold,
+              fontFamily: 'Arial',
             ),
           ),
-          const SizedBox(height: 8), // Spacing
-          // Using ListView.builder to create a list of fortunes with bullets
-          ...fortuneTelling.map((fortune) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4), // Vertical spacing between items
-            child: Text(
-              '* $fortune', // Prefix each fortune with an asterisk
-              style: const TextStyle(
-                color: Colors.white, // White text for readability
-                fontSize: 16, // Font size for the text
-              ),
-            ),
-          )),
+          const SizedBox(height: 12),
+          ...fortuneTelling.map((fortune) =>
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  '• $fortune',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 18,
+                    fontFamily: 'Arial',
+                  ),
+                ),
+              )),
         ],
       ),
     );
   }
 
-
-
-
-
-
-
   Widget _buildCloseButton(BuildContext context) {
-    return Positioned(top:
+    return Positioned(
+      top: 40,
+      right: 16,
+      child: IconButton(
+        icon: const Icon(
+          Icons.close,
+          color: Colors.white,
+          size: 30,
+        ),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+    );
+  }
 
-    40, right:
-
-    16, child:
-
-    IconButton(icon:
-
-    const Icon(Icons.close, color:
-
-    Colors.white), onPressed:
-
-        () => Navigator.of(context).pop(),),);}
+  Widget _buildFortuneTellingPage(String yorum) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const SizedBox(height: 60),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.deepPurple.withOpacity(0.8),
+                  Colors.black.withOpacity(0.7),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              yorum,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                height: 1.5,
+                fontFamily: 'Arial',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
