@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
-import 'package:tarot_fal/models/tarot_card.dart';
 
-import 'data/tarot_bloc.dart';
+import '../data/tarot_bloc.dart';
+import 'card_selection_animation.dart';
 
+
+
+///mainScreen
 class TarotReadingScreen extends StatefulWidget {
   const TarotReadingScreen({super.key});
 
@@ -583,25 +586,26 @@ class SpreadSelectionSheet extends StatelessWidget {
       initialChildSize: 0.9,
       minChildSize: 0.5,
       maxChildSize: 0.95,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[900],
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            _buildSheetHeader('Açılım Seçimi', 'Kartların nasıl açılacağını seçin'),
-            _buildInfoBanner('Her açılım farklı sayıda kart ve yorum içerir'),
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(16),
-                children: _buildSpreadOptions(context),
-              ),
+      builder: (context, scrollController) =>
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
-          ],
-        ),
-      ),
+            child: Column(
+              children: [
+                _buildSheetHeader('Açılım Seçimi', 'Kartların nasıl açılacağını seçin'),
+                _buildInfoBanner('Her açılım farklı sayıda kart ve yorum içerir'),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    children: _buildSpreadOptions(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
     );
   }
 
@@ -671,17 +675,22 @@ class SpreadSelectionSheet extends StatelessWidget {
       options.addAll([
         _buildSpreadTile(context, 'Tek Kart', 'Hızlı cevap için ideal', 1, DrawSingleCard()),
         const SizedBox(height: 12),
-        _buildSpreadTile(context, 'İlişki Açılımı', 'İlişkinizin detaylı analizi', 7, DrawRelationshipSpread()),
+        _buildSpreadTile(
+            context, 'İlişki Açılımı', 'İlişkinizin detaylı analizi', 7, DrawRelationshipSpread()),
       ]);
     } else if (category == 'kariyer') {
       options.addAll([
-        _buildSpreadTile(context, 'Üçlü Açılım', 'Kariyer yolunuz için rehberlik', 3, DrawPastPresentFuture()),
+        _buildSpreadTile(
+            context, 'Üçlü Açılım', 'Kariyer yolunuz için rehberlik', 3, DrawPastPresentFuture()),
         const SizedBox(height: 12),
-        _buildSpreadTile(context, 'Beş Kart Yol Ayrımı', 'Kariyer seçimleriniz için detaylı analiz', 5, DrawFiveCardPath()),
+        _buildSpreadTile(
+            context, 'Beş Kart Yol Ayrımı', 'Kariyer seçimleriniz için detaylı analiz', 5,
+            DrawFiveCardPath()),
       ]);
     } else {
       options.addAll([
-        _buildSpreadTile(context, 'Celtic Cross', 'Detaylı ve kapsamlı analiz', 10, DrawCelticCross()),
+        _buildSpreadTile(
+            context, 'Celtic Cross', 'Detaylı ve kapsamlı analiz', 10, DrawCelticCross()),
         const SizedBox(height: 12),
         _buildSpreadTile(context, 'Yıllık Açılım', '12 ay için rehberlik', 12, DrawYearlySpread()),
       ]);
@@ -690,14 +699,18 @@ class SpreadSelectionSheet extends StatelessWidget {
     return options;
   }
 
-  Widget _buildSpreadTile(BuildContext context, String title, String description, int cardCount, TarotEvent event) {
+  Widget _buildSpreadTile(BuildContext context, String title, String description, int cardCount,
+      TarotEvent event) {
     return InkWell(
       onTap: () {
         Navigator.pop(context); // Alttaki sheet'i kapat
         context.read<TarotBloc>().add(event); // Bloğa event'i ekle
-        Navigator.push( // ResultScreen'e geçiş yap
+        // Okuma sonucuna geçmeden önce animasyon sayfasına yönlendiriyoruz.
+        Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
+          MaterialPageRoute(
+            builder: (context) => CardSelectionAnimationScreen(cardCount: cardCount),
+          ),
         );
       },
       child: Container(
@@ -715,7 +728,8 @@ class SpreadSelectionSheet extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -723,7 +737,8 @@ class SpreadSelectionSheet extends StatelessWidget {
                     color: Colors.purple[700],
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text('$cardCount kart', style: const TextStyle(color: Colors.white, fontSize: 12)),
+                  child: Text(
+                      '$cardCount kart', style: const TextStyle(color: Colors.white, fontSize: 12)),
                 ),
               ],
             ),
@@ -733,457 +748,6 @@ class SpreadSelectionSheet extends StatelessWidget {
         ),
       ),
     );
-  }}
-
-class ReadingResultScreen extends StatefulWidget {
-  const ReadingResultScreen({super.key});
-
-  @override
-  State<ReadingResultScreen> createState() => _ReadingResultScreenState();
-}
-
-class _ReadingResultScreenState extends State<ReadingResultScreen> {
-  late PageController _pageController;
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-    _pageController.addListener(() {
-      setState(() {
-        _currentPage = _pageController.page?.round() ?? 0;
-      });
-    });
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.indigo[900]!.withOpacity(0.4),
-              Colors.deepPurple[800]!.withOpacity(0.3),
-              Colors.purple[700]!.withOpacity(0.5),
-              Colors.black.withOpacity(0.9),
-            ],
-            stops: const [0.1, 0.4, 0.7, 0.9],
-          ),
-        ),
-        child: BlocBuilder<TarotBloc, TarotState>(
-          builder: (context, state) {
-            if (state is TarotLoading) {
-              return Center(
-                child: Lottie.asset(
-                  'assets/animations/tarot_loading.json',
-                  width: 200,
-                  height: 200,
-                ),
-              );
-            }
-
-
-            if (state is SingleCardDrawn) {
-              return Stack(
-                children: [
-                  _buildCardPage('Tek Kart Yorumu', state.card, null),
-                  _buildCloseButton(context)
-                ],
-              );
-            }
-
-            if (state is SpreadDrawn) {
-              return Stack(
-                children: [
-                  PageView.builder(
-                    controller: _pageController,
-                    itemCount: state.spread.length,
-                    itemBuilder: (context, index) =>
-                        _buildCardPage(
-                          state.spread.keys.elementAt(index),
-                          state.spread.values.elementAt(index),
-                          state,
-                        ),
-                  ),
-                  _buildCloseButton(context)
-                ],
-              );
-            }
-
-            if (state is FalYorumuLoaded) {
-              return Stack(
-                children: [
-                  _buildFortuneTellingPage(state.yorum),
-                  _buildCloseButton(context)
-                ],
-              );
-            }
-
-
-            return Center(
-              child: Text("Bir hata oluştu"),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardPage(String position, TarotCard card, SpreadDrawn? state) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 60),
-          Text(
-            position,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepOrangeAccent,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                height: 350,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        'assets/tarot_card_images/${card.img}',
-                        fit: BoxFit.contain,
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (state != null) ...[
-                Positioned(
-                  left: 16,
-                  child: _currentPage > 0
-                      ? IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.purple),
-                    onPressed: () {
-                      _pageController.previousPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInCubic,
-                      );
-                    },
-                  )
-                      : SizedBox.shrink(),
-                ),
-                Positioned(
-                  right: 16,
-                  child: _currentPage < (state.spread.length - 1)
-                      ? IconButton(
-                    icon:
-                    const Icon(Icons.arrow_forward, color: Colors.purple),
-                    onPressed: () {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                  )
-                      : SizedBox.shrink(),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 20),
-          if (state != null) _buildPageIndicator(state.spread.length),
-          // Spacing before card name
-          const SizedBox(height: 20),
-          Text(
-            card.name,
-            style: const TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          _buildKeywords(card.keywords),
-          const SizedBox(height: 16),
-          _buildFortuneTelling(card.fortuneTelling),
-          const SizedBox(height: 16),
-          _buildMeanings(card),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPageIndicator(int pageCount) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(pageCount, (index) =>
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color:
-              _currentPage == index ? Colors.deepOrangeAccent : Colors.white54,
-            ),
-          )),
-    );
-  }
-
-  Widget _buildKeywords(List<String> keywords) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const Text(
-          'Anahtar Kelimeler:',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.yellowAccent,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children:
-          keywords.map((keyword) =>
-              Chip(
-                label: Text(keyword),
-                backgroundColor: Colors.orange[700],
-                labelStyle:
-                const TextStyle(color: Colors.white),
-              )).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMeanings(TarotCard card) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.black.withOpacity(0.8),
-            Colors.deepPurple.withOpacity(0.7),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Anlamlar:',
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.yellowAccent,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Arial',
-            ),
-          ),
-          Card(
-            color: Colors.transparent,
-            elevation: 0,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.thumb_up, color: Colors.green[400]),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Olumlu:',
-                        style: TextStyle(
-                          color: Colors.green[400],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                          fontFamily: 'Arial',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  ...card.meanings.light.map((meaning) =>
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          '* $meaning',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 18,
-                            fontFamily: 'Arial',
-                          ),
-                        ),
-                      )),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(Icons.thumb_down, color: Colors.red[400]),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Olumsuz:',
-                        style: TextStyle(
-                          color: Colors.red[400],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                          fontFamily: 'Arial',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  ...card.meanings.shadow.map((meaning) =>
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          '* $meaning',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 18,
-                            fontFamily: 'Arial',
-                          ),
-                        ),
-                      )),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFortuneTelling(List<String> fortuneTelling) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.deepPurple.withOpacity(0.8),
-            Colors.black.withOpacity(0.7),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Fal Yorumu:',
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.yellowAccent,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Arial',
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...fortuneTelling.map((fortune) =>
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  '• $fortune',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 18,
-                    fontFamily: 'Arial',
-                  ),
-                ),
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCloseButton(BuildContext context) {
-    return Positioned(
-      top: 40,
-      right: 16,
-      child: IconButton(
-        icon: const Icon(
-          Icons.close,
-          color: Colors.white,
-          size: 30,
-        ),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-    );
-  }
-
-  Widget _buildFortuneTellingPage(String yorum) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          const SizedBox(height: 60),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.deepPurple.withOpacity(0.8),
-                  Colors.black.withOpacity(0.7),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              yorum,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                height: 1.5,
-                fontFamily: 'Arial',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
