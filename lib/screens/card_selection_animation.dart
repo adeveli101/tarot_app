@@ -7,7 +7,7 @@ import 'package:tarot_fal/screens/reading_result.dart';
 
 class CardSelectionAnimationScreen extends StatefulWidget {
   final int cardCount; // Seçilmesi gereken toplam kart sayısı
-  const CardSelectionAnimationScreen({Key? key, this.cardCount = 10}) : super(key: key);
+  const CardSelectionAnimationScreen({super.key, this.cardCount = 10});
 
   @override
   _CardSelectionAnimationScreenState createState() => _CardSelectionAnimationScreenState();

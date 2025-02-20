@@ -35,7 +35,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
   }
 
   @override
-// Build metodu: Duruma göre farklı içerik gösteriyor.
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -419,7 +418,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
             // İlk bölümde ayırıcı yoksa metni aynen, diğer bölümlerde tekrar "###" ekleyerek gösteriyoruz.
             String sectionText = sections[index];
             if (index != 0) {
-              sectionText = "### " + sectionText;
+              sectionText = "### $sectionText";
             }
             return LayoutBuilder(
               builder: (context, constraints) {
