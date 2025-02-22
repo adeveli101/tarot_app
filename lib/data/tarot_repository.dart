@@ -1,64 +1,48 @@
+// ignore_for_file: unused_import
+
 import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/services.dart';
-
+import 'package:tarot_fal/generated/l10n.dart';
 import '../models/tarot_card.dart';
 
 class TarotRepository {
-  // Singleton pattern
   static final TarotRepository _instance = TarotRepository._internal();
   factory TarotRepository() => _instance;
   TarotRepository._internal();
 
-  // Tüm kartları tutan liste
   List<TarotCard> _cards = [];
 
-  // JSON'dan kartları yükle
   Future<void> loadCardsFromAsset() async {
     try {
       final String jsonString = await rootBundle.loadString('assets/tarot_cards.json');
       final Map<String, dynamic> data = json.decode(jsonString);
-      _cards = (data['cards'] as List)
-          .map((cardJson) => TarotCard.fromJson(cardJson))
-          .toList();
+      _cards = (data['cards'] as List).map((cardJson) => TarotCard.fromJson(cardJson)).toList();
     } catch (e) {
-      throw TarotException('Kartlar yüklenirken hata: $e');
+      throw TarotException(e.toString());
     }
   }
 
-  // Tüm kartları getir
   List<TarotCard> getAllCards() => _cards;
 
-  // Major Arcana kartları
-  List<TarotCard> getMajorArcanaCards() =>
-      _cards.where((card) => card.arcana == "Major Arcana").toList();
+  List<TarotCard> getMajorArcanaCards() => _cards.where((card) => card.arcana == "Major Arcana").toList();
 
-  // Minor Arcana kartları
-  List<TarotCard> getMinorArcanaCards() =>
-      _cards.where((card) => card.arcana == "Minor Arcana").toList();
+  List<TarotCard> getMinorArcanaCards() => _cards.where((card) => card.arcana == "Minor Arcana").toList();
 
-  // Court kartları
   List<TarotCard> getCourtCards() => _cards.where((card) {
     final name = card.name.toLowerCase();
-    return name.contains('page') ||
-        name.contains('knight') ||
-        name.contains('queen') ||
-        name.contains('king');
+    return name.contains('page') || name.contains('knight') || name.contains('queen') || name.contains('king');
   }).toList();
 
-  // İsme göre kart getir
   TarotCard? getCardByName(String name) {
     try {
-      return _cards.firstWhere(
-              (card) => card.name.toLowerCase() == name.toLowerCase()
-      );
+      return _cards.firstWhere((card) => card.name.toLowerCase() == name.toLowerCase());
     } catch (e) {
       return null;
     }
   }
 
-  // Numaraya göre kart getir
   TarotCard? getCardByNumber(String number) {
     try {
       return _cards.firstWhere((card) => card.number == number);
@@ -67,22 +51,17 @@ class TarotRepository {
     }
   }
 
-  // Suit'e göre kartları getir
   List<TarotCard> getCardsBySuit(String suit) =>
       _cards.where((card) => card.suit.toLowerCase() == suit.toLowerCase()).toList();
 
-  // Rastgele kart çek
   TarotCard drawRandomCard() {
-    if (_cards.isEmpty) throw TarotException('Kart destesi boş');
+    if (_cards.isEmpty) throw TarotException('deck_empty');
     return _cards[Random().nextInt(_cards.length)];
   }
 
-  // Belirli sayıda rastgele kart çek
   List<TarotCard> drawRandomCards(int count) {
-    if (_cards.isEmpty) throw TarotException('Kart destesi boş');
-    if (count > _cards.length) {
-      throw TarotException('İstenen kart sayısı desteden fazla');
-    }
+    if (_cards.isEmpty) throw TarotException('deck_empty');
+    if (count > _cards.length) throw TarotException('too_many_cards');
 
     final List<TarotCard> tempDeck = List.from(_cards);
     final List<TarotCard> drawnCards = [];
@@ -95,7 +74,6 @@ class TarotRepository {
     return drawnCards;
   }
 
-  // Arama yap
   List<TarotCard> searchCards(String query) {
     final lowercaseQuery = query.toLowerCase();
     return _cards.where((card) {
@@ -106,146 +84,170 @@ class TarotRepository {
     }).toList();
   }
 
-  // Desteyi karıştır
   void shuffleDeck() => _cards.shuffle();
 
-  // Desteyi sırala
   void sortDeck() {
     _cards.sort((a, b) {
       if (a.arcana != b.arcana) return a.arcana.compareTo(b.arcana);
-      return int.tryParse(a.number) ?? 0.compareTo(int.tryParse(b.number) ?? 0);
+      return (int.tryParse(a.number) ?? 0).compareTo(int.tryParse(b.number) ?? 0);
     });
   }
 
+  TarotCard singleCardReading() => drawRandomCard();
 
-
-  TarotCard singleCardReading() {
-    return drawRandomCard();
-  }
-
-  // Üçlü Açılım (Geçmiş-Şimdi-Gelecek)
   Map<String, TarotCard> pastPresentFutureReading() {
     final cards = drawRandomCards(3);
-    return {
-      'Geçmiş': cards[0],
-      'Şimdi': cards[1],
-      'Gelecek': cards[2],
-    };
+    return {'Past': cards[0], 'Present': cards[1], 'Future': cards[2]};
   }
 
-  // Problem-Neden-Çözüm Açılımı
   Map<String, TarotCard> problemSolutionReading() {
     final cards = drawRandomCards(3);
-    return {
-      'Problem': cards[0],
-      'Neden': cards[1],
-      'Çözüm': cards[2],
-    };
+    return {'Problem': cards[0], 'Reason': cards[1], 'Solution': cards[2]};
   }
 
-  // Beş Kart Yol Ayrımı Açılımı
   Map<String, TarotCard> fiveCardPathReading() {
     final cards = drawRandomCards(5);
     return {
-      'Mevcut Durum': cards[0],
-      'Engeller': cards[1],
-      'En İyi Sonuç': cards[2],
-      'Temel': cards[3],
-      'Potansiyel': cards[4],
+      'Current Situation': cards[0],
+      'Obstacles': cards[1],
+      'Best Outcome': cards[2],
+      'Foundation': cards[3],
+      'Potential': cards[4],
     };
   }
 
-  // Yedi Kart İlişki Açılımı
   Map<String, TarotCard> relationshipReading() {
     final cards = drawRandomCards(7);
     return {
-      'Siz': cards[0],
+      'You': cards[0],
       'Partner': cards[1],
-      'İlişki': cards[2],
-      'Güçlü Yönler': cards[3],
-      'Zayıf Yönler': cards[4],
-      'Yapılması Gerekenler': cards[5],
-      'Sonuç': cards[6],
+      'Relationship': cards[2],
+      'Strengths': cards[3],
+      'Weaknesses': cards[4],
+      'Actions Needed': cards[5],
+      'Outcome': cards[6],
     };
   }
 
-  // Celtic Cross Açılımı
   Map<String, TarotCard> celticCrossReading() {
     final cards = drawRandomCards(10);
     return {
-      'Mevcut Durum': cards[0],
-      'Engel': cards[1],
-      'Bilinçaltı': cards[2],
-      'Geçmiş': cards[3],
-      'Olası Gelecek': cards[4],
-      'Yakın Gelecek': cards[5],
-      'Kişisel Duruş': cards[6],
-      'Çevre Etkileri': cards[7],
-      'Umutlar/Korkular': cards[8],
-      'Nihai Sonuç': cards[9],
+      'Current Situation': cards[0],
+      'Challenge': cards[1],
+      'Subconscious': cards[2],
+      'Past': cards[3],
+      'Possible Future': cards[4],
+      'Near Future': cards[5],
+      'Personal Stance': cards[6],
+      'External Influences': cards[7],
+      'Hopes/Fears': cards[8],
+      'Final Outcome': cards[9],
     };
   }
 
-  // Yıllık Açılım
   Map<String, TarotCard> yearlyReading() {
     final cards = drawRandomCards(12);
     Map<String, TarotCard> reading = {};
     final months = [
-      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
     ];
-
     for (int i = 0; i < 12; i++) {
       reading[months[i]] = cards[i];
     }
     return reading;
   }
 
-  // Kategorisel fal bakma metodu
   Map<String, TarotCard> categoryReading(String category, int cardCount) {
     final cards = drawRandomCards(cardCount);
     Map<String, TarotCard> reading = {};
-
-    switch(category.toLowerCase()) {
-      case 'aşk':
-        reading = {
-          'Geçmiş': cards[0],
-          'Şimdi': cards[1],
-          'Gelecek': cards[2],
-        };
+    switch (category.toLowerCase()) {
+      case 'love':
+        reading = {'Past': cards[0], 'Present': cards[1], 'Future': cards[2]};
         break;
-      case 'kariyer':
-        reading = {
-          'Mevcut İş': cards[0],
-          'Fırsatlar': cards[1],
-          'Engeller': cards[2],
-        };
+      case 'career':
+        reading = {'Current Job': cards[0], 'Opportunities': cards[1], 'Obstacles': cards[2]};
         break;
-      case 'para':
-        reading = {
-          'Finansal Durum': cards[0],
-          'Potansiyel': cards[1],
-          'Tavsiye': cards[2],
-        };
+      case 'money':
+        reading = {'Financial Situation': cards[0], 'Potential': cards[1], 'Advice': cards[2]};
         break;
       default:
-        reading = {
-          'Genel Durum': cards[0],
-          'Engeller': cards[1],
-          'Tavsiye': cards[2],
-        };
+        reading = {'General Situation': cards[0], 'Obstacles': cards[1], 'Advice': cards[2]};
     }
     return reading;
   }
 
+  Map<String, TarotCard> mindBodySpiritReading() {
+    final cards = drawRandomCards(3);
+    return {'Mind': cards[0], 'Body': cards[1], 'Spirit': cards[2]};
+  }
 
+  Map<String, TarotCard> astroLogicalCrossReading() {
+    final cards = drawRandomCards(5);
+    return {
+      'Identity': cards[0],
+      'Emotional State': cards[1],
+      'External Influences': cards[2],
+      'Challenges': cards[3],
+      'Destiny': cards[4],
+    };
+  }
 
+  Map<String, TarotCard> brokenHeartReading() {
+    final cards = drawRandomCards(5);
+    return {
+      'Source of Pain': cards[0],
+      'Emotional Wounds': cards[1],
+      'Inner Conflict': cards[2],
+      'Healing Process': cards[3],
+      'New Beginning': cards[4],
+    };
+  }
 
-  // Deste boyutu
+  Map<String, TarotCard> dreamInterpretationReading() {
+    final cards = drawRandomCards(3);
+    return {'Dream Symbol': cards[0], 'Emotional Response': cards[1], 'Message': cards[2]};
+  }
+
+  Map<String, TarotCard> horseshoeSpread() {
+    final cards = drawRandomCards(7);
+    return {
+      'Past': cards[0],
+      'Present': cards[1],
+      'Future': cards[2],
+      'Goals/Fears': cards[3],
+      'External Influences': cards[4],
+      'Advice': cards[5],
+      'Outcome': cards[6],
+    };
+  }
+
+  Map<String, TarotCard> careerPathSpread() {
+    final cards = drawRandomCards(5);
+    return {
+      'Current Situation': cards[0],
+      'Obstacles': cards[1],
+      'Opportunities': cards[2],
+      'Strengths': cards[3],
+      'Outcome': cards[4],
+    };
+  }
+
+  Map<String, TarotCard> fullMoonSpread() {
+    final cards = drawRandomCards(6);
+    return {
+      'Past Cycle': cards[0],
+      'Current Energy': cards[1],
+      'Subconscious Message': cards[2],
+      'Obstacles': cards[3],
+      'Recommended Action': cards[4],
+      'Resulting Energy': cards[5],
+    };
+  }
+
   int get deckSize => _cards.length;
 }
 
-// Özel hata sınıfı
 class TarotException implements Exception {
   final String message;
   TarotException(this.message);
@@ -253,4 +255,3 @@ class TarotException implements Exception {
   @override
   String toString() => 'TarotException: $message';
 }
-

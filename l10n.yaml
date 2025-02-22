@@ -1,0 +1,11 @@
+arb-dir: lib/l10n
+template-arb-file: intl_en.arb
+output-localization-file: l10n.dart  # Mevcut projenizdeki dosya adı
+output-class: S               # Mevcut projenizdeki sınıf adı
+output-dir: lib/generated     # Mevcut projenizdeki çıktı dizini
+synthetic-package: false      # Çıktıyı lib/generated/ altına koyar
+preferred-supported-locales:
+  - en
+  - tr
+fallback-locale: en
+untranslated-messages-file: l10n_missing_texts.txt

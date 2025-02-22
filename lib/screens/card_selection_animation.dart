@@ -1,12 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:tarot_fal/generated/l10n.dart'; // S sınıfını import ediyoruz
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/screens/reading_result.dart';
 
 class CardSelectionAnimationScreen extends StatefulWidget {
-  final int cardCount; // Seçilmesi gereken toplam kart sayısı
+  final int cardCount;
   const CardSelectionAnimationScreen({super.key, this.cardCount = 10});
 
   @override
@@ -16,7 +17,7 @@ class CardSelectionAnimationScreen extends StatefulWidget {
 class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen> {
   final TarotRepository repository = TarotRepository();
   List<TarotCard> selectedCards = [];
-  late List<bool> revealed; // Her kartın açılmış olma durumunu tutar
+  late List<bool> revealed;
   bool loading = true;
 
   @override
@@ -31,7 +32,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     } catch (e) {
       // Hata durumunda loglama yapılabilir ya da zaten yüklenmişse devam edilebilir.
     }
-    // drawRandomCards metodu, desteden tekrarsız kart çekmenizi sağlar.
     List<TarotCard> cards = repository.drawRandomCards(widget.cardCount);
     setState(() {
       selectedCards = cards;
@@ -40,7 +40,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     });
   }
 
-  /// Belirli indeksteki kartın açılmasını sağlar. Aynı kart birden fazla açılmaz.
   void _flipCard(int index) {
     if (!revealed[index]) {
       setState(() {
@@ -49,14 +48,12 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     }
   }
 
-  /// Tüm kartların açılmasını sağlar.
   void _flipAllCards() {
     setState(() {
       revealed = List<bool>.filled(widget.cardCount, true);
     });
   }
 
-  /// Kartları yeniden karıştırarak desteyi sıfırlar.
   void _reshuffleCards() {
     setState(() {
       selectedCards = repository.drawRandomCards(widget.cardCount);
@@ -64,7 +61,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     });
   }
 
-  /// Eğer bazı kartlar hâlâ kapalıysa, önce tümünü açar; ardından okuma sonuç ekranına yönlendirir.
   void _goToResultScreen() {
     if (!revealed.every((v) => v)) {
       _flipAllCards();
@@ -77,8 +73,8 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     });
   }
 
-  /// Kart detaylarını gösteren modal dialog. Kart uzun basılı tutulduğunda çalışır.
   void _showCardDetails(TarotCard card) {
+    final loc = S.of(context); // Lokalizasyon için S sınıfını kullanıyoruz
     showDialog(
       context: context,
       builder: (context) {
@@ -90,7 +86,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Kart görseli (img alanı boş değilse gösterilir)
                 if (card.img.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -101,24 +96,24 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
                     ),
                   ),
                 const SizedBox(height: 8),
-                // Kart adı
                 Text(
                   card.name,
                   style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                // Fal Yorumu (varsa)
                 if (card.fortuneTelling.isNotEmpty) ...[
                   Text(
-                    "Fal Yorumu:",
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70),
+                    loc!.fortuneTelling,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   ...card.fortuneTelling.map(
@@ -129,60 +124,56 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
                   ),
                   const SizedBox(height: 8),
                 ],
-                // Anahtar Kelimeler (varsa)
                 if (card.keywords.isNotEmpty) ...[
                   Text(
-                    "Anahtar Kelimeler:",
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70),
+                    loc!.keywords,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Wrap(
                     spacing: 6,
                     children: card.keywords
                         .map((kw) => Chip(
-                      label: Text(kw,
-                          style: const TextStyle(color: Colors.white)),
+                      label: Text(kw, style: const TextStyle(color: Colors.white)),
                       backgroundColor: Colors.deepPurple,
                     ))
                         .toList(),
                   ),
                   const SizedBox(height: 8),
                 ],
-                // Anlamlar: Işık ve Gölge (varsa)
-                if (card.meanings.light.isNotEmpty ||
-                    card.meanings.shadow.isNotEmpty) ...[
+                if (card.meanings.light.isNotEmpty || card.meanings.shadow.isNotEmpty) ...[
                   Text(
-                    "Anlamlar:",
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white70),
+                    loc!.meaning,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   if (card.meanings.light.isNotEmpty)
                     Text(
-                      "Işık: ${card.meanings.light.join(', ')}",
+                      "${loc.lightMeaning} ${card.meanings.light.join(', ')}",
                       style: const TextStyle(fontSize: 14, color: Colors.white),
                     ),
                   if (card.meanings.shadow.isNotEmpty)
                     Text(
-                      "Gölge: ${card.meanings.shadow.join(', ')}",
+                      "${loc.shadowMeaning} ${card.meanings.shadow.join(', ')}",
                       style: const TextStyle(fontSize: 14, color: Colors.white),
                     ),
                   const SizedBox(height: 8),
                 ],
-                // Kapat butonu
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   ),
-                  child: const Text("Kapat"),
+                  child: Text(loc!.close),
                 ),
               ],
             ),
@@ -192,9 +183,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     );
   }
 
-
-  /// Kart widget’i: AnimatedSwitcher ve AnimatedScale kullanılarak kapalıdan açığa flip animasyonu sağlanır.
-  /// Açılan kartlar, hafif ölçeklenme efektiyle vurgulanır.
   Widget _buildCardWidget(int index) {
     final TarotCard card = selectedCards[index];
     final bool isRevealed = revealed[index];
@@ -208,7 +196,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 800),
           transitionBuilder: (Widget child, Animation<double> animation) {
-            // Yatay flip animasyonu: Kartın Y ekseni etrafında dönmesi sağlanır.
             final rotateAnim = Tween(begin: pi, end: 0.0).animate(animation);
             return AnimatedBuilder(
               animation: rotateAnim,
@@ -240,7 +227,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     );
   }
 
-  /// Kapalı kartın ön yüzü: Sabit arka yüz resmi kullanılır.
   Widget _buildCardBack({Key? key}) {
     return Card(
       key: key,
@@ -260,7 +246,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     );
   }
 
-  /// Açılmış kartın ön yüzü: Kartın asset içindeki resmi getirilir ve tüm kart fotoğrafı görünür.
   Widget _buildCardFront(TarotCard card, {Key? key}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -276,8 +261,8 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
               borderRadius: BorderRadius.circular(16),
               image: DecorationImage(
                 image: AssetImage('assets/tarot_card_images/${card.img}'),
-                fit: BoxFit.contain, // Tüm resmin görünmesi sağlanır.
-                alignment: Alignment.center, // Resmin ortalanması sağlanır.
+                fit: BoxFit.contain,
+                alignment: Alignment.center,
               ),
             ),
           ),
@@ -296,9 +281,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     );
   }
 
-
-
-  /// Arka plan; Lottie animasyonu, gradient overlay ve shader mask ile tematik bir atmosfer oluşturur.
   Widget _buildBackground() {
     return Stack(
       fit: StackFit.expand,
@@ -340,6 +322,7 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
 
   @override
   Widget build(BuildContext context) {
+    final loc = S.of(context);
     if (loading) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -348,7 +331,7 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
     }
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Kart Seçimi"),
+        title: Text(loc!.cardSelection),
         backgroundColor: Colors.deepPurple,
       ),
       body: Stack(
@@ -358,15 +341,14 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    "Kart sayısı kadar kapalı kart ekranda görüntülenecektir.\nLütfen tek tek dokunarak açınız, uzun basarak kısa açıklamasını görün veya 'Bütün Kartları Çevir' seçeneğini kullanınız.",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    loc.cardSelectionInstructions,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                // Kartların çok olduğu durumlarda kaydırılabilir ekran
                 Expanded(
                   child: SingleChildScrollView(
                     child: Wrap(
@@ -377,7 +359,6 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
                     ),
                   ),
                 ),
-                // Alt kısım: İşlem butonları
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -389,9 +370,9 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
                           backgroundColor: Colors.deepPurple,
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
                         ),
-                        child: const Text(
-                          "Bütün Kartları Çevir",
-                          style: TextStyle(fontSize: 12),
+                        child: Text(
+                          loc.flipAllCards,
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ),
                       ElevatedButton(
@@ -400,9 +381,9 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
                           backgroundColor: Colors.deepPurple,
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 12),
                         ),
-                        child: const Text(
-                          "Kartları Yeniden Karıştır",
-                          style: TextStyle(fontSize: 16),
+                        child: Text(
+                          loc.reshuffleCards,
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                       ElevatedButton(
@@ -411,14 +392,14 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
                           backgroundColor: Colors.deepPurple,
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                         ),
-                        child: const Text(
-                          "Sonuçları Gör",
-                          style: TextStyle(fontSize: 16),
+                        child: Text(
+                          loc.viewResults,
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),

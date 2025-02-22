@@ -39,6 +39,8 @@ dependencies:
   flutter_bloc: ^9.0.0
   bloc: ^9.0.0
 
+
+
   
   #purchase
   in_app_purchase: ^3.2.1

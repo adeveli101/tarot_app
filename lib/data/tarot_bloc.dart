@@ -1,12 +1,13 @@
-// lib/bloc/tarot_bloc.dart
+// ignore_for_file: unused_import, unused_local_variable
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
+import 'package:tarot_fal/generated/l10n.dart';
 import '../gemini_service.dart';
 import '../models/tarot_card.dart';
 
-// Events (aynı)
+// Events
 abstract class TarotEvent extends Equatable {
   @override
   List<Object?> get props => [];
@@ -21,6 +22,14 @@ class DrawFiveCardPath extends TarotEvent {}
 class DrawRelationshipSpread extends TarotEvent {}
 class DrawCelticCross extends TarotEvent {}
 class DrawYearlySpread extends TarotEvent {}
+class DrawMindBodySpirit extends TarotEvent {}
+class DrawAstroLogicalCross extends TarotEvent {}
+class DrawBrokenHeart extends TarotEvent {}
+class DrawDreamInterpretation extends TarotEvent {}
+class DrawHorseshoeSpread extends TarotEvent {}
+class DrawCareerPathSpread extends TarotEvent {}
+class DrawFullMoonSpread extends TarotEvent {}
+
 class DrawCategoryReading extends TarotEvent {
   final String category;
   final int cardCount;
@@ -31,7 +40,7 @@ class DrawCategoryReading extends TarotEvent {
   List<Object?> get props => [category, cardCount];
 }
 
-// States (aynı)
+// States
 abstract class TarotState extends Equatable {
   @override
   List<Object?> get props => [];
@@ -71,9 +80,10 @@ class SpreadDrawn extends TarotState {
   List<Object?> get props => [spread];
 }
 
-class FalYorumuLoaded extends TarotState { // Yeni state
+class FalYorumuLoaded extends TarotState {
   final String yorum;
   FalYorumuLoaded(this.yorum);
+
   @override
   List<Object?> get props => [yorum];
 }
@@ -82,17 +92,19 @@ class FalYorumuLoaded extends TarotState { // Yeni state
 class TarotBloc extends Bloc<TarotEvent, TarotState> {
   final TarotRepository repository;
   final GeminiService geminiService = GeminiService();
+
+  // Prompt şablonu (lokalizasyon UI'da veya Gemini yanıtında yapılacak)
   String _promptTemplate = '''
 ÖNEMLİ: Aşağıdaki formata kesinlikle UYGUN cevap verin. Başka hiçbir ilave bilgi eklemeyin.  
-Tüm bölümler tamamen Türkçe, akıcı, yaratıcı ve seçilen kategoriye özgü detayları içermelidir.  
+Tüm bölümler tamamen [DİL] (akıcı, yaratıcı ve seçilen kategoriye özgü detayları içermelidir).  
 Önemli bir kart veya özel bir durum söz konusu olduğunda, ekstra açıklama ve destekleyici yorumlar ekleyebilirsiniz.
 
-✨ Tarot Falı - Gizemli Yolların Kılavuzu ✨  
-Bu fal, [KATEGORİ] konusunda [AÇILIM_TİPİ] açılımı ile kişisel ve derin içgörüler sunmaktadır. Ruhunuzun derinliklerine inmeye ve kartların size özel mesajlarını keşfetmeye hazır olun!
+✨ [TAROT_FORTUNE_TITLE] ✨  
+[TAROT_FORTUNE_DESCRIPTION]
 
 ---
 
-### Kartların İlahi Senfonisi
+### [DIVINE_SYMPHONY]
 
 [KART_1_POZİSYON]: [KART_1_ADI]  
 - Anlamı: [KART_1_ANLAMI]  
@@ -113,28 +125,26 @@ Bu fal, [KATEGORİ] konusunda [AÇILIM_TİPİ] açılımı ile kişisel ve derin
 
 ---
 
-### Birleşik Kaderin Yansımaları
+### [UNIFIED_DESTINY_REFLECTION_TITLE]
 
-Bu kartların birleşik enerjisi, [KATEGORİ] alanındaki yolculuğunuzda kritik bir dönüm noktasını simgeliyor.  
-- **Genel Analiz:** [GENEL_ANALİZ]  
-- **Kartların Birlikte Değerlendirilmesi:** [KARTLARIN_BERABER_DEĞERLENDİRİLMESİ]  
-- **Özel Not:** Seçilen kategoriye ilişkin ekstra açıklamalar ve öngörüler.
+[UNIFIED_DESTINY_MESSAGE]  
+- **[GENERAL_ANALYSIS]:** [GENEL_ANALİZ]  
+- **[CARDS_COMBINED_EVALUATION]:** [KARTLARIN_BERABER_DEĞERLENDİRİLMESİ]  
+- **[SPECIAL_NOTE]:** Seçilen kategoriye ilişkin ekstra açıklamalar ve öngörüler.
 
 ---
 
-### Derinlemesine Genel Yorum
+### [DETAILED_GENERAL_COMMENTARY]
 
-Kartların sembolleri ve enerjileri, [KATEGORİ] alanındaki mevcut durumunuza ışık tutar.  
 [DETAYLI_GENEL_YORUM]
 
 ---
 
-### Yol Gösterici Fısıltılar & Öneriler
+### [GUIDING_WHISPERS_AND_SUGGESTIONS]
 
-Yakın geleceğiniz için katmanlı ve özgün öneriler sunun:  
-- **Zaman Çizelgesi & Öneriler:** [YAKIN_GELECEK_ÖNERİLER]  
-- **Dikkat Edilmesi Gerekenler:** [DİKKAT_EDİLMESİ_GEREKEN_NOKTALAR]  
-- **Kategoriye Özel İpuçları:** [KATEGORI_ÖNERİLER]
+- **[TIMELINE_AND_SUGGESTIONS]:** [YAKIN_GELECEK_ÖNERİLER]  
+- **[POINTS_TO_WATCH]:** [DİKKAT_EDİLMESİ_GEREKEN_NOKTALAR]  
+- **[CATEGORY_SPECIFIC_TIPS]:** [KATEGORI_ÖNERİLER]
 
 ---
 
@@ -155,6 +165,13 @@ Talimatlar:
     on<DrawRelationshipSpread>(_onDrawRelationshipSpread);
     on<DrawCelticCross>(_onDrawCelticCross);
     on<DrawYearlySpread>(_onDrawYearlySpread);
+    on<DrawMindBodySpirit>(_onDrawMindBodySpirit);
+    on<DrawAstroLogicalCross>(_onDrawAstroLogicalCross);
+    on<DrawBrokenHeart>(_onDrawBrokenHeart);
+    on<DrawDreamInterpretation>(_onDrawDreamInterpretation);
+    on<DrawHorseshoeSpread>(_onDrawHorseshoeSpread);
+    on<DrawCareerPathSpread>(_onDrawCareerPathSpread);
+    on<DrawFullMoonSpread>(_onDrawFullMoonSpread);
     on<DrawCategoryReading>(_onDrawCategoryReading);
   }
 
@@ -164,7 +181,7 @@ Talimatlar:
       await repository.loadCardsFromAsset();
       emit(TarotCardsLoaded(repository.getAllCards()));
     } catch (e) {
-      emit(TarotError("Kartlar yüklenirken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
     }
   }
 
@@ -177,38 +194,23 @@ Talimatlar:
     emit(TarotLoading());
     try {
       final card = repository.singleCardReading();
-      final prompt = _generatePrompt(
-          category: 'Genel',
-          spreadType: 'Tek Kart',
-          cards: {
-            'Kart': card,
-          }
-      );
-
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Single Card', cards: {'Card': card});
       final yorum = await geminiService.generateContent(prompt);
       emit(FalYorumuLoaded(yorum));
     } catch (e) {
-      emit(TarotError("Tek kart açılımı alınırken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
     }
   }
+
   Future<void> _onDrawPastPresentFuture(DrawPastPresentFuture event, Emitter<TarotState> emit) async {
     emit(TarotLoading());
     try {
       final spread = repository.pastPresentFutureReading();
-
-      final prompt = _generatePrompt(
-          category: 'Genel',
-          spreadType: 'Geçmiş-Şimdi-Gelecek',
-          cards: {
-            'Geçmiş': spread['Geçmiş']!,
-            'Şimdi': spread['Şimdi']!,
-            'Gelecek': spread['Gelecek']!,
-          }
-      );
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Past-Present-Future', cards: spread);
       final yorum = await geminiService.generateContent(prompt);
       emit(FalYorumuLoaded(yorum));
     } catch (e) {
-      emit(TarotError("Geçmiş-Şimdi-Gelecek açılımı alınırken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
     }
   }
 
@@ -216,106 +218,143 @@ Talimatlar:
     emit(TarotLoading());
     try {
       final spread = repository.problemSolutionReading();
-      final prompt = _generatePrompt(
-          category: 'Genel',
-          spreadType: 'Problem-Neden-Çözüm',
-          cards: {
-            'Problem': spread['Problem']!,
-            'Neden': spread['Neden']!,
-            'Çözüm': spread['Çözüm']!,
-          }
-      );
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Problem-Solution', cards: spread);
       final yorum = await geminiService.generateContent(prompt);
       emit(FalYorumuLoaded(yorum));
     } catch (e) {
-      emit(TarotError("Problem-Neden-Çözüm açılımı alınırken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
     }
   }
+
   Future<void> _onDrawFiveCardPath(DrawFiveCardPath event, Emitter<TarotState> emit) async {
     emit(TarotLoading());
     try {
       final spread = repository.fiveCardPathReading();
-      final prompt = _generatePrompt(
-          category: 'Genel',
-          spreadType: 'Beş Kart Yol Ayrımı',
-          cards: {
-            'Mevcut Durum': spread['Mevcut Durum']!,
-            'Engeller': spread['Engeller']!,
-            'En İyi Sonuç': spread['En İyi Sonuç']!,
-            'Temel': spread['Temel']!,
-            'Potansiyel': spread['Potansiyel']!,
-          }
-      );
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Five Card Path', cards: spread);
       final yorum = await geminiService.generateContent(prompt);
       emit(FalYorumuLoaded(yorum));
     } catch (e) {
-      emit(TarotError("Beş Kart Yol Ayrımı açılımı alınırken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
     }
   }
+
   Future<void> _onDrawRelationshipSpread(DrawRelationshipSpread event, Emitter<TarotState> emit) async {
     emit(TarotLoading());
     try {
       final spread = repository.relationshipReading();
-      final prompt = _generatePrompt(
-          category: 'Aşk',
-          spreadType: 'İlişki Açılımı',
-          cards: {
-            'Siz': spread['Siz']!,
-            'Partner': spread['Partner']!,
-            'İlişki': spread['İlişki']!,
-            'Güçlü Yönler': spread['Güçlü Yönler']!,
-            'Zayıf Yönler': spread['Zayıf Yönler']!,
-            'Yapılması Gerekenler': spread['Yapılması Gerekenler']!,
-            'Sonuç': spread['Sonuç']!,
-          }
-      );
+      final prompt = _generatePrompt(category: 'Love', spreadType: 'Relationship Spread', cards: spread);
       final yorum = await geminiService.generateContent(prompt);
       emit(FalYorumuLoaded(yorum));
     } catch (e) {
-      emit(TarotError("İlişki açılımı alınırken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
     }
   }
+
   Future<void> _onDrawCelticCross(DrawCelticCross event, Emitter<TarotState> emit) async {
     emit(TarotLoading());
     try {
       final spread = repository.celticCrossReading();
-      final prompt = _generatePrompt(
-          category: 'Genel',
-          spreadType: 'Celtic Cross Açılımı',
-          cards: {
-            'Mevcut Durum': spread['Mevcut Durum']!,
-            'Engel': spread['Engel']!,
-            'Bilinçaltı': spread['Bilinçaltı']!,
-            'Geçmiş': spread['Geçmiş']!,
-            'Olası Gelecek': spread['Olası Gelecek']!,
-            'Yakın Gelecek': spread['Yakın Gelecek']!,
-            'Kişisel Duruş': spread['Kişisel Duruş']!,
-            'Çevre Etkileri': spread['Çevre Etkileri']!,
-            'Umutlar/Korkular': spread['Umutlar/Korkular']!,
-            'Nihai Sonuç': spread['Nihai Sonuç']!,
-          }
-      );
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Celtic Cross', cards: spread);
       final yorum = await geminiService.generateContent(prompt);
       emit(FalYorumuLoaded(yorum));
     } catch (e) {
-      emit(TarotError("Celtic Cross açılımı alınırken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
     }
   }
+
   Future<void> _onDrawYearlySpread(DrawYearlySpread event, Emitter<TarotState> emit) async {
     emit(TarotLoading());
     try {
       final spread = repository.yearlyReading();
-
-      final prompt = _generatePrompt(
-          category: 'Genel',
-          spreadType: 'Yıllık Açılım',
-          cards: spread
-      );
-
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Yearly Spread', cards: spread);
       final yorum = await geminiService.generateContent(prompt);
       emit(FalYorumuLoaded(yorum));
     } catch (e) {
-      emit(TarotError("Yıllık açılım alınırken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
+    }
+  }
+
+  Future<void> _onDrawMindBodySpirit(DrawMindBodySpirit event, Emitter<TarotState> emit) async {
+    emit(TarotLoading());
+    try {
+      final spread = repository.mindBodySpiritReading();
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Mind-Body-Spirit', cards: spread);
+      final yorum = await geminiService.generateContent(prompt);
+      emit(FalYorumuLoaded(yorum));
+    } catch (e) {
+      emit(TarotError(e.toString()));
+    }
+  }
+
+  Future<void> _onDrawAstroLogicalCross(DrawAstroLogicalCross event, Emitter<TarotState> emit) async {
+    emit(TarotLoading());
+    try {
+      final spread = repository.astroLogicalCrossReading();
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Astrological Cross', cards: spread);
+      final yorum = await geminiService.generateContent(prompt);
+      emit(FalYorumuLoaded(yorum));
+    } catch (e) {
+      emit(TarotError(e.toString()));
+    }
+  }
+
+  Future<void> _onDrawBrokenHeart(DrawBrokenHeart event, Emitter<TarotState> emit) async {
+    emit(TarotLoading());
+    try {
+      final spread = repository.brokenHeartReading();
+      final prompt = _generatePrompt(category: 'Love', spreadType: 'Broken Heart', cards: spread);
+      final yorum = await geminiService.generateContent(prompt);
+      emit(FalYorumuLoaded(yorum));
+    } catch (e) {
+      emit(TarotError(e.toString()));
+    }
+  }
+
+  Future<void> _onDrawDreamInterpretation(DrawDreamInterpretation event, Emitter<TarotState> emit) async {
+    emit(TarotLoading());
+    try {
+      final spread = repository.dreamInterpretationReading();
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Dream Interpretation', cards: spread);
+      final yorum = await geminiService.generateContent(prompt);
+      emit(FalYorumuLoaded(yorum));
+    } catch (e) {
+      emit(TarotError(e.toString()));
+    }
+  }
+
+  Future<void> _onDrawHorseshoeSpread(DrawHorseshoeSpread event, Emitter<TarotState> emit) async {
+    emit(TarotLoading());
+    try {
+      final spread = repository.horseshoeSpread();
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Horseshoe Spread', cards: spread);
+      final yorum = await geminiService.generateContent(prompt);
+      emit(FalYorumuLoaded(yorum));
+    } catch (e) {
+      emit(TarotError(e.toString()));
+    }
+  }
+
+  Future<void> _onDrawCareerPathSpread(DrawCareerPathSpread event, Emitter<TarotState> emit) async {
+    emit(TarotLoading());
+    try {
+      final spread = repository.careerPathSpread();
+      final prompt = _generatePrompt(category: 'Career', spreadType: 'Career Path Spread', cards: spread);
+      final yorum = await geminiService.generateContent(prompt);
+      emit(FalYorumuLoaded(yorum));
+    } catch (e) {
+      emit(TarotError(e.toString()));
+    }
+  }
+
+  Future<void> _onDrawFullMoonSpread(DrawFullMoonSpread event, Emitter<TarotState> emit) async {
+    emit(TarotLoading());
+    try {
+      final spread = repository.fullMoonSpread();
+      final prompt = _generatePrompt(category: 'General', spreadType: 'Full Moon Spread', cards: spread);
+      final yorum = await geminiService.generateContent(prompt);
+      emit(FalYorumuLoaded(yorum));
+    } catch (e) {
+      emit(TarotError(e.toString()));
     }
   }
 
@@ -323,20 +362,14 @@ Talimatlar:
     emit(TarotLoading());
     try {
       final spread = repository.categoryReading(event.category, event.cardCount);
-
-      final prompt = _generatePrompt(
-          category: event.category,
-          spreadType: 'Kategori Bazlı Açılım',
-          cards: spread
-      );
-
+      final prompt = _generatePrompt(category: event.category, spreadType: 'Category Reading', cards: spread);
       final yorum = await geminiService.generateContent(prompt);
       emit(FalYorumuLoaded(yorum));
     } catch (e) {
-      emit(TarotError("Kategori bazlı açılım alınırken bir hata oluştu: ${e.toString()}"));
+      emit(TarotError(e.toString()));
     }
   }
-  // Prompt oluşturma metodu
+
   String _generatePrompt({
     required String category,
     required String spreadType,
@@ -348,50 +381,46 @@ Talimatlar:
         $position: ${card.name}
         - Anlamı: ${card.meanings.light.join(', ')}
         - Mistik Yorum: ${card.meanings.shadow.join(', ')}
-    
-    ''';
+      ''';
     });
 
     return _promptTemplate
-        .replaceAll('[KATEGORİ]', category)
-        .replaceAll('[AÇILIM_TİPİ]', spreadType)
+        .replaceAll('[DİL]', 'current language') // Dil UI'da belirlenecek
+        .replaceAll('[TAROT_FORTUNE_TITLE]', 'Tarot Fortune Title')
+        .replaceAll('[TAROT_FORTUNE_DESCRIPTION]', 'This reading provides insights into [$category] using the [$spreadType] spread.')
+        .replaceAll('[DIVINE_SYMPHONY]', 'Divine Symphony')
+        .replaceAll('[UNIFIED_DESTINY_REFLECTION_TITLE]', 'Unified Destiny Reflection')
+        .replaceAll('[UNIFIED_DESTINY_MESSAGE]', 'The combination of these cards marks a turning point in your [$category] journey.')
+        .replaceAll('[GENERAL_ANALYSIS]', 'General Analysis')
+        .replaceAll('[CARDS_COMBINED_EVALUATION]', 'Cards Combined Evaluation')
+        .replaceAll('[SPECIAL_NOTE]', 'Special Note')
+        .replaceAll('[DETAILED_GENERAL_COMMENTARY]', 'Detailed General Commentary')
+        .replaceAll('[GUIDING_WHISPERS_AND_SUGGESTIONS]', 'Guiding Whispers and Suggestions')
+        .replaceAll('[TIMELINE_AND_SUGGESTIONS]', 'Timeline and Suggestions')
+        .replaceAll('[POINTS_TO_WATCH]', 'Points to Watch')
+        .replaceAll('[CATEGORY_SPECIFIC_TIPS]', 'Category Specific Tips')
         .replaceAllMapped(RegExp(r'\[KART_(\d+)_POZİSYON\]'), (match) {
       final index = int.parse(match.group(1)!);
-      if(cards.length > index){
-        return cards.keys.toList()[index];
-      }
-      return '';
+      return cards.length > index ? cards.keys.toList()[index] : '';
     })
         .replaceAllMapped(RegExp(r'\[KART_(\d+)_ADI\]'), (match) {
       final index = int.parse(match.group(1)!);
-      if(cards.length > index){
-        return cards.values.toList()[index].name;
-      }
-      return '';
-
+      return cards.length > index ? cards.values.toList()[index].name : '';
     })
         .replaceAllMapped(RegExp(r'\[KART_(\d+)_ANLAMI\]'), (match) {
       final index = int.parse(match.group(1)!);
-      if(cards.length > index){
-        return cards.values.toList()[index].meanings.light.join(', ');
-      }
-      return '';
-
+      return cards.length > index ? cards.values.toList()[index].meanings.light.join(', ') : '';
     })
         .replaceAllMapped(RegExp(r'\[KART_(\d+)_MİSTİK_YORUM\]'), (match) {
       final index = int.parse(match.group(1)!);
-      if(cards.length > index){
-        return cards.values.toList()[index].meanings.shadow.join(', ');
-      }
-      return '';
+      return cards.length > index ? cards.values.toList()[index].meanings.shadow.join(', ') : '';
     })
-
-        .replaceAll('[GENEL_ANALİZ]', 'Kartların birleşimi ve enerji akışı')
-        .replaceAll('[KARTLARIN_BERABER_DEĞERLENDİRİLMESİ]', 'Kartların enerjileri birbirini etkiliyor.')
-        .replaceAll('[DETAYLI_GENEL_YORUM]',  'Bu kartlar hayatınızdaki önemli dinamikleri vurguluyor.')
-        .replaceAll('[YAKIN_GELECEK_ÖNERİLER]', 'Bu önerilere kulak verin.')
-        .replaceAll('[DİKKAT_EDİLMESİ_GEREKEN_NOKTALAR]', 'Bu noktalara dikkat edin.')
-
-    ;
+        .replaceAll('[GENEL_ANALİZ]', 'Analysis of card energies')
+        .replaceAll('[KARTLARIN_BERABER_DEĞERLENDİRİLMESİ]', 'The energies of the cards interact.')
+        .replaceAll('[DETAYLI_GENEL_YORUM]', 'These cards highlight key dynamics.')
+        .replaceAll('[YAKIN_GELECEK_ÖNERİLER]', 'Consider these suggestions.')
+        .replaceAll('[DİKKAT_EDİLMESİ_GEREKEN_NOKTALAR]', 'Watch out for these pitfalls.')
+        .replaceAll('[KATEGORİ]', category)
+        .replaceAll('[AÇILIM_TİPİ]', spreadType);
   }
 }
