@@ -113,6 +113,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Choose the topic you want to explore",
     ),
     "close": MessageLookupByLibrary.simpleMessage("Close"),
+    "customPromptHint": MessageLookupByLibrary.simpleMessage(
+      "Type your custom prompt here...",
+    ),
+    "customPromptTitle": MessageLookupByLibrary.simpleMessage("Custom Prompt"),
     "deck_empty": MessageLookupByLibrary.simpleMessage("Card deck is empty"),
     "detailedGeneralCommentary": MessageLookupByLibrary.simpleMessage(
       "In-Depth General Commentary",
@@ -192,6 +196,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Perform Problem-Solution Spread",
     ),
     "problemSolutionReadingError": m10,
+    "promptEmptyError": MessageLookupByLibrary.simpleMessage(
+      "Please enter a prompt.",
+    ),
     "relationshipSpread": MessageLookupByLibrary.simpleMessage(
       "Relationship Spread",
     ),
@@ -200,6 +207,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "relationshipSpreadReadingError": m11,
     "reshuffleCards": MessageLookupByLibrary.simpleMessage("Reshuffle Cards"),
+    "sendPrompt": MessageLookupByLibrary.simpleMessage("Send Prompt"),
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
     "shadowMeaning": MessageLookupByLibrary.simpleMessage("Shadow:"),
     "singleCard": MessageLookupByLibrary.simpleMessage(

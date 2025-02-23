@@ -93,5 +93,21 @@
   "viewResults": "View Results",
   "close": "Close",
   "lightMeaning": "Light:",
-  "shadowMeaning": "Shadow:"
+  "shadowMeaning": "Shadow:",
+  "customPromptTitle": "Custom Prompt",
+  "@customPromptTitle": {
+    "description": "Title for the custom prompt input dialog."
+  },
+  "customPromptHint": "Type your custom prompt here...",
+  "@customPromptHint": {
+    "description": "Hint for the custom prompt field."
+  },
+  "promptEmptyError": "Please enter a prompt.",
+  "@promptEmptyError": {
+    "description": "Error message when the prompt input is empty."
+  },
+  "sendPrompt": "Send Prompt",
+  "@sendPrompt": {
+    "description": "Text for the button used to send the prompt."
+  }
 }

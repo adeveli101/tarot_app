@@ -2,13 +2,19 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/generated/l10n.dart';
+import 'package:tarot_fal/screens/reading_result.dart';
 import '../data/tarot_bloc.dart';
+import '../gemini_service.dart';
 import 'card_selection_animation.dart';
+
+
 
 class TarotReadingScreen extends StatefulWidget {
   final VoidCallback onSettingsTap;
@@ -23,41 +29,36 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
-    return BlocProvider(
-      create: (context) => TarotBloc(
-        repository: TarotRepository(),
-      )..add(LoadTarotCards()),
-      child: Scaffold(
-        backgroundColor: Colors.grey[900],
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Text(loc!.tarotFortune),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings, color: Colors.white),
-              onPressed: widget.onSettingsTap,
+    return Scaffold(
+      backgroundColor: Colors.grey[900],
+      body: Stack(
+        children: [
+          BlocBuilder<TarotBloc, TarotState>(
+            builder: (context, state) {
+              if (state is TarotLoading) {
+                return Center(
+                  child: Lottie.asset('assets/animations/tarot_loading.json'),
+                );
+              }
+              if (state is FalYorumuLoaded) {
+                return _buildFortuneTellingPage(state.yorum);
+              }
+              return _buildMainContent();
+            },
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: IconButton(
+                  icon: const Icon(Icons.settings, color: Colors.white),
+                  onPressed: widget.onSettingsTap,
+                ),
+              ),
             ),
-          ],
-        ),
-        body: BlocBuilder<TarotBloc, TarotState>(
-          builder: (context, state) {
-            if (state is TarotLoading) {
-              return Center(
-                child: Lottie.asset('assets/animations/tarot_loading.json'),
-              );
-            }
-            if (state is FalYorumuLoaded) {
-              return Stack(
-                children: [
-                  _buildFortuneTellingPage(state.yorum),
-                  _buildCloseButton(context),
-                ],
-              );
-            }
-            return _buildMainContent();
-          },
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -98,6 +99,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
       children: [
         _buildBackground(),
         _buildGradientOverlay(),
+
         SafeArea(
           child: Column(
             children: [
@@ -107,9 +109,11 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
               const SizedBox(height: 20),
               _buildBottomInfo(),
               const SizedBox(height: 20),
+
             ],
           ),
         ),
+
       ],
     );
   }
@@ -389,17 +393,10 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> {
     );
   }
 
-  Widget _buildCloseButton(BuildContext context) {
-    return Positioned(
-      top: 40,
-      right: 16,
-      child: IconButton(
-        icon: const Icon(Icons.close, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-    );
-  }
+
 }
+
+
 
 class CategorySelectionSheet extends StatelessWidget {
   const CategorySelectionSheet({super.key});
@@ -639,10 +636,25 @@ class CategorySelectionSheet extends StatelessWidget {
   }
 }
 
-class SpreadSelectionSheet extends StatelessWidget {
+
+
+class SpreadSelectionSheet extends StatefulWidget {
   final String category;
 
   const SpreadSelectionSheet({super.key, required this.category});
+
+  @override
+  SpreadSelectionSheetState createState() => SpreadSelectionSheetState();
+}
+
+class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
+  final TextEditingController _promptController = TextEditingController();
+
+  @override
+  void dispose() {
+    _promptController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -702,6 +714,7 @@ class SpreadSelectionSheet extends StatelessWidget {
               subtitle: loc.chooseSpread,
             ),
             _buildInfoBanner(loc),
+            _buildCustomPromptSection(context),
             Expanded(
               child: ListView(
                 controller: scrollController,
@@ -738,18 +751,80 @@ class SpreadSelectionSheet extends StatelessWidget {
     );
   }
 
+  Widget _buildCustomPromptSection(BuildContext context) {
+    final loc = S.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            loc!.customPromptTitle,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.purple[400]!.withOpacity(0.6),
+                  Colors.blueGrey[800]!.withOpacity(0.5),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[600]!),
+            ),
+            child: TextField(
+              controller: _promptController,
+              maxLines: 3,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: loc.customPromptHint,
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                border: InputBorder.none,
+              ),
+              onChanged: (value) {
+                if (kDebugMode) {
+                  print("Prompt changed to: $value");
+                } // Hata ayıklama için
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            loc.swipeForMore,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<Widget> _buildSpreadOptions(BuildContext context) {
     final loc = S.of(context);
+    final String? customPrompt = _promptController.text.trim().isNotEmpty ? _promptController.text.trim() : null;
+
     final List<Widget> options = [];
 
-    if (category == 'aşk') {
+    if (widget.category == 'aşk') {
       options.addAll([
         _buildSpreadTile(
           context,
           loc!.singleCard,
           loc.singleCardDescription,
           1,
-          DrawSingleCard(),
+          DrawSingleCard(customPrompt: customPrompt),
         ),
         const SizedBox(height: 12),
         _buildSpreadTile(
@@ -757,17 +832,17 @@ class SpreadSelectionSheet extends StatelessWidget {
           loc.relationshipSpread,
           loc.relationshipSpreadDescription,
           7,
-          DrawRelationshipSpread(),
+          DrawRelationshipSpread(customPrompt: customPrompt),
         ),
       ]);
-    } else if (category == 'kariyer') {
+    } else if (widget.category == 'kariyer') {
       options.addAll([
         _buildSpreadTile(
           context,
           loc!.pastPresentFuture,
           loc.pastPresentFutureDescription,
           3,
-          DrawPastPresentFuture(),
+          DrawPastPresentFuture(customPrompt: customPrompt),
         ),
         const SizedBox(height: 12),
         _buildSpreadTile(
@@ -775,7 +850,7 @@ class SpreadSelectionSheet extends StatelessWidget {
           loc.fiveCardPath,
           loc.fiveCardPathDescription,
           5,
-          DrawFiveCardPath(),
+          DrawFiveCardPath(customPrompt: customPrompt),
         ),
       ]);
     } else {
@@ -785,7 +860,7 @@ class SpreadSelectionSheet extends StatelessWidget {
           loc!.celticCrossReading,
           loc.celticCrossDescription,
           10,
-          DrawCelticCross(),
+          DrawCelticCross(customPrompt: customPrompt),
         ),
         const SizedBox(height: 12),
         _buildSpreadTile(
@@ -793,7 +868,7 @@ class SpreadSelectionSheet extends StatelessWidget {
           loc.yearlySpreadReading,
           loc.yearlySpreadDescription,
           12,
-          DrawYearlySpread(),
+          DrawYearlySpread(customPrompt: customPrompt),
         ),
       ]);
     }
@@ -806,6 +881,9 @@ class SpreadSelectionSheet extends StatelessWidget {
     final loc = S.of(context);
     return TapAnimatedScale(
       onTap: () {
+        if (kDebugMode) {
+          print("Selected spread with prompt: $event");
+        }
         Navigator.pop(context);
         context.read<TarotBloc>().add(event);
         Navigator.push(
@@ -813,7 +891,18 @@ class SpreadSelectionSheet extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => CardSelectionAnimationScreen(cardCount: cardCount),
           ),
-        );
+        ).then((_) {
+          if (mounted) {
+            SchedulerBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
+                );
+              }
+            });
+          }
+        });
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -836,7 +925,6 @@ class SpreadSelectionSheet extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                   decoration: BoxDecoration(
@@ -845,15 +933,11 @@ class SpreadSelectionSheet extends StatelessWidget {
                   ),
                   child: Text(
                     loc!.cardCount(cardCount),
-
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
-
                 ),
-
               ],
             ),
-
             const SizedBox(height: 8),
             Text(
               description,
@@ -864,18 +948,25 @@ class SpreadSelectionSheet extends StatelessWidget {
       ),
     );
   }
+
+
+
 }
 
+
+
+
+///tap animastion
 class TapAnimatedScale extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
   const TapAnimatedScale({super.key, required this.child, required this.onTap});
 
   @override
-  _TapAnimatedScaleState createState() => _TapAnimatedScaleState();
+  TapAnimatedScaleState createState() => TapAnimatedScaleState();
 }
 
-class _TapAnimatedScaleState extends State<TapAnimatedScale>
+class TapAnimatedScaleState extends State<TapAnimatedScale>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
@@ -916,6 +1007,7 @@ class _TapAnimatedScaleState extends State<TapAnimatedScale>
   }
 }
 
+///gradient
 class MysticGradientWidget extends StatefulWidget {
   final Widget child;
   final Duration duration;
@@ -927,10 +1019,10 @@ class MysticGradientWidget extends StatefulWidget {
   });
 
   @override
-  _MysticGradientWidgetState createState() => _MysticGradientWidgetState();
+  MysticGradientWidgetState createState() => MysticGradientWidgetState();
 }
 
-class _MysticGradientWidgetState extends State<MysticGradientWidget> {
+class MysticGradientWidgetState extends State<MysticGradientWidget> {
   final List<List<Color>> _gradients = [
     [Colors.deepPurple, Colors.purpleAccent],
     [Colors.purpleAccent, Colors.deepPurple],
@@ -973,6 +1065,8 @@ class _MysticGradientWidgetState extends State<MysticGradientWidget> {
     );
   }
 }
+
+
 
 class HeaderScaleAnimation extends StatelessWidget {
   final String title;

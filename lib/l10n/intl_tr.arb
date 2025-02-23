@@ -93,5 +93,21 @@
   "shadowMeaning": "Gölge:",
   "deck_empty": "Kart destesi boş",
   "too_many_cards": "Çok fazla kart seçildi",
-  "cards_loading_error": "Kartlar yüklenirken bir hata oluştu"
+  "cards_loading_error": "Kartlar yüklenirken bir hata oluştu",
+  "customPromptTitle": "Özel İstek",
+  "@customPromptTitle": {
+    "description": "Özel istek giriş penceresi için başlık."
+  },
+  "customPromptHint": "Özel isteğinizi buraya yazın...",
+  "@customPromptHint": {
+    "description": "Özel istek alanı için ipucu."
+  },
+  "promptEmptyError": "Lütfen bir istek giriniz.",
+  "@promptEmptyError": {
+    "description": "İstek alanı boş bırakıldığında gösterilecek hata mesajı."
+  },
+  "sendPrompt": "İsteği Gönder",
+  "@sendPrompt": {
+    "description": "İsteği göndermek için kullanılan butonun metni."
+  }
 }

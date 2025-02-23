@@ -11,10 +11,10 @@ class CardSelectionAnimationScreen extends StatefulWidget {
   const CardSelectionAnimationScreen({super.key, this.cardCount = 10});
 
   @override
-  _CardSelectionAnimationScreenState createState() => _CardSelectionAnimationScreenState();
+  CardSelectionAnimationScreenState createState() => CardSelectionAnimationScreenState();
 }
 
-class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen> {
+class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen> {
   final TarotRepository repository = TarotRepository();
   List<TarotCard> selectedCards = [];
   late List<bool> revealed;
@@ -66,10 +66,12 @@ class _CardSelectionAnimationScreenState extends State<CardSelectionAnimationScr
       _flipAllCards();
     }
     Future.delayed(const Duration(milliseconds: 500), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
-      );
+      if (mounted) { // Widget hala aktif mi kontrol et
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
+        );
+      }
     });
   }
 

@@ -646,6 +646,30 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// Title for the custom prompt input dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Prompt'**
+  String get customPromptTitle;
+
+  /// Hint for the custom prompt field.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your custom prompt here...'**
+  String get customPromptHint;
+
+  /// Error message when the prompt input is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a prompt.'**
+  String get promptEmptyError;
+
+  /// Text for the button used to send the prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Prompt'**
+  String get sendPrompt;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

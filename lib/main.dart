@@ -8,17 +8,13 @@ import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/screens/settings_screen.dart';
 import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'gemini_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // .env dosyasını yükle
   await dotenv.load(fileName: ".env");
-
-  // SharedPreferences örneğini başlat
   final prefs = await SharedPreferences.getInstance();
   final String? savedLanguage = prefs.getString('language');
-
   runApp(MyApp(initialLocale: savedLanguage != null ? Locale(savedLanguage) : null));
 }
 
@@ -28,30 +24,57 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key, this.initialLocale});
 
   @override
-  _MyAppState createState() => _MyAppState();
+  MyAppState createState() => MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class MyAppState extends State<MyApp> {
   late Locale _locale;
+  late TarotBloc _tarotBloc;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _locale = widget.initialLocale ?? const Locale('tr'); // Varsayılan dil Türkçe
+    _locale = widget.initialLocale ?? const Locale('tr');
+    _tarotBloc = TarotBloc(
+      repository: TarotRepository(),
+      geminiService: GeminiService(),
+      locale: _locale.languageCode,
+    )..add(LoadTarotCards());
   }
 
-  void _changeLocale(Locale newLocale) async {
+  Future<void> _changeLocale(Locale newLocale, BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', newLocale.languageCode);
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
     setState(() {
       _locale = newLocale;
+      _tarotBloc.close();
+      _tarotBloc = TarotBloc(
+        repository: TarotRepository(),
+        geminiService: GeminiService(),
+        locale: newLocale.languageCode,
+      )..add(LoadTarotCards());
+      _isLoading = false;
     });
   }
 
   @override
+  void dispose() {
+    _tarotBloc.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => TarotBloc(repository: TarotRepository()),
+    return BlocProvider.value(
+      value: _tarotBloc,
       child: MaterialApp(
         title: 'Tarot Falı',
         debugShowCheckedModeBanner: false,
@@ -71,24 +94,40 @@ class _MyAppState extends State<MyApp> {
         ],
         supportedLocales: S.supportedLocales,
         locale: _locale,
-        home: FutureBuilder<bool>(
-          future: _checkLanguageSelection(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.data == true) {
-              return TarotReadingScreen(onSettingsTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SettingsScreen(onLocaleChange: _changeLocale),
-                  ),
+        home: Stack(
+          children: [
+            FutureBuilder<bool>(
+              future: _checkLanguageSelection(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.data == true) {
+                  return TarotReadingScreen(onSettingsTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SettingsScreen(
+                          onLocaleChange: (locale, ctx) => _changeLocale(locale, ctx),
+                          currentLocale: _locale,
+                        ),
+                      ),
+                    );
+                  });
+                }
+                return LanguageSelectionScreen(
+                  onLocaleSelected: (locale, ctx) => _changeLocale(locale, ctx),
                 );
-              });
-            }
-            return LanguageSelectionScreen(onLocaleSelected: _changeLocale);
-          },
+              },
+            ),
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.8),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Colors.deepPurple),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -101,7 +140,7 @@ class _MyAppState extends State<MyApp> {
 }
 
 class LanguageSelectionScreen extends StatelessWidget {
-  final Function(Locale) onLocaleSelected;
+  final Future<void> Function(Locale, BuildContext) onLocaleSelected;
 
   const LanguageSelectionScreen({super.key, required this.onLocaleSelected});
 
@@ -123,27 +162,21 @@ class LanguageSelectionScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () => onLocaleSelected(const Locale('en')),
+              onPressed: () => onLocaleSelected(const Locale('en'), context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
               ),
-              child: const Text(
-                'English',
-                style: TextStyle(fontSize: 18),
-              ),
+              child: const Text('English', style: TextStyle(fontSize: 18)),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () => onLocaleSelected(const Locale('tr')),
+              onPressed: () => onLocaleSelected(const Locale('tr'), context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
               ),
-              child: const Text(
-                'Türkçe',
-                style: TextStyle(fontSize: 18),
-              ),
+              child: const Text('Türkçe', style: TextStyle(fontSize: 18)),
             ),
           ],
         ),

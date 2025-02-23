@@ -313,4 +313,16 @@ class STr extends S {
 
   @override
   String get close => 'Kapat';
+
+  @override
+  String get customPromptTitle => 'Özel İstek';
+
+  @override
+  String get customPromptHint => 'Özel isteğinizi buraya yazın...';
+
+  @override
+  String get promptEmptyError => 'Lütfen bir istek giriniz.';
+
+  @override
+  String get sendPrompt => 'İsteği Gönder';
 }

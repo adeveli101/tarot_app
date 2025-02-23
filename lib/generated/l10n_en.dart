@@ -313,4 +313,16 @@ class SEn extends S {
 
   @override
   String get close => 'Close';
+
+  @override
+  String get customPromptTitle => 'Custom Prompt';
+
+  @override
+  String get customPromptHint => 'Type your custom prompt here...';
+
+  @override
+  String get promptEmptyError => 'Please enter a prompt.';
+
+  @override
+  String get sendPrompt => 'Send Prompt';
 }

@@ -112,6 +112,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Fal baktırmak istediğiniz konuyu seçin",
     ),
     "close": MessageLookupByLibrary.simpleMessage("Kapat"),
+    "customPromptHint": MessageLookupByLibrary.simpleMessage(
+      "Özel isteğinizi buraya yazın...",
+    ),
+    "customPromptTitle": MessageLookupByLibrary.simpleMessage("Özel İstek"),
     "deck_empty": MessageLookupByLibrary.simpleMessage("Kart destesi boş"),
     "detailedGeneralCommentary": MessageLookupByLibrary.simpleMessage(
       "Derinlemesine Genel Yorum",
@@ -193,6 +197,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Problem-Çözüm Açılımı Yap",
     ),
     "problemSolutionReadingError": m10,
+    "promptEmptyError": MessageLookupByLibrary.simpleMessage(
+      "Lütfen bir istek giriniz.",
+    ),
     "relationshipSpread": MessageLookupByLibrary.simpleMessage(
       "İlişki Açılımı",
     ),
@@ -203,6 +210,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "reshuffleCards": MessageLookupByLibrary.simpleMessage(
       "Kartları Yeniden Karıştır",
     ),
+    "sendPrompt": MessageLookupByLibrary.simpleMessage("İsteği Gönder"),
     "settings": MessageLookupByLibrary.simpleMessage("Ayarlar"),
     "shadowMeaning": MessageLookupByLibrary.simpleMessage("Gölge:"),
     "singleCard": MessageLookupByLibrary.simpleMessage("Tek Kart Açılımı Yap"),
