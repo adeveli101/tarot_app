@@ -109,5 +109,65 @@
   "sendPrompt": "İsteği Gönder",
   "@sendPrompt": {
     "description": "İsteği göndermek için kullanılan butonun metni."
+  },
+
+  "cancel": "İptal",
+  "dailyLimitExceeded": "Günlük ücretsiz fal limitine ulaşıldı. Lütfen kredi satın alın veya premium’a yükseltin.",
+  "tokenLimitExceeded": "Bu açılım için token limiti aşıldı. Daha detaylı yorumlar için premium’a yükseltin.",
+  "mindBodySpiritError": "Zihin-Beden-Ruh açılımı hatası: ${error}",
+  "astroLogicalCrossError": "Astrolojik Haç açılımı hatası: ${error}",
+  "brokenHeartError": "Kırık Kalp açılımı hatası: ${error}",
+  "dreamInterpretationError": "Rüya Yorumu açılımı hatası: ${error}",
+  "horseshoeSpreadError": "At Nalı açılımı hatası: ${error}",
+  "careerPathSpreadError": "Kariyer Yolu açılımı hatası: ${error}",
+  "fullMoonSpreadError": "Dolunay açılımı hatası: ${error}",
+
+  "warning": "Uyarı",
+  "insufficientCredits": "Devam etmek için yeterli krediniz yok.",
+  "dailyLimitReached": "Günlük ücretsiz fal hakkınız doldu.",
+  "insufficientCreditsAndLimit": "Günlük ücretsiz fal hakkınız doldu ve yeterli krediniz yok.",
+
+  "couponHint": "Kupon kodunu girin",
+  "redeem": "Kullan",
+
+  "couponRedeemed": "{message}",
+  "couponInvalid": "{message}",
+  "@couponRedeemed": {
+    "description": "Kupon başarıyla kullanıldı.",
+    "placeholders": {
+      "message": {}
+    }
+  },
+  "@couponInvalid": {
+    "description": "Kupon geçersiz.",
+    "placeholders": {
+      "message": {}
+    }
+  },
+
+  "returnToHome": "Ana Sayfaya Dön",
+  "pleaseWait":"Lütfen Bekleyin.",
+
+  "profile": "Profil",
+  "noReadings": "Kayıtlı fal bulunamadı",
+
+
+  "dateLabel": "Tarih:",
+
+  "purchaseCredits": "Kredi Satın Al",
+  "insufficientCreditsMessage": "Devam etmek için {required} krediye ihtiyacınız var. Aşağıdan daha fazla kredi satın alın.",
+  "@insufficientCreditsMessage": {
+    "description": "Kullanıcının yetersiz kredisi olduğunda gösterilen mesaj",
+    "placeholders": {
+      "required": {}
+    }
+  },
+
+  "nextFreeReadingInfo": "Bir sonraki ücretsiz fal hakkınız {hours} saat içinde kullanılabilir olacak.",
+  "@nextFreeReadingInfo": {
+    "description": "Kullanıcıyı bir sonraki ücretsiz fal hakkının zamanı hakkında bilgilendirir",
+    "placeholders": {
+      "hours": {}
+    }
   }
 }

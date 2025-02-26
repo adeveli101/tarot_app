@@ -3,9 +3,11 @@
 
 // ignore_for_file: constant_identifier_names
 // ignore_for_file: lines_longer_than_80_chars
+import 'dart:core';
+import 'dart:nativewrappers/_internal/vm/lib/core_patch.dart';
+
 class DefaultRes {
   DefaultRes._();
-
 
   static const String = '.env';
 }

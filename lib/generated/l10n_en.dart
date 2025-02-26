@@ -7,7 +7,7 @@ class SEn extends S {
   SEn([String locale = 'en']) : super(locale);
 
   @override
-  String get tarotFortune => 'Tarot Reading';
+  String get tarotFortune => 'Tarot';
 
   @override
   String errorMessage(Object message) {
@@ -18,7 +18,7 @@ class SEn extends S {
   String get tryAgain => 'Try Again';
 
   @override
-  String get pastPresentFuture => 'Perform Past-Present-Future Spread';
+  String get pastPresentFuture => ' Past-Present-Future Spread';
 
   @override
   String get problemSolution => 'Perform Problem-Solution Spread';
@@ -45,11 +45,11 @@ class SEn extends S {
   String get mysticMeaning => 'Mystical Interpretation';
 
   @override
-  String get tarotFortuneGuide => 'Tarot Reading - Guide to Mystical Paths';
+  String get tarotFortuneGuide => 'Guide to Mystical Paths';
 
   @override
   String fortuneInsight(Object category, Object spreadType) {
-    return 'This reading provides deep insight into $category using the $spreadType spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.';
+    return 'This Tarot Reading - reading provides deep insight into $category using the $spreadType spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.';
   }
 
   @override
@@ -325,4 +325,113 @@ class SEn extends S {
 
   @override
   String get sendPrompt => 'Send Prompt';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get dailyLimitExceeded => 'Daily free reading limit reached. Please purchase credits or upgrade to premium.';
+
+  @override
+  String get tokenLimitExceeded => 'Token limit exceeded for this spread. Upgrade to premium for more detailed readings.';
+
+  @override
+  String mindBodySpiritError(Object error) {
+    return 'Mind-Body-Spirit reading error: \$$error';
+  }
+
+  @override
+  String astroLogicalCrossError(Object error) {
+    return 'AstroLogical Cross reading error: \$$error';
+  }
+
+  @override
+  String brokenHeartError(Object error) {
+    return 'Broken Heart reading error: \$$error';
+  }
+
+  @override
+  String dreamInterpretationError(Object error) {
+    return 'Dream Interpretation reading error: \$$error';
+  }
+
+  @override
+  String horseshoeSpreadError(Object error) {
+    return 'Horseshoe Spread reading error: \$$error';
+  }
+
+  @override
+  String careerPathSpreadError(Object error) {
+    return 'Career Path Spread reading error: \$$error';
+  }
+
+  @override
+  String fullMoonSpreadError(Object error) {
+    return 'Full Moon Spread reading error: \$$error';
+  }
+
+  @override
+  String get readingSaved => 'Reading saved successfully';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get warning => 'Warning';
+
+  @override
+  String get insufficientCredits => 'You don\'t have enough credits to proceed.';
+
+  @override
+  String get dailyLimitReached => 'You have reached your daily free reading limit.';
+
+  @override
+  String get insufficientCreditsAndLimit => 'You have reached your daily free reading limit and don\'t have enough credits.';
+
+  @override
+  String get couponHint => 'Enter coupon code';
+
+  @override
+  String get redeem => 'Redeem';
+
+  @override
+  String couponRedeemed(Object message) {
+    return '$message';
+  }
+
+  @override
+  String couponInvalid(Object message) {
+    return '$message';
+  }
+
+  @override
+  String get returnToHome => 'Return to Home';
+
+  @override
+  String get pleaseWait => 'Please wait.';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get noReadings => 'No readings found';
+
+  @override
+  String get dateLabel => 'Date:';
+
+  @override
+  String get purchaseCredits => 'Purchase Credits';
+
+  @override
+  String insufficientCreditsMessage(Object required) {
+    return 'You need $required credits to continue. Purchase more credits below.';
+  }
+
+  @override
+  String nextFreeReadingInfo(Object hours) {
+    return 'Your next free reading will be available in $hours hours.';
+  }
 }

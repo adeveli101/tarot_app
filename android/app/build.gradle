@@ -2,6 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    id 'com.google.gms.google-services'
 
 }
 android {
@@ -19,7 +20,7 @@ android {
     }
 
     buildFeatures {
-        buildConfig true // BuildConfig alanlarını etkinleştir
+        buildConfig true
     }
 
 
@@ -45,8 +46,9 @@ flutter {
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.7.0'
-
-
-
-
-}
+    implementation platform('com.google.firebase:firebase-bom:33.9.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-auth'
+    }

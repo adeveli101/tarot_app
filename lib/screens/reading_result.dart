@@ -1,11 +1,17 @@
 // ignore_for_file: unused_local_variable
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
-import 'package:tarot_fal/generated/l10n.dart'; // S sınıfı
+import 'package:share_plus/share_plus.dart';
+import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
+import 'package:tarot_fal/screens/settings_screen.dart';
+import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
 import '../data/tarot_bloc.dart';
+import '../main.dart';
 
 class ReadingResultScreen extends StatefulWidget {
   const ReadingResultScreen({super.key});
@@ -14,9 +20,10 @@ class ReadingResultScreen extends StatefulWidget {
   State<ReadingResultScreen> createState() => _ReadingResultScreenState();
 }
 
-class _ReadingResultScreenState extends State<ReadingResultScreen> {
+class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTickerProviderStateMixin {
   late PageController _pageController;
   int _currentPage = 0;
+  late AnimationController _closeButtonController;
 
   @override
   void initState() {
@@ -27,17 +34,77 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
         _currentPage = _pageController.page?.round() ?? 0;
       });
     });
+    _closeButtonController = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+      lowerBound: 0.95,
+      upperBound: 1.0,
+      value: 1.0,
+    );
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _closeButtonController.dispose();
     super.dispose();
+  }
+
+  void _saveReadingToFirestore(String content, BuildContext context) async {
+    final bloc = context.read<TarotBloc>();
+    final spreadType = bloc.currentSpreadType; // Public getter kullanıldı
+    if (spreadType != null) {
+      try {
+        await bloc.saveReadingToFirestore(content, spreadType, {}); // Public method kullanıldı
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context)!.readingSaved)),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context)!.errorMessage(e.toString()))),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.of(context)!.errorMessage('No spread type available'))),
+      );
+    }
+  }
+
+  void _shareReading(String content) {
+    Share.share(content);
+  }
+
+  // Ana sayfaya dönme işlevi
+  void _navigateToHome(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TarotReadingScreen(
+          onSettingsTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SettingsScreen(
+                  onLocaleChange: (locale, ctx) {
+
+                    final myAppState = context.findAncestorStateOfType<MyAppState>();
+                    myAppState?.changeLocale(locale, ctx);
+                  },
+                  currentLocale: Localizations.localeOf(context),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+          (route) => false, // Tüm önceki ekranları kaldırır
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final loc = S.of(context); // S sınıfını kullanıyoruz
+    final loc = S.of(context);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -45,15 +112,35 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.indigo[900]!.withOpacity(0.4),
-              Colors.deepPurple[800]!.withOpacity(0.3),
-              Colors.purple[700]!.withOpacity(0.5),
+              Colors.deepPurple[900]!.withOpacity(0.4),
               Colors.black.withOpacity(0.9),
             ],
-            stops: const [0.1, 0.4, 0.7, 0.9],
+            stops: const [0.3, 0.9],
           ),
         ),
-        child: BlocBuilder<TarotBloc, TarotState>(
+        child: BlocConsumer<TarotBloc, TarotState>(
+          listener: (context, state) {
+            if (state is TarotError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(loc!.errorMessage(state.message)),
+                  action: SnackBarAction(
+                    label: loc.tryAgain,
+                    onPressed: () {
+                      context.read<TarotBloc>().add(LoadTarotCards());
+                    },
+                  ),
+                ),
+              );
+            } else if (state is FalYorumuLoaded) {
+              // Son falı otomatik kaydet
+              final bloc = context.read<TarotBloc>();
+              final spreadType = bloc.currentSpreadType;
+              if (spreadType != null) {
+                _saveReadingToFirestore(state.yorum, context);
+              }
+            }
+          },
           builder: (context, state) {
             if (state is TarotLoading) {
               return Center(
@@ -61,6 +148,15 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                   'assets/animations/tarot_loading.json',
                   width: 200,
                   height: 200,
+                  frameRate: FrameRate(30),
+                ),
+              );
+            } else if (state is TarotInitial) {
+              return Center(
+                child: Text(
+                  loc!.pleaseWait,
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  textAlign: TextAlign.center,
                 ),
               );
             } else if (state is SingleCardDrawn) {
@@ -68,6 +164,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                 children: [
                   _buildCardPage(loc!.singleCard, state.card, null),
                   _buildCloseButton(context),
+                  _buildActionButtons(context, state.card.name, null),
                 ],
               );
             } else if (state is SpreadDrawn) {
@@ -75,6 +172,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                 children: [
                   PageView.builder(
                     controller: _pageController,
+                    physics: const BouncingScrollPhysics(),
                     itemCount: state.spread.length,
                     itemBuilder: (context, index) => _buildCardPage(
                       state.spread.keys.elementAt(index),
@@ -83,6 +181,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                     ),
                   ),
                   _buildCloseButton(context),
+                  _buildActionButtons(context, state.spread.values.elementAt(_currentPage).name, state),
                 ],
               );
             } else if (state is FalYorumuLoaded) {
@@ -90,13 +189,67 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                 children: [
                   _buildFortuneTellingPage(state.yorum),
                   _buildCloseButton(context),
+                  _buildActionButtons(context, 'Fortune Telling', null, yorum: state.yorum),
                 ],
               );
             } else if (state is TarotError) {
-              return Center(child: Text(loc!.errorMessage(state.message)));
+              return Stack(
+                children: [
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        loc!.errorMessage(state.message),
+                        style: const TextStyle(color: Colors.white, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  _buildCloseButton(context),
+                ],
+              );
             }
-            return Center(child: Text(loc!.errorMessage('Unknown error')));
+            return Stack(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      loc!.errorMessage('Unexpected state: $state'),
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                _buildCloseButton(context),
+              ],
+            );
           },
+        ),
+      ),
+    );
+  }
+
+  // Kapatma butonunu ekleyen yardımcı metod
+  Widget _buildCloseButton(BuildContext context) {
+    return Positioned(
+      top: 40,
+      right: 16,
+      child: TapAnimatedScale(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          _navigateToHome(context);
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.purple[300]!.withOpacity(0.5)),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white, size: 30),
+            onPressed: null, // TapAnimatedScale tarafından yönetiliyor
+          ),
         ),
       ),
     );
@@ -105,17 +258,24 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
   Widget _buildCardPage(String position, TarotCard card, SpreadDrawn? state) {
     final loc = S.of(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.05),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 60),
           Text(
-            position, // Dinamik pozisyon isimleri, lokalizasyon repository'den gelebilir
-            style: const TextStyle(
+            position,
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.deepOrangeAccent,
+              shadows: [
+                Shadow(
+                  color: Colors.black54,
+                  offset: const Offset(2, 2),
+                  blurRadius: 4,
+                ),
+              ],
             ),
             textAlign: TextAlign.center,
           ),
@@ -130,7 +290,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.3),
-                      blurRadius: 10,
+                      blurRadius: 12,
                       spreadRadius: 2,
                     ),
                   ],
@@ -146,7 +306,14 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.black.withOpacity(0.2),
+                              Colors.deepPurple.withOpacity(0.3),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
@@ -163,7 +330,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                     onPressed: () {
                       _pageController.previousPage(
                         duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInCubic,
+                        curve: Curves.easeInOut,
                       );
                     },
                   )
@@ -191,10 +358,17 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
           const SizedBox(height: 20),
           Text(
             card.name,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               color: Colors.white,
               fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  color: Colors.black26,
+                  offset: const Offset(1, 1),
+                  blurRadius: 4,
+                ),
+              ],
             ),
             textAlign: TextAlign.center,
           ),
@@ -215,13 +389,21 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(
         pageCount,
-            (index) => Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: 8,
-          height: 8,
+            (index) => AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          width: 12,
+          height: 12,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _currentPage == index ? Colors.deepOrangeAccent : Colors.white54,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
         ),
       ),
@@ -235,7 +417,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
       children: [
         Text(
           loc!.keywords,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             color: Colors.yellowAccent,
             fontWeight: FontWeight.bold,
@@ -243,7 +425,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
         ),
         const SizedBox(height: 4),
         Wrap(
-          spacing: 4,
+          spacing: 6,
           runSpacing: 4,
           children: keywords
               .map(
@@ -251,6 +433,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
               label: Text(keyword),
               backgroundColor: Colors.orange[700],
               labelStyle: const TextStyle(color: Colors.white),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           )
               .toList(),
@@ -268,10 +451,17 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
           end: Alignment.bottomRight,
           colors: [
             Colors.black.withOpacity(0.8),
-            Colors.deepPurple.withOpacity(0.7),
+            Colors.deepPurple[900]!.withOpacity(0.7),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -279,13 +469,14 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
         children: [
           Text(
             loc!.meaning,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               color: Colors.yellowAccent,
               fontWeight: FontWeight.bold,
               fontFamily: 'Arial',
             ),
           ),
+          const SizedBox(height: 12),
           Card(
             color: Colors.transparent,
             elevation: 0,
@@ -303,7 +494,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                         style: TextStyle(
                           color: Colors.green[400],
                           fontWeight: FontWeight.bold,
-                          fontSize: 22,
+                          fontSize: 18,
                           fontFamily: 'Arial',
                         ),
                       ),
@@ -315,9 +506,9 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         '* $meaning',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white70,
-                          fontSize: 18,
+                          fontSize: 16,
                           fontFamily: 'Arial',
                         ),
                       ),
@@ -333,7 +524,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                         style: TextStyle(
                           color: Colors.red[400],
                           fontWeight: FontWeight.bold,
-                          fontSize: 22,
+                          fontSize: 18,
                           fontFamily: 'Arial',
                         ),
                       ),
@@ -345,9 +536,9 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         '* $meaning',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white70,
-                          fontSize: 18,
+                          fontSize: 16,
                           fontFamily: 'Arial',
                         ),
                       ),
@@ -370,11 +561,18 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.deepPurple.withOpacity(0.8),
+            Colors.deepPurple[900]!.withOpacity(0.8),
             Colors.black.withOpacity(0.7),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -382,7 +580,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
         children: [
           Text(
             loc!.fortuneTelling,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               color: Colors.yellowAccent,
               fontWeight: FontWeight.bold,
@@ -395,9 +593,9 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
                 '• $fortune',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white70,
-                  fontSize: 18,
+                  fontSize: 16,
                   fontFamily: 'Arial',
                 ),
               ),
@@ -408,137 +606,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
     );
   }
 
-/*Widget _buildFortuneTellingPage(String yorum) {
-    final loc = S.of(context);
-    final sections = yorum.split(RegExp(r'\n### '));
-    final PageController fortunePageController = PageController();
-
-    return Stack(
-      children: [
-        PageView.builder(
-          controller: fortunePageController,
-          itemCount: sections.length,
-          itemBuilder: (context, index) {
-            String sectionText = sections[index];
-            if (index != 0) sectionText = "### $sectionText";
-
-            // Başlık ve içerik ayrımı
-            final List<String> lines = sectionText.split('\n');
-            String title = lines.firstWhere((line) => line.trim().isNotEmpty, orElse: () => '');
-            String content = lines.skipWhile((line) => line == title).join('\n').trim();
-
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        // Başlık (eğer varsa)
-                        if (title.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 24, bottom: 16),
-                            child: Text(
-                              title.replaceAll('###', '').trim(),
-                              style: const TextStyle(
-                                color: Colors.deepOrangeAccent,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black54,
-                                    offset: Offset(2, 2),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        // İçerik
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.deepPurple.withOpacity(0.8),
-                                Colors.black.withOpacity(0.7),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(20),
-                          child: Text(
-                            content,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              height: 1.5,
-                              fontFamily: 'Arial',
-                            ),
-                            textAlign: TextAlign.justify,
-                          ),
-                        ),
-                        // Esneklik ekleyerek metni sayfanın üstüne yayıyoruz
-                        const SizedBox(height: 24),
-                        if (index == 0 && content.length < 150)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Text(
-                              loc.swipeForMore,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.yellowAccent,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        ),
-        // Yuvarlak Sayfa Göstergesi
-        Positioned(
-          bottom: 16,
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              sections.length,
-              (index) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _currentPage == index ? Colors.deepOrangeAccent : Colors.white54,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-*/
   Widget _buildFortuneTellingPage(String yorum) {
     final loc = S.of(context);
     final sections = yorum.split(RegExp(r'\n### '));
@@ -548,12 +615,12 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
       children: [
         PageView.builder(
           controller: fortunePageController,
+          physics: const BouncingScrollPhysics(),
           itemCount: sections.length,
           itemBuilder: (context, index) {
             String sectionText = sections[index];
             if (index != 0) sectionText = "### $sectionText";
 
-            // Başlık ve içerik ayrımı
             final List<String> lines = sectionText.split('\n');
             String title = lines.firstWhere((line) => line.trim().isNotEmpty, orElse: () => '');
             String content = lines.skipWhile((line) => line == title).join('\n').trim();
@@ -562,27 +629,26 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
               builder: (context, constraints) {
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.05),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(minHeight: constraints.maxHeight),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        // Başlık (eğer varsa)
                         if (title.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 24, bottom: 16),
                             child: Text(
                               title.replaceAll('###', '').trim(),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.deepOrangeAccent,
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 shadows: [
                                   Shadow(
                                     color: Colors.black54,
-                                    offset: Offset(2, 2),
+                                    offset: const Offset(2, 2),
                                     blurRadius: 4,
                                   ),
                                 ],
@@ -590,14 +656,13 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                        // İçerik
                         Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Colors.deepPurple.withOpacity(0.8),
+                                Colors.deepPurple[900]!.withOpacity(0.8),
                                 Colors.black.withOpacity(0.7),
                               ],
                             ),
@@ -613,16 +678,15 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                           padding: const EdgeInsets.all(20),
                           child: Text(
                             content,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: 16,
                               height: 1.5,
                               fontFamily: 'Arial',
                             ),
                             textAlign: TextAlign.justify,
                           ),
                         ),
-                        // Esneklik ekleyerek metni sayfanın üstüne yayıyoruz
                         const SizedBox(height: 24),
                         if (index == 0 && content.length < 150)
                           Padding(
@@ -630,7 +694,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                             child: Text(
                               loc!.swipeForMore,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.yellowAccent,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -645,7 +709,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
             );
           },
         ),
-        // Yuvarlak Sayfa Göstergesi
         Positioned(
           bottom: 16,
           left: 0,
@@ -654,13 +717,21 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
               sections.length,
-                  (index) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: 10,
-                height: 10,
+                  (index) => AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                width: 12,
+                height: 12,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _currentPage == index ? Colors.deepOrangeAccent : Colors.white54,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -670,14 +741,112 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
     );
   }
 
-
-  Widget _buildCloseButton(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context, String title, SpreadDrawn? state, {String? yorum}) {
     return Positioned(
-      top: 40,
+      bottom: 16,
+      left: 16,
       right: 16,
-      child: IconButton(
-        icon: const Icon(Icons.close, color: Colors.white, size: 30),
-        onPressed: () => Navigator.of(context).pop(),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center, // Butonları ortala
+        children: [
+          _buildActionButton(
+            context: context,
+            label: S.of(context)!.save,
+            icon: Icons.save,
+            onPressed: () => _saveReadingToFirestore(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}', context),
+          ),
+          const SizedBox(width: 16),
+          _buildActionButton(
+            context: context,
+            label: S.of(context)!.share,
+            icon: Icons.share,
+            onPressed: () => _shareReading(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}'),
+          ),
+          const SizedBox(width: 16),
+          _buildActionButton(
+            context: context,
+            label: S.of(context)!.returnToHome, // Yerelleştirme dosyasına eklenecek
+            icon: Icons.home,
+            onPressed: () => _navigateToHome(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18, color: Colors.white),
+      label: Text(
+        label,
+        style: GoogleFonts.cinzel(
+          fontSize: 14,
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.deepPurple[900]!.withOpacity(0.9),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 4,
+        shadowColor: Colors.black54,
+      ),
+    );
+  }
+}
+
+// TapAnimatedScale (TarotReadingScreen'den kopyalandı)
+class TapAnimatedScale extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  const TapAnimatedScale({super.key, required this.child, required this.onTap});
+
+  @override
+  TapAnimatedScaleState createState() => TapAnimatedScaleState();
+}
+
+class TapAnimatedScaleState extends State<TapAnimatedScale> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+      lowerBound: 0.95,
+      upperBound: 1.0,
+      value: 1.0,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) => _controller.reverse();
+  void _onTapUp(TapUpDetails details) => _controller.forward();
+  void _onTapCancel() => _controller.forward();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: ScaleTransition(
+        scale: _controller,
+        child: widget.child,
       ),
     );
   }

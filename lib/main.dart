@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -8,15 +9,29 @@ import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/screens/settings_screen.dart';
 import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'firebase_options.dart';
 import 'gemini_service.dart';
+
+// ============================================================================
+// Sayfa 1: Giriş ve Başlangıç
+// Amaç: Uygulamanın temel bağımlılıklarını ve başlangıç noktasını tanımlar.
+// ============================================================================
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await dotenv.load(fileName: ".env");
   final prefs = await SharedPreferences.getInstance();
   final String? savedLanguage = prefs.getString('language');
   runApp(MyApp(initialLocale: savedLanguage != null ? Locale(savedLanguage) : null));
 }
+
+// ============================================================================
+// Sayfa 2: MyApp Sınıfı ve Durum Yönetimi
+// Amaç: Uygulamanın ana widget'ını ve durum yönetimini içerir.
+// ============================================================================
 
 class MyApp extends StatefulWidget {
   final Locale? initialLocale;
@@ -35,7 +50,7 @@ class MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _locale = widget.initialLocale ?? const Locale('tr');
+    _locale = widget.initialLocale ?? const Locale('tr'); // Varsayılan dil Türkçe
     _tarotBloc = TarotBloc(
       repository: TarotRepository(),
       geminiService: GeminiService(),
@@ -43,24 +58,26 @@ class MyAppState extends State<MyApp> {
     )..add(LoadTarotCards());
   }
 
-  Future<void> _changeLocale(Locale newLocale, BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language', newLocale.languageCode);
-
+  Future<void> changeLocale(Locale newLocale, BuildContext context) async {
     setState(() {
       _isLoading = true;
     });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language', newLocale.languageCode);
+
+    // Bloc’u kapatıp yeniden başlat
+    _tarotBloc.close();
+    _tarotBloc = TarotBloc(
+      repository: TarotRepository(),
+      geminiService: GeminiService(),
+      locale: newLocale.languageCode,
+    )..add(LoadTarotCards());
 
     await Future.delayed(const Duration(milliseconds: 500));
 
     setState(() {
       _locale = newLocale;
-      _tarotBloc.close();
-      _tarotBloc = TarotBloc(
-        repository: TarotRepository(),
-        geminiService: GeminiService(),
-        locale: newLocale.languageCode,
-      )..add(LoadTarotCards());
       _isLoading = false;
     });
   }
@@ -70,6 +87,12 @@ class MyAppState extends State<MyApp> {
     _tarotBloc.close();
     super.dispose();
   }
+
+// ============================================================================
+// Sayfa 3: Uygulama Arayüzü
+// Amaç: MaterialApp widget'ını ve temel arayüz yapısını oluşturur.
+// Sabit "Ana Sayfaya Dön" butonu kaldırıldı.
+// ============================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -92,42 +115,48 @@ class MyAppState extends State<MyApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: S.supportedLocales,
+        supportedLocales: const [
+          Locale('en'),
+          Locale('tr'),
+        ],
         locale: _locale,
-        home: Stack(
-          children: [
-            FutureBuilder<bool>(
-              future: _checkLanguageSelection(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.data == true) {
-                  return TarotReadingScreen(onSettingsTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SettingsScreen(
-                          onLocaleChange: (locale, ctx) => _changeLocale(locale, ctx),
-                          currentLocale: _locale,
+        home: Builder(
+          builder: (context) => Stack(
+            children: [
+              FutureBuilder<bool>(
+                future: _checkLanguageSelection(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.data == true) {
+                    return TarotReadingScreen(onSettingsTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SettingsScreen(
+                            onLocaleChange: changeLocale,
+                            currentLocale: _locale,
+                          ),
                         ),
-                      ),
-                    );
-                  });
-                }
-                return LanguageSelectionScreen(
-                  onLocaleSelected: (locale, ctx) => _changeLocale(locale, ctx),
-                );
-              },
-            ),
-            if (_isLoading)
-              Container(
-                color: Colors.black.withOpacity(0.8),
-                child: const Center(
-                  child: CircularProgressIndicator(color: Colors.deepPurple),
-                ),
+                      );
+                    });
+                  }
+                  return LanguageSelectionScreen(
+                    onLocaleSelected: changeLocale,
+                  );
+                },
               ),
-          ],
+              // Yükleme ekranı
+              if (_isLoading)
+                Container(
+                  color: Colors.black.withOpacity(0.8),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Colors.deepPurple),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -138,6 +167,11 @@ class MyAppState extends State<MyApp> {
     return prefs.getString('language') != null;
   }
 }
+
+// ============================================================================
+// Sayfa 4: Dil Seçim Ekranı
+// Amaç: Kullanıcıya dil seçimi sunar ve seçimi ana uygulamaya iletir.
+// ============================================================================
 
 class LanguageSelectionScreen extends StatelessWidget {
   final Future<void> Function(Locale, BuildContext) onLocaleSelected;

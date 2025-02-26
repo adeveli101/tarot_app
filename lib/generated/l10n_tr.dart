@@ -325,4 +325,113 @@ class STr extends S {
 
   @override
   String get sendPrompt => 'İsteği Gönder';
+
+  @override
+  String get cancel => 'İptal';
+
+  @override
+  String get dailyLimitExceeded => 'Günlük ücretsiz fal limitine ulaşıldı. Lütfen kredi satın alın veya premium’a yükseltin.';
+
+  @override
+  String get tokenLimitExceeded => 'Bu açılım için token limiti aşıldı. Daha detaylı yorumlar için premium’a yükseltin.';
+
+  @override
+  String mindBodySpiritError(Object error) {
+    return 'Zihin-Beden-Ruh açılımı hatası: \$$error';
+  }
+
+  @override
+  String astroLogicalCrossError(Object error) {
+    return 'Astrolojik Haç açılımı hatası: \$$error';
+  }
+
+  @override
+  String brokenHeartError(Object error) {
+    return 'Kırık Kalp açılımı hatası: \$$error';
+  }
+
+  @override
+  String dreamInterpretationError(Object error) {
+    return 'Rüya Yorumu açılımı hatası: \$$error';
+  }
+
+  @override
+  String horseshoeSpreadError(Object error) {
+    return 'At Nalı açılımı hatası: \$$error';
+  }
+
+  @override
+  String careerPathSpreadError(Object error) {
+    return 'Kariyer Yolu açılımı hatası: \$$error';
+  }
+
+  @override
+  String fullMoonSpreadError(Object error) {
+    return 'Dolunay açılımı hatası: \$$error';
+  }
+
+  @override
+  String get readingSaved => 'Reading saved successfully';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get warning => 'Uyarı';
+
+  @override
+  String get insufficientCredits => 'Devam etmek için yeterli krediniz yok.';
+
+  @override
+  String get dailyLimitReached => 'Günlük ücretsiz fal hakkınız doldu.';
+
+  @override
+  String get insufficientCreditsAndLimit => 'Günlük ücretsiz fal hakkınız doldu ve yeterli krediniz yok.';
+
+  @override
+  String get couponHint => 'Kupon kodunu girin';
+
+  @override
+  String get redeem => 'Kullan';
+
+  @override
+  String couponRedeemed(Object message) {
+    return '$message';
+  }
+
+  @override
+  String couponInvalid(Object message) {
+    return '$message';
+  }
+
+  @override
+  String get returnToHome => 'Ana Sayfaya Dön';
+
+  @override
+  String get pleaseWait => 'Lütfen Bekleyin.';
+
+  @override
+  String get profile => 'Profil';
+
+  @override
+  String get noReadings => 'Kayıtlı fal bulunamadı';
+
+  @override
+  String get dateLabel => 'Tarih:';
+
+  @override
+  String get purchaseCredits => 'Kredi Satın Al';
+
+  @override
+  String insufficientCreditsMessage(Object required) {
+    return 'Devam etmek için $required krediye ihtiyacınız var. Aşağıdan daha fazla kredi satın alın.';
+  }
+
+  @override
+  String nextFreeReadingInfo(Object hours) {
+    return 'Bir sonraki ücretsiz fal hakkınız $hours saat içinde kullanılabilir olacak.';
+  }
 }

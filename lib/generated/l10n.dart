@@ -98,7 +98,7 @@ abstract class S {
   /// No description provided for @tarotFortune.
   ///
   /// In en, this message translates to:
-  /// **'Tarot Reading'**
+  /// **'Tarot'**
   String get tarotFortune;
 
   /// No description provided for @errorMessage.
@@ -116,7 +116,7 @@ abstract class S {
   /// No description provided for @pastPresentFuture.
   ///
   /// In en, this message translates to:
-  /// **'Perform Past-Present-Future Spread'**
+  /// **' Past-Present-Future Spread'**
   String get pastPresentFuture;
 
   /// No description provided for @problemSolution.
@@ -170,13 +170,13 @@ abstract class S {
   /// No description provided for @tarotFortuneGuide.
   ///
   /// In en, this message translates to:
-  /// **'Tarot Reading - Guide to Mystical Paths'**
+  /// **'Guide to Mystical Paths'**
   String get tarotFortuneGuide;
 
   /// No description provided for @fortuneInsight.
   ///
   /// In en, this message translates to:
-  /// **'This reading provides deep insight into {category} using the {spreadType} spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.'**
+  /// **'This Tarot Reading - reading provides deep insight into {category} using the {spreadType} spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.'**
   String fortuneInsight(Object category, Object spreadType);
 
   /// No description provided for @divineDance.
@@ -670,6 +670,180 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Send Prompt'**
   String get sendPrompt;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @dailyLimitExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily free reading limit reached. Please purchase credits or upgrade to premium.'**
+  String get dailyLimitExceeded;
+
+  /// No description provided for @tokenLimitExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Token limit exceeded for this spread. Upgrade to premium for more detailed readings.'**
+  String get tokenLimitExceeded;
+
+  /// No description provided for @mindBodySpiritError.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind-Body-Spirit reading error: \${error}'**
+  String mindBodySpiritError(Object error);
+
+  /// No description provided for @astroLogicalCrossError.
+  ///
+  /// In en, this message translates to:
+  /// **'AstroLogical Cross reading error: \${error}'**
+  String astroLogicalCrossError(Object error);
+
+  /// No description provided for @brokenHeartError.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken Heart reading error: \${error}'**
+  String brokenHeartError(Object error);
+
+  /// No description provided for @dreamInterpretationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream Interpretation reading error: \${error}'**
+  String dreamInterpretationError(Object error);
+
+  /// No description provided for @horseshoeSpreadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Horseshoe Spread reading error: \${error}'**
+  String horseshoeSpreadError(Object error);
+
+  /// No description provided for @careerPathSpreadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Career Path Spread reading error: \${error}'**
+  String careerPathSpreadError(Object error);
+
+  /// No description provided for @fullMoonSpreadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Moon Spread reading error: \${error}'**
+  String fullMoonSpreadError(Object error);
+
+  /// No description provided for @readingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading saved successfully'**
+  String get readingSaved;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get warning;
+
+  /// No description provided for @insufficientCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have enough credits to proceed.'**
+  String get insufficientCredits;
+
+  /// No description provided for @dailyLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You have reached your daily free reading limit.'**
+  String get dailyLimitReached;
+
+  /// No description provided for @insufficientCreditsAndLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You have reached your daily free reading limit and don\'t have enough credits.'**
+  String get insufficientCreditsAndLimit;
+
+  /// No description provided for @couponHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter coupon code'**
+  String get couponHint;
+
+  /// No description provided for @redeem.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem'**
+  String get redeem;
+
+  /// Coupon is successfully redeemed
+  ///
+  /// In en, this message translates to:
+  /// **'{message}'**
+  String couponRedeemed(Object message);
+
+  /// Coupon is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'{message}'**
+  String couponInvalid(Object message);
+
+  /// No description provided for @returnToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to Home'**
+  String get returnToHome;
+
+  /// No description provided for @pleaseWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait.'**
+  String get pleaseWait;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @noReadings.
+  ///
+  /// In en, this message translates to:
+  /// **'No readings found'**
+  String get noReadings;
+
+  /// No description provided for @dateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date:'**
+  String get dateLabel;
+
+  /// No description provided for @purchaseCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase Credits'**
+  String get purchaseCredits;
+
+  /// Message shown when user has insufficient credits
+  ///
+  /// In en, this message translates to:
+  /// **'You need {required} credits to continue. Purchase more credits below.'**
+  String insufficientCreditsMessage(Object required);
+
+  /// Informs the user about the time until their next free reading
+  ///
+  /// In en, this message translates to:
+  /// **'Your next free reading will be available in {hours} hours.'**
+  String nextFreeReadingInfo(Object hours);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

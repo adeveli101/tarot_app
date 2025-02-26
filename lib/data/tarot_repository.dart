@@ -3,9 +3,12 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:tarot_fal/generated/l10n.dart';
-import '../models/tarot_card.dart';
+import 'package:tarot_fal/models/tarot_card.dart';
 
 class TarotRepository {
   static final TarotRepository _instance = TarotRepository._internal();
@@ -13,7 +16,11 @@ class TarotRepository {
   TarotRepository._internal();
 
   List<TarotCard> _cards = [];
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
+  // Kartları dosyadan yükleme
   Future<void> loadCardsFromAsset() async {
     try {
       final String jsonString = await rootBundle.loadString('assets/tarot_cards.json');
@@ -24,6 +31,119 @@ class TarotRepository {
     }
   }
 
+  // Anonim giriş
+  Future<void> signInAnonymously() async {
+    try {
+      if (_auth.currentUser == null) {
+        await _auth.signInAnonymously();
+        await _setupNotifications();
+      }
+    } catch (e) {
+      throw TarotException('Anonim giriş başarısız: $e');
+    }
+  }
+
+  // Bildirim sistemi kurulumu
+  Future<void> _setupNotifications() async {
+    try {
+      NotificationSettings settings = await _messaging.requestPermission();
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        String? token = await _messaging.getToken();
+        if (token != null && _auth.currentUser != null) {
+          await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
+            'fcmToken': token,
+            'lastUpdated': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true)); // SetOptions burada doğru şekilde import edildi
+        }
+      }
+    } catch (e) {
+      throw TarotException('Bildirim kurulumu başarısız: $e');
+    }
+  }
+
+  // CRUD Operasyonları için Firestore ile Fal Kaydetme
+  Future<void> saveReading(Map<String, TarotCard> reading, String spreadType) async {
+    final user = _auth.currentUser;
+    if (user == null) throw TarotException('Kullanıcı giriş yapmamış');
+
+    try {
+      final readingData = reading.map((key, value) => MapEntry(key, {
+        'name': value.name,
+        'arcana': value.arcana,
+        'suit': value.suit,
+        'number': value.number,
+        'keywords': value.keywords,
+        'meanings': {
+          'light': value.meanings.light,
+          'shadow': value.meanings.shadow,
+        },
+        'fortuneTelling': value.fortuneTelling,
+        'img': value.img,
+      }));
+
+      await _firestore.collection('readings').doc(user.uid).collection('history').add({
+        'spreadType': spreadType,
+        'reading': readingData,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw TarotException('Fal kaydetme başarısız: $e');
+    }
+  }
+
+  // Kullanıcının geçmiş fallarını okuma
+  Future<List<Map<String, dynamic>>> getUserReadings() async {
+    final user = _auth.currentUser;
+    if (user == null) throw TarotException('Kullanıcı giriş yapmamış');
+
+    try {
+      final snapshot = await _firestore
+          .collection('readings')
+          .doc(user.uid)
+          .collection('history')
+          .orderBy('timestamp', descending: true)
+          .get();
+      return snapshot.docs.map((doc) => doc.data()).toList();
+    } catch (e) {
+      throw TarotException('Geçmiş fallar alınamadı: $e');
+    }
+  }
+
+  // Belirli bir falı güncelleme (örneğin, not ekleme)
+  Future<void> updateReading(String readingId, Map<String, dynamic> updates) async {
+    final user = _auth.currentUser;
+    if (user == null) throw TarotException('Kullanıcı giriş yapmamış');
+
+    try {
+      await _firestore
+          .collection('readings')
+          .doc(user.uid)
+          .collection('history')
+          .doc(readingId)
+          .update(updates);
+    } catch (e) {
+      throw TarotException('Fal güncelleme başarısız: $e');
+    }
+  }
+
+  // Belirli bir falı silme
+  Future<void> deleteReading(String readingId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw TarotException('Kullanıcı giriş yapmamış');
+
+    try {
+      await _firestore
+          .collection('readings')
+          .doc(user.uid)
+          .collection('history')
+          .doc(readingId)
+          .delete();
+    } catch (e) {
+      throw TarotException('Fal silme başarısız: $e');
+    }
+  }
+
+  // Mevcut kart operasyonları
   List<TarotCard> getAllCards() => _cards;
 
   List<TarotCard> getMajorArcanaCards() => _cards.where((card) => card.arcana == "Major Arcana").toList();
@@ -93,32 +213,43 @@ class TarotRepository {
     });
   }
 
-  TarotCard singleCardReading() => drawRandomCard();
+  // Fal açılım metodları (CRUD ile entegre)
+  TarotCard singleCardReading() {
+    final card = drawRandomCard();
+    saveReading({'Card': card}, 'singleCard');
+    return card;
+  }
 
   Map<String, TarotCard> pastPresentFutureReading() {
     final cards = drawRandomCards(3);
-    return {'Past': cards[0], 'Present': cards[1], 'Future': cards[2]};
+    final reading = {'Past': cards[0], 'Present': cards[1], 'Future': cards[2]};
+    saveReading(reading, 'pastPresentFuture');
+    return reading;
   }
 
   Map<String, TarotCard> problemSolutionReading() {
     final cards = drawRandomCards(3);
-    return {'Problem': cards[0], 'Reason': cards[1], 'Solution': cards[2]};
+    final reading = {'Problem': cards[0], 'Reason': cards[1], 'Solution': cards[2]};
+    saveReading(reading, 'problemSolution');
+    return reading;
   }
 
   Map<String, TarotCard> fiveCardPathReading() {
     final cards = drawRandomCards(5);
-    return {
+    final reading = {
       'Current Situation': cards[0],
       'Obstacles': cards[1],
       'Best Outcome': cards[2],
       'Foundation': cards[3],
       'Potential': cards[4],
     };
+    saveReading(reading, 'fiveCardPath');
+    return reading;
   }
 
   Map<String, TarotCard> relationshipReading() {
     final cards = drawRandomCards(7);
-    return {
+    final reading = {
       'You': cards[0],
       'Partner': cards[1],
       'Relationship': cards[2],
@@ -127,11 +258,13 @@ class TarotRepository {
       'Actions Needed': cards[5],
       'Outcome': cards[6],
     };
+    saveReading(reading, 'relationship');
+    return reading;
   }
 
   Map<String, TarotCard> celticCrossReading() {
     final cards = drawRandomCards(10);
-    return {
+    final reading = {
       'Current Situation': cards[0],
       'Challenge': cards[1],
       'Subconscious': cards[2],
@@ -143,6 +276,8 @@ class TarotRepository {
       'Hopes/Fears': cards[8],
       'Final Outcome': cards[9],
     };
+    saveReading(reading, 'celticCross');
+    return reading;
   }
 
   Map<String, TarotCard> yearlyReading() {
@@ -155,6 +290,7 @@ class TarotRepository {
     for (int i = 0; i < 12; i++) {
       reading[months[i]] = cards[i];
     }
+    saveReading(reading, 'yearly');
     return reading;
   }
 
@@ -174,44 +310,53 @@ class TarotRepository {
       default:
         reading = {'General Situation': cards[0], 'Obstacles': cards[1], 'Advice': cards[2]};
     }
+    saveReading(reading, 'category_$category');
     return reading;
   }
 
   Map<String, TarotCard> mindBodySpiritReading() {
     final cards = drawRandomCards(3);
-    return {'Mind': cards[0], 'Body': cards[1], 'Spirit': cards[2]};
+    final reading = {'Mind': cards[0], 'Body': cards[1], 'Spirit': cards[2]};
+    saveReading(reading, 'mindBodySpirit');
+    return reading;
   }
 
   Map<String, TarotCard> astroLogicalCrossReading() {
     final cards = drawRandomCards(5);
-    return {
+    final reading = {
       'Identity': cards[0],
       'Emotional State': cards[1],
       'External Influences': cards[2],
       'Challenges': cards[3],
       'Destiny': cards[4],
     };
+    saveReading(reading, 'astroLogicalCross');
+    return reading;
   }
 
   Map<String, TarotCard> brokenHeartReading() {
     final cards = drawRandomCards(5);
-    return {
+    final reading = {
       'Source of Pain': cards[0],
       'Emotional Wounds': cards[1],
       'Inner Conflict': cards[2],
       'Healing Process': cards[3],
       'New Beginning': cards[4],
     };
+    saveReading(reading, 'brokenHeart');
+    return reading;
   }
 
   Map<String, TarotCard> dreamInterpretationReading() {
     final cards = drawRandomCards(3);
-    return {'Dream Symbol': cards[0], 'Emotional Response': cards[1], 'Message': cards[2]};
+    final reading = {'Dream Symbol': cards[0], 'Emotional Response': cards[1], 'Message': cards[2]};
+    saveReading(reading, 'dreamInterpretation');
+    return reading;
   }
 
   Map<String, TarotCard> horseshoeSpread() {
     final cards = drawRandomCards(7);
-    return {
+    final reading = {
       'Past': cards[0],
       'Present': cards[1],
       'Future': cards[2],
@@ -220,22 +365,26 @@ class TarotRepository {
       'Advice': cards[5],
       'Outcome': cards[6],
     };
+    saveReading(reading, 'horseshoe');
+    return reading;
   }
 
   Map<String, TarotCard> careerPathSpread() {
     final cards = drawRandomCards(5);
-    return {
+    final reading = {
       'Current Situation': cards[0],
       'Obstacles': cards[1],
       'Opportunities': cards[2],
       'Strengths': cards[3],
       'Outcome': cards[4],
     };
+    saveReading(reading, 'careerPath');
+    return reading;
   }
 
   Map<String, TarotCard> fullMoonSpread() {
     final cards = drawRandomCards(6);
-    return {
+    final reading = {
       'Past Cycle': cards[0],
       'Current Energy': cards[1],
       'Subconscious Message': cards[2],
@@ -243,6 +392,8 @@ class TarotRepository {
       'Recommended Action': cards[4],
       'Resulting Energy': cards[5],
     };
+    saveReading(reading, 'fullMoon');
+    return reading;
   }
 
   int get deckSize => _cards.length;
