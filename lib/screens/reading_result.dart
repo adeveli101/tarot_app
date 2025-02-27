@@ -11,7 +11,9 @@ import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/screens/settings_screen.dart';
 import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
 import '../data/tarot_bloc.dart';
+import '../data/tarot_event_state.dart';
 import '../main.dart';
+import '../models/animations/tap_animations_scale.dart';
 
 class ReadingResultScreen extends StatefulWidget {
   const ReadingResultScreen({super.key});
@@ -747,27 +749,33 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
       left: 16,
       right: 16,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center, // Butonları ortala
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildActionButton(
-            context: context,
-            label: S.of(context)!.save,
-            icon: Icons.save,
-            onPressed: () => _saveReadingToFirestore(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}', context),
+          Expanded(
+            child: _buildActionButton(
+              context: context,
+              label: S.of(context)!.save,
+              icon: Icons.save,
+              onPressed: () => _saveReadingToFirestore(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}', context),
+            ),
           ),
           const SizedBox(width: 16),
-          _buildActionButton(
-            context: context,
-            label: S.of(context)!.share,
-            icon: Icons.share,
-            onPressed: () => _shareReading(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}'),
+          Expanded(
+            child: _buildActionButton(
+              context: context,
+              label: S.of(context)!.share,
+              icon: Icons.share,
+              onPressed: () => _shareReading(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}'),
+            ),
           ),
           const SizedBox(width: 16),
-          _buildActionButton(
-            context: context,
-            label: S.of(context)!.returnToHome, // Yerelleştirme dosyasına eklenecek
-            icon: Icons.home,
-            onPressed: () => _navigateToHome(context),
+          Expanded(
+            child: _buildActionButton(
+              context: context,
+              label: S.of(context)!.returnToHome,
+              icon: Icons.home,
+              onPressed: () => _navigateToHome(context),
+            ),
           ),
         ],
       ),
@@ -797,56 +805,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 4,
         shadowColor: Colors.black54,
-      ),
-    );
-  }
-}
-
-// TapAnimatedScale (TarotReadingScreen'den kopyalandı)
-class TapAnimatedScale extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
-  const TapAnimatedScale({super.key, required this.child, required this.onTap});
-
-  @override
-  TapAnimatedScaleState createState() => TapAnimatedScaleState();
-}
-
-class TapAnimatedScaleState extends State<TapAnimatedScale> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 100),
-      vsync: this,
-      lowerBound: 0.95,
-      upperBound: 1.0,
-      value: 1.0,
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onTapDown(TapDownDetails details) => _controller.reverse();
-  void _onTapUp(TapUpDetails details) => _controller.forward();
-  void _onTapCancel() => _controller.forward();
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      child: ScaleTransition(
-        scale: _controller,
-        child: widget.child,
       ),
     );
   }

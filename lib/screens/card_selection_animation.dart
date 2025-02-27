@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +11,10 @@ import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/screens/reading_result.dart';
+
+import '../data/tarot_event_state.dart';
+import '../models/animations/tap_animations_scale.dart';
+
 
 class CardSelectionAnimationScreen extends StatefulWidget {
   final int cardCount;
@@ -72,26 +77,8 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     }
   }
 
-  Future<void> _flipAllCards() async {
-    bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.black87,
-        title: Text(S.of(context)!.flipAllCards, style: const TextStyle(color: Colors.white)),
-        content: Text("Are you sure you want to flip all cards?", style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(S.of(context)!.cancel, style: const TextStyle(color: Colors.white70)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text("Confirm", style: const TextStyle(color: Colors.deepPurple)),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true && mounted) {
+  void _flipAllCards() {
+    if (mounted) {
       setState(() {
         revealed = List<bool>.filled(widget.cardCount, true);
       });
@@ -99,26 +86,8 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     }
   }
 
-  Future<void> _reshuffleCards() async {
-    bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.black87,
-        title: Text(S.of(context)!.reshuffleCards, style: const TextStyle(color: Colors.white)),
-        content: Text("Are you sure you want to reshuffle the cards?", style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(S.of(context)!.cancel, style: const TextStyle(color: Colors.white70)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text("Confirm", style: const TextStyle(color: Colors.deepPurple)),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true && mounted) {
+  void _reshuffleCards() {
+    if (mounted) {
       setState(() {
         selectedCards = repository.drawRandomCards(widget.cardCount);
         revealed = List<bool>.filled(widget.cardCount, false);
@@ -134,9 +103,11 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       backgroundColor: Colors.transparent,
       builder: (context) => BlocProvider.value(
         value: BlocProvider.of<TarotBloc>(context),
-        child: PurchaseSheet(requiredCredits: requiredCredits),
+        child: InsufficientResourcesScreen(requiredCredits: requiredCredits),
       ),
-    );
+    ).then((_) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    });
   }
 
   void _checkCreditsAndNavigate() {
@@ -145,19 +116,41 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       _flipAllCards();
     }
 
-    final canStart = bloc.isPremium || bloc.dailyFreeFalCount < 5 || bloc.userCredits >= 1.0;
-    if (!canStart) {
-      _showPurchaseSheet(context, 1.0); // Minimum 1 kredi gerekiyor
-      _showNextFreeReadingInfo(context);
+    if (kDebugMode) {
+      print("Checking credits: isPremium=${bloc.isPremium}, dailyFreeFalCount=${bloc.dailyFreeFalCount}, userCredits=${bloc.userCredits}, state=${bloc.state.runtimeType}");
+    }
+    if (bloc.state is InsufficientResources) {
+      _showPurchaseSheet(context, (bloc.state as InsufficientResources).requiredCredits);
+      return;
+    }
+
+    if (bloc.isPremium) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ReadingResultScreenWithTransition()),
+      );
+    } else if (bloc.dailyFreeFalCount < 5) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ReadingResultScreenWithTransition()),
+      );
+    } else if (bloc.userCredits >= (bloc.currentSpreadType?.costInCredits ?? 1.0)) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ReadingResultScreenWithTransition()),
+      );
     } else {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
-          );
-        }
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(S.of(context)!.dailyLimitReached),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: S.of(context)!.purchaseCredits,
+            onPressed: () => _showPurchaseSheet(context, bloc.currentSpreadType?.costInCredits ?? 1.0),
+          ),
+        ),
+      );
+      _showNextFreeReadingInfo(context);
     }
   }
 
@@ -381,6 +374,11 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                 image: AssetImage('assets/tarot_card_images/${card.img}'),
                 fit: BoxFit.contain,
                 alignment: Alignment.center,
+                onError: (exception, stackTrace) => const Icon(
+                  Icons.broken_image,
+                  color: Colors.white70,
+                  size: 50,
+                ),
               ),
             ),
           ),
@@ -536,7 +534,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                         ),
                       ),
                       ElevatedButton(
-                        onPressed: _checkCreditsAndNavigate, // View Result pasif değil ancak kontrol ekleniyor
+                        onPressed: _checkCreditsAndNavigate,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple[900],
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -559,10 +557,10 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 }
 
-class PurchaseSheet extends StatelessWidget {
+class InsufficientResourcesScreen extends StatelessWidget {
   final double requiredCredits;
 
-  const PurchaseSheet({super.key, required this.requiredCredits});
+  const InsufficientResourcesScreen({super.key, this.requiredCredits = 1.0});
 
   @override
   Widget build(BuildContext context) {
@@ -588,7 +586,7 @@ class PurchaseSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              loc!.purchaseCredits,
+              loc!.insufficientCreditsAndLimit,
               style: GoogleFonts.cinzel(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -608,6 +606,8 @@ class PurchaseSheet extends StatelessWidget {
             _buildPurchaseOption(context, "50 Credits", 4.99, '50_credits'),
             const SizedBox(height: 12),
             _buildPurchaseOption(context, "100 Credits", 9.99, '100_credits'),
+            const SizedBox(height: 16),
+            _buildPremiumOption(context),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -635,8 +635,14 @@ class PurchaseSheet extends StatelessWidget {
             currencyCode: 'USD',
           ),
         );
-        await InAppPurchase.instance.buyConsumable(purchaseParam: purchaseParam);
-        Navigator.pop(context);
+        try {
+          await InAppPurchase.instance.buyConsumable(purchaseParam: purchaseParam);
+          Navigator.pop(context);
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Purchase failed: $e')),
+          );
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -674,54 +680,149 @@ class PurchaseSheet extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildPremiumOption(BuildContext context) {
+    return TapAnimatedScale(
+      onTap: () async {
+        final purchaseParam = PurchaseParam(
+          productDetails: ProductDetails(
+            id: 'premium_subscription',
+            title: 'Premium Subscription',
+            description: 'Unlock premium features',
+            price: '9.99 USD',
+            rawPrice: 9.99,
+            currencyCode: 'USD',
+          ),
+        );
+        try {
+          await InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
+          Navigator.pop(context);
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Premium purchase failed: $e')),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.purple[700]!.withOpacity(0.8),
+              Colors.deepPurple[900]!.withOpacity(0.6),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Get Premium',
+              style: GoogleFonts.cinzel(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              'USD 9.99',
+              style: GoogleFonts.cinzel(
+                fontSize: 16,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-// TapAnimatedScale sınıfı (değişmedi, önceki dosyadan kopyalandı)
-class TapAnimatedScale extends StatefulWidget {
-  final Widget child;
-  final VoidCallback onTap;
 
-  const TapAnimatedScale({super.key, required this.child, required this.onTap});
+
+class ReadingResultScreenWithTransition extends StatefulWidget {
+  const ReadingResultScreenWithTransition({super.key});
 
   @override
-  TapAnimatedScaleState createState() => TapAnimatedScaleState();
+  ReadingResultScreenWithTransitionState createState() => ReadingResultScreenWithTransitionState();
 }
 
-class TapAnimatedScaleState extends State<TapAnimatedScale> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWithTransition> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 100),
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2), // Animasyon süresi
       vsync: this,
-      lowerBound: 0.95,
-      upperBound: 1.0,
-      value: 1.0,
     );
+    _startTransition();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
-  void _onTapDown(TapDownDetails details) => _controller.reverse();
-  void _onTapUp(TapUpDetails details) => _controller.forward();
-  void _onTapCancel() => _controller.forward();
+  void _startTransition() async {
+    await _animationController.forward();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      onTapDown: _onTapDown,
-      onTapUp: _onTapUp,
-      onTapCancel: _onTapCancel,
-      child: ScaleTransition(
-        scale: _controller,
-        child: widget.child,
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF2C1A4D), // Derin mor
+              Color(0xFF0D0D0D), // Siyah
+            ],
+            stops: [0.3, 0.9],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Lottie.asset(
+                'assets/animations/tarot_loading.json', // Mistik bir animasyon dosyası, assets'a eklemelisiniz
+                controller: _animationController,
+                height: 200,
+                fit: BoxFit.cover,
+                repeat: false,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Unveiling the Mystical Path...',
+                style: TextStyle(
+                  fontFamily: 'Cinzel',
+                  fontSize: 18,
+                  color: Colors.white70,
+                  shadows: [
+                    Shadow(
+                      color: Colors.purple.withOpacity(0.5),
+                      offset: const Offset(2, 2),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

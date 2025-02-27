@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
@@ -9,6 +10,7 @@ import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/screens/settings_screen.dart';
 import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'data/tarot_event_state.dart';
 import 'firebase_options.dart';
 import 'gemini_service.dart';
 
@@ -17,16 +19,34 @@ import 'gemini_service.dart';
 // Amaç: Uygulamanın temel bağımlılıklarını ve başlangıç noktasını tanımlar.
 // ============================================================================
 
-Future<void> main() async {
+Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await dotenv.load(fileName: ".env");
+
+  // Satın alma işlemlerini başlat
+  final InAppPurchase inAppPurchase = InAppPurchase.instance;
+  final bool available = await inAppPurchase.isAvailable();
+
+  if (available) {
+    // Ürün detaylarını yükle
+    final productIds = SpreadType.allProductIds;
+    final ProductDetailsResponse response = await inAppPurchase.queryProductDetails(productIds.toSet());
+
+    // Hata varsa logla
+    if (response.error != null) {
+      print('Ürün detayları yüklenirken hata: ${response.error}');
+    }
+  }
+
   final prefs = await SharedPreferences.getInstance();
   final String? savedLanguage = prefs.getString('language');
+
   runApp(MyApp(initialLocale: savedLanguage != null ? Locale(savedLanguage) : null));
 }
+
 
 // ============================================================================
 // Sayfa 2: MyApp Sınıfı ve Durum Yönetimi

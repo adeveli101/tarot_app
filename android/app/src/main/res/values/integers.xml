@@ -1,0 +1,4 @@
+<!-- android/app/src/main/res/values/integers.xml -->
+<resources>
+	<integer name="google_play_services_version">12451000</integer> <!-- Güncel sürümü kontrol edin -->
+</resources>
