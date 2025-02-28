@@ -148,6 +148,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Type your custom prompt here...",
     ),
     "customPromptTitle": MessageLookupByLibrary.simpleMessage("Custom Prompt"),
+    "dailyFreeReadings": MessageLookupByLibrary.simpleMessage(
+      "Daily Free Readings",
+    ),
     "dailyLimitExceeded": MessageLookupByLibrary.simpleMessage(
       "Daily free reading limit reached. Please purchase credits or upgrade to premium.",
     ),
@@ -203,6 +206,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "insufficientCreditsMessage": m17,
     "keywords": MessageLookupByLibrary.simpleMessage("Keywords:"),
+    "language": MessageLookupByLibrary.simpleMessage("Language"),
     "lifeDynamicsHighlighted": MessageLookupByLibrary.simpleMessage(
       "These cards highlight important dynamics in your life.",
     ),
@@ -269,6 +273,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "save": MessageLookupByLibrary.simpleMessage("Save"),
     "sendPrompt": MessageLookupByLibrary.simpleMessage("Send Prompt"),
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
+    "settingsHelp": MessageLookupByLibrary.simpleMessage(
+      "Adjust your language and manage your mystical tokens here.",
+    ),
     "shadowMeaning": MessageLookupByLibrary.simpleMessage("Shadow:"),
     "share": MessageLookupByLibrary.simpleMessage("Share"),
     "singleCard": MessageLookupByLibrary.simpleMessage(
@@ -316,6 +323,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "unifiedDestinyReflectionTitle": MessageLookupByLibrary.simpleMessage(
       "Reflections of Unified Destiny",
     ),
+    "userInfo": MessageLookupByLibrary.simpleMessage("User Info"),
     "viewResults": MessageLookupByLibrary.simpleMessage("View Results"),
     "warning": MessageLookupByLibrary.simpleMessage("Warning"),
     "yearlySpreadDescription": MessageLookupByLibrary.simpleMessage(

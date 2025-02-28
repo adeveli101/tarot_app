@@ -147,6 +147,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Özel isteğinizi buraya yazın...",
     ),
     "customPromptTitle": MessageLookupByLibrary.simpleMessage("Özel İstek"),
+    "dailyFreeReadings": MessageLookupByLibrary.simpleMessage(
+      "Günlük Ücretsiz Fallar",
+    ),
     "dailyLimitExceeded": MessageLookupByLibrary.simpleMessage(
       "Günlük ücretsiz fal limitine ulaşıldı. Lütfen kredi satın alın veya premium’a yükseltin.",
     ),
@@ -206,6 +209,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "insufficientCreditsMessage": m17,
     "keywords": MessageLookupByLibrary.simpleMessage("Anahtar Kelimeler:"),
+    "language": MessageLookupByLibrary.simpleMessage("Dil"),
     "lifeDynamicsHighlighted": MessageLookupByLibrary.simpleMessage(
       "Bu kartlar hayatınızdaki önemli dinamikleri vurguluyor.",
     ),
@@ -270,6 +274,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "returnToHome": MessageLookupByLibrary.simpleMessage("Ana Sayfaya Dön"),
     "sendPrompt": MessageLookupByLibrary.simpleMessage("İsteği Gönder"),
     "settings": MessageLookupByLibrary.simpleMessage("Ayarlar"),
+    "settingsHelp": MessageLookupByLibrary.simpleMessage(
+      "Dil ayarlarınızı yapın ve mistik tokenlarınızı buradan yönetin.",
+    ),
     "shadowMeaning": MessageLookupByLibrary.simpleMessage("Gölge:"),
     "singleCard": MessageLookupByLibrary.simpleMessage("Tek Kart Açılımı Yap"),
     "singleCardDescription": MessageLookupByLibrary.simpleMessage(
@@ -288,7 +295,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "swipeToSeePages": MessageLookupByLibrary.simpleMessage(
       "Sayfaları görmek için kaydırın",
     ),
-    "tarotFortune": MessageLookupByLibrary.simpleMessage("Tarot Falı"),
+    "tarotFortune": MessageLookupByLibrary.simpleMessage("Tarot"),
     "tarotFortuneDescription": m24,
     "tarotFortuneGuide": MessageLookupByLibrary.simpleMessage(
       "Tarot Falı - Gizemli Yolların Kılavuzu",
@@ -316,6 +323,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "unifiedDestinyReflectionTitle": MessageLookupByLibrary.simpleMessage(
       "Birleşik Kaderin Yansımaları",
     ),
+    "userInfo": MessageLookupByLibrary.simpleMessage("Kullanıcı Bilgileri"),
     "viewResults": MessageLookupByLibrary.simpleMessage("Sonuçları Gör"),
     "warning": MessageLookupByLibrary.simpleMessage("Uyarı"),
     "yearlySpreadDescription": MessageLookupByLibrary.simpleMessage(

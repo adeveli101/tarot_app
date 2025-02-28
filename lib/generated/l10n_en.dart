@@ -434,4 +434,16 @@ class SEn extends S {
   String nextFreeReadingInfo(Object hours) {
     return 'Your next free reading will be available in $hours hours.';
   }
+
+  @override
+  String get userInfo => 'User Info';
+
+  @override
+  String get dailyFreeReadings => 'Daily Free Readings';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get settingsHelp => 'Adjust your language and manage your mystical tokens here.';
 }

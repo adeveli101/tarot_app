@@ -844,6 +844,30 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Your next free reading will be available in {hours} hours.'**
   String nextFreeReadingInfo(Object hours);
+
+  /// No description provided for @userInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'User Info'**
+  String get userInfo;
+
+  /// No description provided for @dailyFreeReadings.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Free Readings'**
+  String get dailyFreeReadings;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @settingsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust your language and manage your mystical tokens here.'**
+  String get settingsHelp;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

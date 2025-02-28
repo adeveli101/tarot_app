@@ -7,7 +7,7 @@ class STr extends S {
   STr([String locale = 'tr']) : super(locale);
 
   @override
-  String get tarotFortune => 'Tarot Falı';
+  String get tarotFortune => 'Tarot';
 
   @override
   String errorMessage(Object message) {
@@ -434,4 +434,16 @@ class STr extends S {
   String nextFreeReadingInfo(Object hours) {
     return 'Bir sonraki ücretsiz fal hakkınız $hours saat içinde kullanılabilir olacak.';
   }
+
+  @override
+  String get userInfo => 'Kullanıcı Bilgileri';
+
+  @override
+  String get dailyFreeReadings => 'Günlük Ücretsiz Fallar';
+
+  @override
+  String get language => 'Dil';
+
+  @override
+  String get settingsHelp => 'Dil ayarlarınızı yapın ve mistik tokenlarınızı buradan yönetin.';
 }
