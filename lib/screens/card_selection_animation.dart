@@ -1,35 +1,37 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:lottie/lottie.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tarot_fal/data/tarot_bloc.dart';
+import 'package:tarot_fal/data/tarot_event_state.dart';
+import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
-import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/screens/reading_result.dart';
-
-import '../data/tarot_event_state.dart';
 import '../models/animations/tap_animations_scale.dart';
+
+
 
 
 class CardSelectionAnimationScreen extends StatefulWidget {
   final int cardCount;
-  const CardSelectionAnimationScreen({super.key, this.cardCount = 10});
+
+  const CardSelectionAnimationScreen({super.key, required this.cardCount});
 
   @override
   CardSelectionAnimationScreenState createState() => CardSelectionAnimationScreenState();
 }
 
-class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen> with SingleTickerProviderStateMixin {
+class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen>
+    with TickerProviderStateMixin {
   final TarotRepository repository = TarotRepository();
+  late AnimationController _cardAnimationController;
+  AnimationController? _entryAnimationController;
   List<TarotCard> selectedCards = [];
   late List<bool> revealed;
   bool loading = true;
-  late AnimationController _cardAnimationController;
 
   @override
   void initState() {
@@ -38,50 +40,54 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    _initializeCards();
+    _entryAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    )..forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _initializeCards();
+      }
+    });
   }
 
   @override
   void dispose() {
     _cardAnimationController.dispose();
+    _entryAnimationController?.dispose();
     super.dispose();
   }
 
   Future<void> _initializeCards() async {
     try {
       await repository.loadCardsFromAsset();
-      List<TarotCard> cards = repository.drawRandomCards(widget.cardCount);
-      setState(() {
-        selectedCards = cards;
-        revealed = List<bool>.filled(widget.cardCount, false);
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          selectedCards = repository.drawRandomCards(widget.cardCount);
+          revealed = List<bool>.filled(widget.cardCount, false);
+          loading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error loading cards: $e")),
         );
-        setState(() {
-          loading = false;
-        });
+        setState(() => loading = false);
       }
     }
   }
 
   void _flipCard(int index) {
     if (!revealed[index]) {
-      setState(() {
-        revealed[index] = true;
-      });
+      setState(() => revealed[index] = true);
       _cardAnimationController.forward().then((_) => _cardAnimationController.reverse());
     }
   }
 
   void _flipAllCards() {
     if (mounted) {
-      setState(() {
-        revealed = List<bool>.filled(widget.cardCount, true);
-      });
+      setState(() => revealed = List<bool>.filled(widget.cardCount, true));
       _cardAnimationController.forward().then((_) => _cardAnimationController.reverse());
     }
   }
@@ -92,86 +98,50 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
         selectedCards = repository.drawRandomCards(widget.cardCount);
         revealed = List<bool>.filled(widget.cardCount, false);
       });
-      _cardAnimationController.forward().then((_) => _cardAnimationController.reverse());
+      _entryAnimationController?.reset();
+      _entryAnimationController?.forward();
     }
   }
 
-  void _showPurchaseSheet(BuildContext context, double requiredCredits) {
+  Future<void> _navigateToResults() async {
+    final bloc = context.read<TarotBloc>();
+    if (!revealed.every((v) => v)) _flipAllCards();
+
+    if (bloc.state is InsufficientResources) {
+      _showPurchaseSheet(context, (bloc.state as InsufficientResources).requiredTokens);
+      return;
+    }
+
+    if (bloc.currentSpreadType == SpreadType.singleCard) {
+      bloc.add(DrawSingleCard());
+    } else if (bloc.currentSpreadType == SpreadType.pastPresentFuture) {
+      bloc.add(DrawPastPresentFuture());
+    } else if (bloc.currentSpreadType == SpreadType.celticCross) {
+      bloc.add(DrawCelticCross());
+    }
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ReadingResultScreenWithTransition()),
+      );
+    }
+  }
+
+  void _showPurchaseSheet(BuildContext context, double requiredTokens) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => BlocProvider.value(
         value: BlocProvider.of<TarotBloc>(context),
-        child: InsufficientResourcesScreen(requiredCredits: requiredCredits),
+        child: InsufficientResourcesScreen(requiredCredits: requiredTokens),
       ),
-    ).then((_) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    });
+    );
   }
 
-  void _checkCreditsAndNavigate() {
-    final bloc = context.read<TarotBloc>();
-    if (!revealed.every((v) => v)) {
-      _flipAllCards();
-    }
-
-    if (kDebugMode) {
-      print("Checking credits: isPremium=${bloc.isPremium}, dailyFreeFalCount=${bloc.dailyFreeFalCount}, userCredits=${bloc.userCredits}, state=${bloc.state.runtimeType}");
-    }
-    if (bloc.state is InsufficientResources) {
-      _showPurchaseSheet(context, (bloc.state as InsufficientResources).requiredCredits);
-      return;
-    }
-
-    if (bloc.isPremium) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ReadingResultScreenWithTransition()),
-      );
-    } else if (bloc.dailyFreeFalCount < 5) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ReadingResultScreenWithTransition()),
-      );
-    } else if (bloc.userCredits >= (bloc.currentSpreadType?.costInCredits ?? 1.0)) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ReadingResultScreenWithTransition()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(S.of(context)!.dailyLimitReached),
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: S.of(context)!.purchaseCredits,
-            onPressed: () => _showPurchaseSheet(context, bloc.currentSpreadType?.costInCredits ?? 1.0),
-          ),
-        ),
-      );
-      _showNextFreeReadingInfo(context);
-    }
-  }
-
-  void _showNextFreeReadingInfo(BuildContext context) {
-    final bloc = context.read<TarotBloc>();
-    final prefs = SharedPreferences.getInstance();
-    prefs.then((prefs) {
-      final lastReset = prefs.getInt('last_reset_${bloc.userId}') ?? 0;
-      final now = DateTime.now().millisecondsSinceEpoch ~/ 86400000;
-      final hoursUntilNext = lastReset < now ? 24 - (DateTime.now().hour % 24) : 24 - ((DateTime.now().hour - (lastReset % 24)) % 24);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(S.of(context)!.nextFreeReadingInfo(hoursUntilNext)),
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    });
-  }
-
-  void _showCardDetails(TarotCard card) {
-    final loc = S.of(context);
+  void _showDetailedCardInfo(TarotCard card) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -181,100 +151,62 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
           padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Text(
+                  card.name,
+                  style: GoogleFonts.cinzel(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+              const SizedBox(height: 12),
               if (card.img.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/tarot_card_images/${card.img}',
-                    height: 150,
-                    fit: BoxFit.cover,
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset('assets/tarot_card_images/${card.img}', height: 150, fit: BoxFit.cover),
                   ),
                 ),
-              const SizedBox(height: 8),
-              Text(
-                card.name,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
+              const SizedBox(height: 12),
+              _buildDetailRow("Arcana", card.arcana),
+              _buildDetailRow("Suit", card.suit),
+              _buildDetailRow("Number", card.number),
+              if (card.archetype != null) _buildDetailRow("Archetype", card.archetype!),
+              if (card.hebrewAlphabet != null) _buildDetailRow("Hebrew Alphabet", card.hebrewAlphabet!),
+              if (card.numerology != null) _buildDetailRow("Numerology", card.numerology!),
+              if (card.elemental != null) _buildDetailRow("Elemental", card.elemental!),
+              if (card.mythicalSpiritual != null) _buildDetailRow("Mythical/Spiritual", card.mythicalSpiritual!),
+              const SizedBox(height: 12),
+              Text("Keywords", style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+              Wrap(
+                spacing: 8,
+                children: card.keywords.map((k) => Chip(label: Text(k, style: GoogleFonts.cinzel(color: Colors.white)))).toList(),
               ),
-              const SizedBox(height: 8),
-              Text(
-                "Arcana: ${card.arcana}, Suit: ${card.suit}, Number: ${card.number}",
-                style: const TextStyle(fontSize: 14, color: Colors.white70),
-              ),
-              const SizedBox(height: 8),
-              if (card.fortuneTelling.isNotEmpty) ...[
-                Text(
-                  loc!.fortuneTelling,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                ...card.fortuneTelling.map(
-                      (yorum) => Text(
-                    yorum,
-                    style: const TextStyle(fontSize: 14, color: Colors.white),
-                  ),
-                ),
-                const SizedBox(height: 8),
+              const SizedBox(height: 12),
+              Text("Fortune Telling", style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+              ...card.fortuneTelling.map((f) => Text("• $f", style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white70))),
+              const SizedBox(height: 12),
+              Text("Meanings", style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+              Text("Light: ${card.meanings.light.join(', ')}", style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white70)),
+              Text("Shadow: ${card.meanings.shadow.join(', ')}", style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white70)),
+              if (card.questionsToAsk != null) ...[
+                const SizedBox(height: 12),
+                Text("Questions to Ask", style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+                ...card.questionsToAsk!.map((q) => Text("• $q", style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white70))),
               ],
-              if (card.keywords.isNotEmpty) ...[
-                Text(
-                  loc!.keywords,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white70,
+              const SizedBox(height: 16),
+              Center(
+                child: TapAnimatedScale(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.deepPurple[700]!, Colors.purple[900]!]),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text("Close", style: GoogleFonts.cinzel(color: Colors.white)),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 6,
-                  children: card.keywords
-                      .map((kw) => Chip(
-                    label: Text(kw, style: const TextStyle(color: Colors.white)),
-                    backgroundColor: Colors.deepPurple,
-                  ))
-                      .toList(),
-                ),
-                const SizedBox(height: 8),
-              ],
-              if (card.meanings.light.isNotEmpty || card.meanings.shadow.isNotEmpty) ...[
-                Text(
-                  loc!.meaning,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (card.meanings.light.isNotEmpty)
-                  Text(
-                    "${loc.lightMeaning} ${card.meanings.light.join(', ')}",
-                    style: const TextStyle(fontSize: 14, color: Colors.white),
-                  ),
-                if (card.meanings.shadow.isNotEmpty)
-                  Text(
-                    "${loc.shadowMeaning} ${card.meanings.shadow.join(', ')}",
-                    style: const TextStyle(fontSize: 14, color: Colors.white),
-                  ),
-                const SizedBox(height: 8),
-              ],
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: Text(loc!.close),
               ),
             ],
           ),
@@ -283,279 +215,367 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
-  Widget _buildCardWidget(int index) {
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text("$label: ", style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(value, style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white70)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardWidget(int index, {required double cardWidth, required double cardHeight}) {
+    if (index >= selectedCards.length) return const SizedBox.shrink();
     final TarotCard card = selectedCards[index];
     final bool isRevealed = revealed[index];
+
     return GestureDetector(
       onTap: () => _flipCard(index),
-      onLongPress: () => _showCardDetails(card),
-      child: AnimatedScale(
-        scale: isRevealed ? 1.1 : 1.0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 600),
-          transitionBuilder: (Widget child, Animation<double> animation) {
-            final rotateAnim = Tween(begin: pi, end: 0.0).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            ));
-            return AnimatedBuilder(
-              animation: rotateAnim,
-              child: child,
-              builder: (context, child) {
-                final angle = rotateAnim.value;
-                return Transform(
-                  transform: Matrix4.rotationY(angle),
-                  alignment: Alignment.center,
-                  child: child,
-                );
-              },
-            );
-          },
-          layoutBuilder: (currentChild, previousChildren) {
-            return Stack(
-              alignment: Alignment.center,
-              children: <Widget>[if (currentChild != null) currentChild, ...previousChildren],
-            );
-          },
-          child: isRevealed
-              ? _buildCardFront(card, key: ValueKey("front_$index"))
-              : _buildCardBack(key: ValueKey("back_$index")),
+      onLongPress: () => _showDetailedCardInfo(card),
+      child: AnimatedBuilder(
+        animation: _entryAnimationController ?? AnimationController(vsync: this),
+        builder: (context, child) {
+          final animationValue = _entryAnimationController?.value ?? 0;
+          final offset = Offset.lerp(
+            const Offset(0, -1), // Ekran dışından yukarıdan gelme
+            Offset.zero,
+            Curves.easeOutBack.transform(animationValue),
+          )!;
+          return Transform.translate(
+            offset: offset,
+            child: Opacity(
+              opacity: animationValue,
+              child: AnimatedScale(
+                scale: isRevealed ? 1.05 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: AnimatedBuilder(
+                  animation: _cardAnimationController,
+                  builder: (context, child) {
+                    final angle = isRevealed ? 0.0 : pi;
+                    final transform = Matrix4.rotationY(angle * _cardAnimationController.value);
+                    return Transform(
+                      transform: transform,
+                      alignment: Alignment.center,
+                      child: isRevealed ? _buildCardFront(card, cardWidth, cardHeight) : _buildCardBack(cardWidth, cardHeight),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCardBack(double width, double height) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(colors: [Colors.deepPurple[900]!, Colors.purple[700]!]),
+        image: const DecorationImage(
+          image: AssetImage('assets/tarot_card_images/card_back.png'),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(Colors.black54, BlendMode.dstATop),
         ),
       ),
     );
   }
 
-  Widget _buildCardBack({Key? key}) {
-    return Card(
-      key: key,
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: 120,
-        height: 200,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple[900]!, Colors.purple[700]!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          image: const DecorationImage(
-            image: AssetImage('assets/tarot_card_images/card_back.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black54, BlendMode.dstATop),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardFront(TarotCard card, {Key? key}) {
+  Widget _buildCardFront(TarotCard card, double width, double height) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Card(
-          key: key,
-          elevation: 8,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Container(
-            width: 130,
-            height: 210,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: [Colors.purple[900]!, Colors.deepPurple[700]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              image: DecorationImage(
-                image: AssetImage('assets/tarot_card_images/${card.img}'),
-                fit: BoxFit.contain,
-                alignment: Alignment.center,
-                onError: (exception, stackTrace) => const Icon(
-                  Icons.broken_image,
-                  color: Colors.white70,
-                  size: 50,
-                ),
-              ),
+        Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(colors: [Colors.purple[900]!, Colors.deepPurple[700]!]),
+            image: DecorationImage(
+              image: AssetImage('assets/tarot_card_images/${card.img}'),
+              fit: BoxFit.contain,
+              onError: (exception, stackTrace) => const Icon(Icons.broken_image, color: Colors.white70, size: 50),
             ),
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          card.name,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        SizedBox(
+          width: width,
+          child: Text(
+            card.name,
+            style: GoogleFonts.cinzel(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildBackground() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Lottie.asset(
-          'assets/animations/tarot_shuffle.json',
-          fit: BoxFit.contain,
-          frameRate: FrameRate(24),
-          repeat: true,
+  Widget _buildCardLayout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height; // screenHeight eklenerek tanımlandı
+    final bloc = context.read<TarotBloc>();
+    final spreadType = bloc.currentSpreadType;
+
+    // Simetrik kart boyutları
+    double cardWidth = screenWidth * 0.25; // Ekranın %25’i, simetrik bir oran
+    double cardHeight = cardWidth * 1.5;
+    double padding = 16.0;
+
+    // Celtic Cross için ek alan bırakma
+    if (spreadType == SpreadType.celticCross && widget.cardCount == 10) {
+      return _buildCelticCrossLayout(cardWidth, cardHeight, screenWidth, screenHeight, padding);
+    } else if (spreadType == SpreadType.pastPresentFuture && widget.cardCount == 3) {
+      return _buildPastPresentFutureLayout(cardWidth, cardHeight, screenWidth, padding);
+    } else {
+      return _buildGenericLayout(cardWidth, cardHeight, screenWidth, padding);
+    }
+  }
+
+  Widget _buildGenericLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    int maxCardsPerRow = (screenWidth / (cardWidth + padding * 2)).floor();
+    if (maxCardsPerRow < 1) maxCardsPerRow = 1;
+
+    if (widget.cardCount == 1) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.2), // screenHeight burada kullanılacak
+          child: _buildCardWidget(0, cardWidth: cardWidth, cardHeight: cardHeight),
         ),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.deepPurple[900]!.withOpacity(0.4),
-                Colors.black.withOpacity(0.9),
-              ],
-              stops: const [0.3, 0.9],
-            ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: padding,
+        runSpacing: padding,
+        children: List.generate(widget.cardCount, (index) => SizedBox(
+          width: cardWidth,
+          child: _buildCardWidget(index, cardWidth: cardWidth, cardHeight: cardHeight),
+        )),
+      ),
+    );
+  }
+
+  Widget _buildPastPresentFutureLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: screenWidth * 0.2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(widget.cardCount, (index) => Padding(
+            padding: EdgeInsets.symmetric(horizontal: padding),
+            child: _buildCardWidget(index, cardWidth: cardWidth, cardHeight: cardHeight),
+          )),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCelticCrossLayout(double cardWidth, double cardHeight, double screenWidth, double screenHeight, double padding) {
+    // Dil desteği için S sınıfını kullan
+    final loc = S.of(context)!;
+
+    // Ekran boyutlarına göre ayarlamalar
+    final maxWidth = screenWidth * 0.9;
+
+    // Kart boyutlarını ayarla
+    final adjustedCardWidth = min(cardWidth, maxWidth / 4.5);
+    final adjustedCardHeight = adjustedCardWidth * 1.5;
+
+    // Etiket oluşturma fonksiyonu
+    Widget buildLabel(String text) {
+      return Container(
+        width: adjustedCardWidth,
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Text(
+          text,
+          style: GoogleFonts.cinzel(
+            fontSize: 10,
+            color: Colors.white70,
+            fontWeight: FontWeight.bold,
           ),
+          textAlign: TextAlign.center,
+          maxLines: 2,
         ),
-        ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.purple[200]!.withOpacity(0.2),
-              Colors.transparent,
-              Colors.indigo[300]!.withOpacity(0.2),
+      );
+    }
+
+    // Kart ve etiket birleşimi
+    Widget buildCardWithLabel(int index, String text) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildCardWidget(index, cardWidth: adjustedCardWidth, cardHeight: adjustedCardHeight),
+          const SizedBox(height: 4),
+          buildLabel(text),
+        ],
+      );
+    }
+
+    return Center(
+      child: SingleChildScrollView(
+        child: SizedBox(
+          width: maxWidth,
+          child: Column(
+            children: [
+              // Üst kart - SUBCO
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: padding * 2),
+                child: buildCardWithLabel(0, loc.celticCrossSubconscious),
+              ),
+
+              // İkinci sıra - 4 kart yan yana
+              Container(
+                margin: EdgeInsets.symmetric(vertical: padding),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    buildCardWithLabel(1, loc.celticCrossChallenge),
+                    buildCardWithLabel(2, loc.celticCrossPast),
+                    buildCardWithLabel(3, loc.celticCrossCurrentSituation),
+                    buildCardWithLabel(4, loc.celticCrossFuture),
+                  ],
+                ),
+              ),
+
+              // Orta kart - NEAR
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: padding * 2),
+                child: buildCardWithLabel(5, loc.celticCrossNearFuture),
+              ),
+
+              // Alt sıra - 4 kart yan yana
+              Container(
+                margin: EdgeInsets.only(bottom: padding * 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    buildCardWithLabel(6, loc.celticCrossPersonalStance),
+                    buildCardWithLabel(7, loc.celticCrossExternalInfluences),
+                    buildCardWithLabel(8, loc.celticCrossHopesFears),
+                    buildCardWithLabel(9, loc.celticCrossFinalOutcome),
+                  ],
+                ),
+              ),
             ],
-            stops: const [0.0, 0.5, 1.0],
-          ).createShader(bounds),
-          child: Container(
-            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05)),
           ),
         ),
-      ],
+      ),
+    );
+  }
+
+
+
+  Widget _buildActionButtons() {
+    final loc = S.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildActionButton(loc!.flipAllCards, _flipAllCards, Icons.flip),
+          _buildActionButton(loc.reshuffleCards, _reshuffleCards, Icons.shuffle),
+          _buildActionButton(loc.viewResults, _navigateToResults, Icons.arrow_forward),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, VoidCallback onPressed, IconData icon) {
+    return TapAnimatedScale(
+      onTap: onPressed,
+      child: Container(
+        width: 100,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: [Colors.deepPurple[700]!, Colors.purple[900]!]),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.cinzel(fontSize: 12, color: Colors.white),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
-    if (loading) {
+    if (loading || _entryAnimationController == null) {
       return Scaffold(
         backgroundColor: Colors.black,
         body: Center(
-          child: CircularProgressIndicator(color: Colors.white),
+          child: Lottie.asset('assets/animations/tarot_loading.json', width: 200, height: 200),
         ),
       );
     }
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(loc!.cardSelection),
-        backgroundColor: Colors.deepPurple[900],
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help, color: Colors.white),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: Colors.black87,
-                  title: Text(loc.cardSelection, style: const TextStyle(color: Colors.white)),
-                  content: Text(loc.cardSelectionInstructions, style: const TextStyle(color: Colors.white70)),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(loc.close, style: const TextStyle(color: Colors.deepPurple)),
-                    ),
+
+    return BlocConsumer<TarotBloc, TarotState>(
+      listener: (context, state) {
+        if (state is InsufficientResources) {
+          _showPurchaseSheet(context, state.requiredTokens);
+        }
+      },
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(loc!.cardSelection, style: GoogleFonts.cinzel(color: Colors.white)),
+            backgroundColor: Colors.deepPurple[900],
+            elevation: 0,
+          ),
+          body: Stack(
+            children: [
+              Lottie.asset('assets/animations/tarot_shuffle.json', fit: BoxFit.cover, repeat: true),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.deepPurple[900]!.withOpacity(0.7), Colors.black.withOpacity(0.9)],
+                  ),
+                ),
+              ),
+              SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(child: SingleChildScrollView(child: Center(child: _buildCardLayout(context)))),
+                    _buildActionButtons(),
                   ],
                 ),
-              );
-            },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          _buildBackground(),
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.05),
-                  child: Text(
-                    loc.cardSelectionInstructions,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.05),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 16,
-                      alignment: WrapAlignment.center,
-                      runAlignment: WrapAlignment.center,
-                      children: List.generate(widget.cardCount, (index) => _buildCardWidget(index)),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: _flipAllCards,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple[900],
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text(
-                          loc.flipAllCards,
-                          style: const TextStyle(fontSize: 14, color: Colors.white),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: _reshuffleCards,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple[900],
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text(
-                          loc.reshuffleCards,
-                          style: const TextStyle(fontSize: 14, color: Colors.white),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: _checkCreditsAndNavigate,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple[900],
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: Text(
-                          loc.viewResults,
-                          style: const TextStyle(fontSize: 14, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
+
+
+
 
 class InsufficientResourcesScreen extends StatelessWidget {
   final double requiredCredits;
@@ -572,10 +592,7 @@ class InsufficientResourcesScreen extends StatelessWidget {
       builder: (context, scrollController) => Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Colors.deepPurple[900]!,
-              Colors.black87,
-            ],
+            colors: [Colors.deepPurple[900]!, Colors.black87],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -587,17 +604,13 @@ class InsufficientResourcesScreen extends StatelessWidget {
           children: [
             Text(
               loc!.insufficientCreditsAndLimit,
-              style: GoogleFonts.cinzel(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style: GoogleFonts.cinzel(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             Text(
               loc.insufficientCreditsMessage(requiredCredits),
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
+              style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 14),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -607,14 +620,9 @@ class InsufficientResourcesScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _buildPurchaseOption(context, "100 Credits", 9.99, '100_credits'),
             const SizedBox(height: 16),
-            _buildPremiumOption(context),
-            const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(
-                loc.cancel,
-                style: const TextStyle(color: Colors.white70),
-              ),
+              child: Text(loc.cancel, style: GoogleFonts.cinzel(color: Colors.white70)),
             ),
           ],
         ),
@@ -648,10 +656,7 @@ class InsufficientResourcesScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Colors.purple[700]!.withOpacity(0.8),
-              Colors.deepPurple[900]!.withOpacity(0.6),
-            ],
+            colors: [Colors.purple[700]!.withOpacity(0.8), Colors.deepPurple[900]!.withOpacity(0.6)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -662,86 +667,15 @@ class InsufficientResourcesScreen extends StatelessWidget {
           children: [
             Text(
               title,
-              style: GoogleFonts.cinzel(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
+              style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
             ),
-            Text(
-              '\$$price',
-              style: GoogleFonts.cinzel(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPremiumOption(BuildContext context) {
-    return TapAnimatedScale(
-      onTap: () async {
-        final purchaseParam = PurchaseParam(
-          productDetails: ProductDetails(
-            id: 'premium_subscription',
-            title: 'Premium Subscription',
-            description: 'Unlock premium features',
-            price: '9.99 USD',
-            rawPrice: 9.99,
-            currencyCode: 'USD',
-          ),
-        );
-        try {
-          await InAppPurchase.instance.buyNonConsumable(purchaseParam: purchaseParam);
-          Navigator.pop(context);
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Premium purchase failed: $e')),
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.purple[700]!.withOpacity(0.8),
-              Colors.deepPurple[900]!.withOpacity(0.6),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Get Premium',
-              style: GoogleFonts.cinzel(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              'USD 9.99',
-              style: GoogleFonts.cinzel(
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
+            Text('\$$price', style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white)),
           ],
         ),
       ),
     );
   }
 }
-
-
 
 class ReadingResultScreenWithTransition extends StatefulWidget {
   const ReadingResultScreenWithTransition({super.key});
@@ -750,14 +684,15 @@ class ReadingResultScreenWithTransition extends StatefulWidget {
   ReadingResultScreenWithTransitionState createState() => ReadingResultScreenWithTransitionState();
 }
 
-class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWithTransition> with SingleTickerProviderStateMixin {
+class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWithTransition>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 2), // Animasyon süresi
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
     _startTransition();
@@ -771,25 +706,23 @@ class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWi
 
   void _startTransition() async {
     await _animationController.forward();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
-    );
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2C1A4D), // Derin mor
-              Color(0xFF0D0D0D), // Siyah
-            ],
-            stops: [0.3, 0.9],
+            colors: [Colors.deepPurple[900]!.withOpacity(0.7), Colors.black.withOpacity(0.9)],
           ),
         ),
         child: Center(
@@ -797,7 +730,7 @@ class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWi
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Lottie.asset(
-                'assets/animations/tarot_loading.json', // Mistik bir animasyon dosyası, assets'a eklemelisiniz
+                'assets/animations/tarot_loading.json',
                 controller: _animationController,
                 height: 200,
                 fit: BoxFit.cover,
@@ -806,8 +739,7 @@ class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWi
               const SizedBox(height: 20),
               Text(
                 'Unveiling the Mystical Path...',
-                style: TextStyle(
-                  fontFamily: 'Cinzel',
+                style: GoogleFonts.cinzel(
                   fontSize: 18,
                   color: Colors.white70,
                   shadows: [

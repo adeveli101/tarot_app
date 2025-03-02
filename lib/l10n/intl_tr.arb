@@ -1,6 +1,6 @@
 {
   "@@locale": "tr",
-  "tarotFortune": "Tarot Falı",
+  "tarotFortune": "Tarot",
   "errorMessage": "Hata: {message}",
   "tryAgain": "Tekrar Dene",
   "pastPresentFuture": "Geçmiş-Şimdi-Gelecek Açılımı Yap",
@@ -169,5 +169,23 @@
     "placeholders": {
       "hours": {}
     }
-  }
+  },
+
+  "userInfo": "Kullanıcı Bilgileri",
+  "dailyFreeReadings": "Günlük Ücretsiz Fallar",
+  "language": "Dil",
+  "settingsHelp": "Dil ayarlarınızı yapın ve mistik tokenlarınızı buradan yönetin.",
+
+
+
+  "celticCrossCurrentSituation": "Mevcut Durum",
+  "celticCrossChallenge": "Zorluk",
+  "celticCrossSubconscious": "Bilinçaltı",
+  "celticCrossPast": "Geçmiş",
+  "celticCrossFuture": "Olası Gelecek",
+  "celticCrossNearFuture": "Yakın Gelecek",
+  "celticCrossPersonalStance": "Kişisel Duruş",
+  "celticCrossExternalInfluences": "Dış Etkiler",
+  "celticCrossHopesFears": "Umutlar ve Korkular",
+  "celticCrossFinalOutcome": "Sonuç"
 }

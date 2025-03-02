@@ -446,4 +446,34 @@ class STr extends S {
 
   @override
   String get settingsHelp => 'Dil ayarlarınızı yapın ve mistik tokenlarınızı buradan yönetin.';
+
+  @override
+  String get celticCrossCurrentSituation => 'Mevcut Durum';
+
+  @override
+  String get celticCrossChallenge => 'Zorluk';
+
+  @override
+  String get celticCrossSubconscious => 'Bilinçaltı';
+
+  @override
+  String get celticCrossPast => 'Geçmiş';
+
+  @override
+  String get celticCrossFuture => 'Olası Gelecek';
+
+  @override
+  String get celticCrossNearFuture => 'Yakın Gelecek';
+
+  @override
+  String get celticCrossPersonalStance => 'Kişisel Duruş';
+
+  @override
+  String get celticCrossExternalInfluences => 'Dış Etkiler';
+
+  @override
+  String get celticCrossHopesFears => 'Umutlar ve Korkular';
+
+  @override
+  String get celticCrossFinalOutcome => 'Sonuç';
 }

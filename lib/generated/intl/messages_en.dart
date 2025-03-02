@@ -129,11 +129,37 @@ class MessageLookup extends MessageLookupByLibrary {
       "Category-Specific Tips",
     ),
     "categorySpreadReadingError": m7,
+    "celticCrossChallenge": MessageLookupByLibrary.simpleMessage("Challenge"),
+    "celticCrossCurrentSituation": MessageLookupByLibrary.simpleMessage(
+      "Current Situation",
+    ),
     "celticCrossDescription": MessageLookupByLibrary.simpleMessage(
       "Detailed and comprehensive analysis",
     ),
+    "celticCrossExternalInfluences": MessageLookupByLibrary.simpleMessage(
+      "External Influences",
+    ),
+    "celticCrossFinalOutcome": MessageLookupByLibrary.simpleMessage(
+      "Final Outcome",
+    ),
+    "celticCrossFuture": MessageLookupByLibrary.simpleMessage(
+      "Possible Future",
+    ),
+    "celticCrossHopesFears": MessageLookupByLibrary.simpleMessage(
+      "Hopes & Fears",
+    ),
+    "celticCrossNearFuture": MessageLookupByLibrary.simpleMessage(
+      "Near Future",
+    ),
+    "celticCrossPast": MessageLookupByLibrary.simpleMessage("Past"),
+    "celticCrossPersonalStance": MessageLookupByLibrary.simpleMessage(
+      "Personal Stance",
+    ),
     "celticCrossReading": MessageLookupByLibrary.simpleMessage("Celtic Cross"),
     "celticCrossReadingError": m8,
+    "celticCrossSubconscious": MessageLookupByLibrary.simpleMessage(
+      "Subconscious",
+    ),
     "chooseSpread": MessageLookupByLibrary.simpleMessage(
       "Choose how the cards will be drawn",
     ),

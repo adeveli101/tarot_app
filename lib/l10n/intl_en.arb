@@ -173,5 +173,24 @@
     "placeholders": {
       "hours": {}
     }
-  }
+  },
+
+
+  "userInfo": "User Info",
+  "dailyFreeReadings": "Daily Free Readings",
+  "language": "Language",
+  "settingsHelp": "Adjust your language and manage your mystical tokens here.",
+
+
+
+  "celticCrossCurrentSituation": "Current Situation",
+  "celticCrossChallenge": "Challenge",
+  "celticCrossSubconscious": "Subconscious",
+  "celticCrossPast": "Past",
+  "celticCrossFuture": "Possible Future",
+  "celticCrossNearFuture": "Near Future",
+  "celticCrossPersonalStance": "Personal Stance",
+  "celticCrossExternalInfluences": "External Influences",
+  "celticCrossHopesFears": "Hopes & Fears",
+  "celticCrossFinalOutcome": "Final Outcome"
 }

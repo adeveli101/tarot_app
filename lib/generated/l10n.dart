@@ -868,6 +868,66 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Adjust your language and manage your mystical tokens here.'**
   String get settingsHelp;
+
+  /// No description provided for @celticCrossCurrentSituation.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Situation'**
+  String get celticCrossCurrentSituation;
+
+  /// No description provided for @celticCrossChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge'**
+  String get celticCrossChallenge;
+
+  /// No description provided for @celticCrossSubconscious.
+  ///
+  /// In en, this message translates to:
+  /// **'Subconscious'**
+  String get celticCrossSubconscious;
+
+  /// No description provided for @celticCrossPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get celticCrossPast;
+
+  /// No description provided for @celticCrossFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible Future'**
+  String get celticCrossFuture;
+
+  /// No description provided for @celticCrossNearFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Near Future'**
+  String get celticCrossNearFuture;
+
+  /// No description provided for @celticCrossPersonalStance.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Stance'**
+  String get celticCrossPersonalStance;
+
+  /// No description provided for @celticCrossExternalInfluences.
+  ///
+  /// In en, this message translates to:
+  /// **'External Influences'**
+  String get celticCrossExternalInfluences;
+
+  /// No description provided for @celticCrossHopesFears.
+  ///
+  /// In en, this message translates to:
+  /// **'Hopes & Fears'**
+  String get celticCrossHopesFears;
+
+  /// No description provided for @celticCrossFinalOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Final Outcome'**
+  String get celticCrossFinalOutcome;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

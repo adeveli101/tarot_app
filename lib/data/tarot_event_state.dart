@@ -1,27 +1,18 @@
-import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// lib/data/tarot_event_state.dart
 import 'package:equatable/equatable.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tarot_fal/data/tarot_repository.dart';
-import 'package:tarot_fal/gemini_service.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 
-// Events
+// Events (unchanged)
 abstract class TarotEvent extends Equatable {
   @override
   List<Object?> get props => [];
 }
+
 class LoadTarotCards extends TarotEvent {}
 class ShuffleDeck extends TarotEvent {}
 class RedeemCoupon extends TarotEvent {
   final String couponCode;
-
   RedeemCoupon(this.couponCode);
-
   @override
   List<Object?> get props => [couponCode];
 }
@@ -49,77 +40,66 @@ class DrawFiveCardPath extends TarotEvent {
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawRelationshipSpread extends TarotEvent {
   final String? customPrompt;
   DrawRelationshipSpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawCelticCross extends TarotEvent {
   final String? customPrompt;
   DrawCelticCross({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawYearlySpread extends TarotEvent {
   final String? customPrompt;
   DrawYearlySpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawMindBodySpirit extends TarotEvent {
   final String? customPrompt;
   DrawMindBodySpirit({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawAstroLogicalCross extends TarotEvent {
   final String? customPrompt;
   DrawAstroLogicalCross({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawBrokenHeart extends TarotEvent {
   final String? customPrompt;
   DrawBrokenHeart({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawDreamInterpretation extends TarotEvent {
   final String? customPrompt;
   DrawDreamInterpretation({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawHorseshoeSpread extends TarotEvent {
   final String? customPrompt;
   DrawHorseshoeSpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawCareerPathSpread extends TarotEvent {
   final String? customPrompt;
   DrawCareerPathSpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawFullMoonSpread extends TarotEvent {
   final String? customPrompt;
   DrawFullMoonSpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
-
 class DrawCategoryReading extends TarotEvent {
   final String category;
   final int cardCount;
@@ -131,74 +111,137 @@ class DrawCategoryReading extends TarotEvent {
 
 // States
 abstract class TarotState extends Equatable {
+  final bool isPremium;
+  final double userTokens; // Renamed from userCredits to userTokens
+  final int dailyFreeFalCount;
+
+  const TarotState({
+    required this.isPremium,
+    required this.userTokens,
+    required this.dailyFreeFalCount,
+  });
+
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [isPremium, userTokens, dailyFreeFalCount];
 }
 
-class TarotInitial extends TarotState {}
+class TarotInitial extends TarotState {
+  const TarotInitial({
+    super.isPremium = false,
+    super.userTokens = 0.0,
+    super.dailyFreeFalCount = 0,
+  });
+}
 
-class TarotLoading extends TarotState {}
+class TarotLoading extends TarotState {
+  const TarotLoading({
+    required super.isPremium,
+    required super.userTokens,
+    required super.dailyFreeFalCount,
+  });
+}
 
 class TarotError extends TarotState {
   final String message;
-  TarotError(this.message);
+  const TarotError(
+      this.message, {
+        required super.isPremium,
+        required super.userTokens,
+        required super.dailyFreeFalCount,
+      });
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, isPremium, userTokens, dailyFreeFalCount];
 }
 
 class TarotCardsLoaded extends TarotState {
   final List<TarotCard> cards;
-  TarotCardsLoaded(this.cards);
+  const TarotCardsLoaded(
+      this.cards, {
+        required super.isPremium,
+        required super.userTokens,
+        required super.dailyFreeFalCount,
+      });
   @override
-  List<Object?> get props => [cards];
+  List<Object?> get props => [cards, isPremium, userTokens, dailyFreeFalCount];
 }
 
 class CouponRedeemed extends TarotState {
   final String message;
-  CouponRedeemed(this.message);
+  const CouponRedeemed(
+      this.message, {
+        required super.isPremium,
+        required super.userTokens,
+        required super.dailyFreeFalCount,
+      });
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, isPremium, userTokens, dailyFreeFalCount];
 }
 
 class CouponInvalid extends TarotState {
   final String message;
-  CouponInvalid(this.message);
+  const CouponInvalid(
+      this.message, {
+        required super.isPremium,
+        required super.userTokens,
+        required super.dailyFreeFalCount,
+      });
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, isPremium, userTokens, dailyFreeFalCount];
 }
 
 class SingleCardDrawn extends TarotState {
   final TarotCard card;
-  SingleCardDrawn(this.card);
+  const SingleCardDrawn(
+      this.card, {
+        required super.isPremium,
+        required super.userTokens,
+        required super.dailyFreeFalCount,
+      });
   @override
-  List<Object?> get props => [card];
+  List<Object?> get props => [card, isPremium, userTokens, dailyFreeFalCount];
 }
 
 class SpreadDrawn extends TarotState {
   final Map<String, TarotCard> spread;
-  SpreadDrawn(this.spread);
+  const SpreadDrawn(
+      this.spread, {
+        required super.isPremium,
+        required super.userTokens,
+        required super.dailyFreeFalCount,
+      });
   @override
-  List<Object?> get props => [spread];
+  List<Object?> get props => [spread, isPremium, userTokens, dailyFreeFalCount];
 }
 
 class FalYorumuLoaded extends TarotState {
   final String yorum;
   final int tokenCount;
   final double cost;
-  FalYorumuLoaded(this.yorum, {required this.tokenCount, required this.cost});
+  const FalYorumuLoaded(
+      this.yorum, {
+        required this.tokenCount,
+        required this.cost,
+        required super.isPremium,
+        required super.userTokens,
+        required super.dailyFreeFalCount,
+      });
   @override
-  List<Object?> get props => [yorum, tokenCount, cost];
+  List<Object?> get props => [yorum, tokenCount, cost, isPremium, userTokens, dailyFreeFalCount];
 }
 
 class InsufficientResources extends TarotState {
-  final double requiredCredits;
-  InsufficientResources(this.requiredCredits);
+  final double requiredTokens; // Renamed from requiredCredits to requiredTokens
+  const InsufficientResources(
+      this.requiredTokens, {
+        required super.isPremium,
+        required super.userTokens,
+        required super.dailyFreeFalCount,
+      });
   @override
-  List<Object?> get props => [requiredCredits];
+  List<Object?> get props => [requiredTokens, isPremium, userTokens, dailyFreeFalCount];
 }
 
-
-// Spread Types
+// Spread Types (unchanged)
 enum SpreadType {
   singleCard(600, 2000, 1.0, 'single_card_purchase'),
   pastPresentFuture(1200, 3000, 2.0, 'past_present_future_purchase'),
@@ -220,8 +263,7 @@ enum SpreadType {
   final int premiumTokenLimit;
   final double costInCredits;
   final String productId;
-  static List<String> get allProductIds {
-    return SpreadType.values.map((type) => type.productId).toList();
-  }
+  static List<String> get allProductIds => SpreadType.values.map((type) => type.productId).toList();
+
   const SpreadType(this.freeTokenLimit, this.premiumTokenLimit, this.costInCredits, this.productId);
 }

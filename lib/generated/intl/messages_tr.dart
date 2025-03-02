@@ -128,11 +128,33 @@ class MessageLookup extends MessageLookupByLibrary {
       "Kategoriye Özel İpuçları",
     ),
     "categorySpreadReadingError": m7,
+    "celticCrossChallenge": MessageLookupByLibrary.simpleMessage("Zorluk"),
+    "celticCrossCurrentSituation": MessageLookupByLibrary.simpleMessage(
+      "Mevcut Durum",
+    ),
     "celticCrossDescription": MessageLookupByLibrary.simpleMessage(
       "Detaylı ve kapsamlı analiz",
     ),
+    "celticCrossExternalInfluences": MessageLookupByLibrary.simpleMessage(
+      "Dış Etkiler",
+    ),
+    "celticCrossFinalOutcome": MessageLookupByLibrary.simpleMessage("Sonuç"),
+    "celticCrossFuture": MessageLookupByLibrary.simpleMessage("Olası Gelecek"),
+    "celticCrossHopesFears": MessageLookupByLibrary.simpleMessage(
+      "Umutlar ve Korkular",
+    ),
+    "celticCrossNearFuture": MessageLookupByLibrary.simpleMessage(
+      "Yakın Gelecek",
+    ),
+    "celticCrossPast": MessageLookupByLibrary.simpleMessage("Geçmiş"),
+    "celticCrossPersonalStance": MessageLookupByLibrary.simpleMessage(
+      "Kişisel Duruş",
+    ),
     "celticCrossReading": MessageLookupByLibrary.simpleMessage("Celtic Cross"),
     "celticCrossReadingError": m8,
+    "celticCrossSubconscious": MessageLookupByLibrary.simpleMessage(
+      "Bilinçaltı",
+    ),
     "chooseSpread": MessageLookupByLibrary.simpleMessage(
       "Kartların nasıl açılacağını seçin",
     ),

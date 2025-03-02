@@ -1,22 +1,19 @@
+// lib/screens/tarot_reading_screen.dart
 // ignore_for_file: unused_local_variable
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:lottie/lottie.dart';
 import 'package:tarot_fal/data/tarot_bloc.dart';
-import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/screens/profile_page.dart';
-import 'package:tarot_fal/screens/reading_result.dart';
+import 'package:tarot_fal/screens/purchase_sheet.dart';
+import 'package:tarot_fal/screens/card_selection_animation.dart';
 import '../data/tarot_event_state.dart';
-import '../gemini_service.dart';
 import '../models/animations/tap_animations_scale.dart';
-import 'card_selection_animation.dart';
 
 class TarotReadingScreen extends StatefulWidget {
   final VoidCallback onSettingsTap;
@@ -30,7 +27,6 @@ class TarotReadingScreen extends StatefulWidget {
 class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTickerProviderStateMixin {
   late AnimationController _titleController;
   final TextEditingController _couponController = TextEditingController();
-  final InAppPurchase _inAppPurchase = InAppPurchase.instance;
 
   @override
   void initState() {
@@ -39,7 +35,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
       duration: const Duration(milliseconds: 600),
       vsync: this,
     )..forward();
-    _initializeInAppPurchase();
   }
 
   @override
@@ -49,32 +44,17 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
     super.dispose();
   }
 
-  void _initializeInAppPurchase() {
-    _inAppPurchase.restorePurchases();
-  }
-
-  bool _canStartReading(TarotBloc bloc) {
-    final isPremium = bloc.isPremium;
-    final userCredits = bloc.userCredits;
-    final dailyFreeFalCount = bloc.dailyFreeFalCount;
-    const maxFreeFalsPerDay = 5;
-    const minCreditsRequired = 1.0;
-
-    return isPremium || dailyFreeFalCount < maxFreeFalsPerDay || userCredits >= minCreditsRequired;
-  }
-
-  void _showPurchaseSheet(BuildContext context, double requiredCredits) {
+  void _showPurchaseSheet(BuildContext context, double requiredTokens) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => BlocProvider.value(
         value: BlocProvider.of<TarotBloc>(context),
-        child: PurchaseSheet(requiredCredits: requiredCredits),
+        child: PurchaseSheet(requiredTokens: requiredTokens),
       ),
     );
   }
-
 
   void _showCouponSheet(BuildContext context) {
     showModalBottomSheet(
@@ -95,8 +75,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
@@ -115,12 +93,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
                     ),
                   ),
                 );
-              } else if (state is FalYorumuLoaded) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
-                      (route) => false,
-                );
               } else if (state is CouponRedeemed) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(loc!.couponRedeemed(state.message))),
@@ -133,13 +105,11 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(loc!.errorMessage(state.message))),
                 );
-              } else if (state is InsufficientResources) {
-                _showPurchaseSheet(context, state.requiredCredits);
               }
             },
             builder: (context, state) {
               if (state is TarotLoading) return _buildLoadingWidget();
-              return _buildMainContent(context);
+              return _buildMainContent(context, state);
             },
           ),
           SafeArea(
@@ -186,7 +156,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
     );
   }
 
-  Widget _buildMainContent(BuildContext context) {
+  Widget _buildMainContent(BuildContext context, TarotState state) {
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -198,7 +168,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
             children: [
               _buildTitle(),
               SizedBox(height: MediaQuery.of(context).size.height * 0.45),
-              _buildMainCard(context),
+              _buildMainCard(context, state),
               SizedBox(height: MediaQuery.of(context).size.height * 0.03),
               _buildBottomInfo(),
             ],
@@ -301,29 +271,25 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
     );
   }
 
-  Widget _buildMainCard(BuildContext context) {
+  Widget _buildMainCard(BuildContext context, TarotState state) {
     return Center(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
-        child: _buildStartButton(context),
+        child: _buildStartButton(context, state),
       ),
     );
   }
 
-  Widget _buildStartButton(BuildContext context) {
+  Widget _buildStartButton(BuildContext context, TarotState state) {
     final loc = S.of(context);
-    final bloc = context.read<TarotBloc>();
-    final canStart = _canStartReading(bloc);
+    const maxFreeReadsPerDay = 3;
+    const minTokensRequired = 1.0;
+    final canStart = state.isPremium || state.dailyFreeFalCount < maxFreeReadsPerDay || state.userTokens >= minTokensRequired;
 
     return TapAnimatedScale(
-      onTap: canStart
-          ? () {
+      onTap: () {
         HapticFeedback.lightImpact();
         _showCategorySheet(context);
-      }
-          : () {
-        HapticFeedback.heavyImpact();
-        _showPurchaseSheet(context, 1.0);
       },
       child: Container(
         width: MediaQuery.of(context).size.width * 0.6,
@@ -401,7 +367,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
   Widget _buildUserInfoBar(BuildContext context) {
     return BlocBuilder<TarotBloc, TarotState>(
       builder: (context, state) {
-        final bloc = context.read<TarotBloc>();
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
@@ -414,12 +379,12 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
             children: [
               Icon(
                 Icons.star,
-                color: bloc.isPremium ? Colors.amber : Colors.grey,
+                color: state.isPremium ? Colors.amber : Colors.grey,
                 size: 16,
               ),
               const SizedBox(width: 4),
               Text(
-                bloc.isPremium ? "Premium" : "${bloc.userCredits.toStringAsFixed(1)} Credits",
+                state.isPremium ? "Premium" : "${state.userTokens.toStringAsFixed(1)} Tokens",
                 style: GoogleFonts.cinzel(
                   color: Colors.white,
                   fontSize: 10,
@@ -813,10 +778,10 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             child: TextField(
               controller: _promptController,
               maxLines: 3,
-              style: const TextStyle(color: Colors.white),
+              style: GoogleFonts.cinzel(color: Colors.white),
               decoration: InputDecoration(
                 hintText: loc.customPromptHint,
-                hintStyle: TextStyle(color: Colors.grey[400]),
+                hintStyle: GoogleFonts.cinzel(color: Colors.grey[400]),
                 border: InputBorder.none,
               ),
             ),
@@ -833,7 +798,7 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
 
     return spreads.map((spread) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 12), // Corrected to 'bottom'
+        padding: const EdgeInsets.only(bottom: 12), // Replace with bottom: 12
         child: _buildSpreadTile(
           context: context,
           title: spread['title'],
@@ -978,25 +943,14 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
     return TapAnimatedScale(
       onTap: () {
         HapticFeedback.selectionClick();
-        Navigator.pop(context);
-        context.read<TarotBloc>().add(event() as TarotEvent); // Cast to TarotEvent
+        Navigator.pop(context); // Close SpreadSelectionSheet
+        context.read<TarotBloc>().add(event() as TarotEvent);
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => CardSelectionAnimationScreen(cardCount: cardCount),
           ),
-        ).then((_) {
-          if (mounted) {
-            SchedulerBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReadingResultScreen()),
-                );
-              }
-            });
-          }
-        });
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -1058,7 +1012,7 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  "${cost.toStringAsFixed(1)} Credits",
+                  "${cost.toStringAsFixed(1)} Tokens",
                   style: GoogleFonts.cinzel(
                     color: Colors.yellowAccent,
                     fontSize: 10,
@@ -1073,265 +1027,3 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
     );
   }
 }
-
-class CouponSheet extends StatefulWidget {
-  const CouponSheet({super.key});
-
-  @override
-  CouponSheetState createState() => CouponSheetState();
-}
-
-class CouponSheetState extends State<CouponSheet> {
-  final TextEditingController _couponController = TextEditingController();
-
-  @override
-  void dispose() {
-    _couponController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = S.of(context);
-    return DraggableScrollableSheet(
-      initialChildSize: 0.4,
-      minChildSize: 0.3,
-      maxChildSize: 0.5,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple[900]!, Colors.black87],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              loc!.redeem,
-              style: GoogleFonts.cinzel(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _couponController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: loc.couponHint,
-                hintStyle: TextStyle(color: Colors.grey[400]),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.purple[300]!.withOpacity(0.5)),
-                ),
-                filled: true,
-                fillColor: Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TapAnimatedScale(
-              onTap: () {
-                if (_couponController.text.trim().isNotEmpty) {
-                  context.read<TarotBloc>().add(RedeemCoupon(_couponController.text));
-                  _couponController.clear();
-                  Navigator.pop(context);
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.purple[700]!.withOpacity(0.8),
-                      Colors.deepPurple[900]!.withOpacity(0.6),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  loc.redeem,
-                  style: GoogleFonts.cinzel(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class PurchaseSheet extends StatefulWidget {
-  final double requiredCredits;
-
-  const PurchaseSheet({super.key, required this.requiredCredits});
-
-  @override
-  PurchaseSheetState createState() => PurchaseSheetState();
-}
-
-class PurchaseSheetState extends State<PurchaseSheet> {
-  final List<String> _productIds = ['10_credits', '50_credits', '100_credits'];
-  late StreamSubscription<List<PurchaseDetails>> _subscription;
-  List<ProductDetails> _products = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProducts();
-    _subscription = InAppPurchase.instance.purchaseStream.listen(
-          (purchaseDetailsList) {
-        _handlePurchaseUpdates(purchaseDetailsList);
-      },
-      onError: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Purchase error: $error')));
-      },
-    );
-  }
-  Future<void> _loadProducts() async {
-    final response = await InAppPurchase.instance.queryProductDetails(_productIds.toSet());
-    setState(() {
-      _products = response.productDetails;
-    });
-  }
-
-  void _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) async {
-    for (var purchase in purchaseDetailsList) {
-      if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
-        final bloc = context.read<TarotBloc>();
-        double credits = _getCreditValue(purchase.productID);
-        await bloc.updateUserCredits(credits); // Use public method
-        await InAppPurchase.instance.completePurchase(purchase);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added $credits credits!')));
-        Navigator.pop(context);
-      }
-    }
-  }
-
-  double _getCreditValue(String productId) {
-    switch (productId) {
-      case '10_credits': return 10.0;
-      case '50_credits': return 50.0;
-      case '100_credits': return 100.0;
-      default: return 0.0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = S.of(context);
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      minChildSize: 0.4,
-      maxChildSize: 0.6,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple[900]!, Colors.black87],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              loc!.purchaseCredits,
-              style: GoogleFonts.cinzel(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              loc.insufficientCreditsMessage(widget.requiredCredits),
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ..._products.map((product) => _buildPurchaseOption(context, product)),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                loc.cancel,
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPurchaseOption(BuildContext context, ProductDetails product) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TapAnimatedScale(
-        onTap: () async {
-          final purchaseParam = PurchaseParam(productDetails: product);
-          await InAppPurchase.instance.buyConsumable(purchaseParam: purchaseParam);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.purple[700]!.withOpacity(0.8),
-                Colors.deepPurple[900]!.withOpacity(0.6),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                product.title,
-                style: GoogleFonts.cinzel(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                product.price,
-                style: GoogleFonts.cinzel(
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-}
-

@@ -446,4 +446,34 @@ class SEn extends S {
 
   @override
   String get settingsHelp => 'Adjust your language and manage your mystical tokens here.';
+
+  @override
+  String get celticCrossCurrentSituation => 'Current Situation';
+
+  @override
+  String get celticCrossChallenge => 'Challenge';
+
+  @override
+  String get celticCrossSubconscious => 'Subconscious';
+
+  @override
+  String get celticCrossPast => 'Past';
+
+  @override
+  String get celticCrossFuture => 'Possible Future';
+
+  @override
+  String get celticCrossNearFuture => 'Near Future';
+
+  @override
+  String get celticCrossPersonalStance => 'Personal Stance';
+
+  @override
+  String get celticCrossExternalInfluences => 'External Influences';
+
+  @override
+  String get celticCrossHopesFears => 'Hopes & Fears';
+
+  @override
+  String get celticCrossFinalOutcome => 'Final Outcome';
 }

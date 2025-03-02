@@ -1,3 +1,4 @@
+// lib/screens/reading_result_screen.dart
 // ignore_for_file: unused_local_variable
 
 import 'package:flutter/material.dart';
@@ -52,32 +53,10 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
     super.dispose();
   }
 
-  void _saveReadingToFirestore(String content, BuildContext context) async {
-    final bloc = context.read<TarotBloc>();
-    final spreadType = bloc.currentSpreadType; // Public getter kullanıldı
-    if (spreadType != null) {
-      try {
-        await bloc.saveReadingToFirestore(content, spreadType, {}); // Public method kullanıldı
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context)!.readingSaved)),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context)!.errorMessage(e.toString()))),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(S.of(context)!.errorMessage('No spread type available'))),
-      );
-    }
-  }
-
   void _shareReading(String content) {
     Share.share(content);
   }
 
-  // Ana sayfaya dönme işlevi
   void _navigateToHome(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
@@ -89,7 +68,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
               MaterialPageRoute(
                 builder: (context) => SettingsScreen(
                   onLocaleChange: (locale, ctx) {
-
                     final myAppState = context.findAncestorStateOfType<MyAppState>();
                     myAppState?.changeLocale(locale, ctx);
                   },
@@ -100,7 +78,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
           },
         ),
       ),
-          (route) => false, // Tüm önceki ekranları kaldırır
+          (route) => false, // Clear navigation stack
     );
   }
 
@@ -114,10 +92,9 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.deepPurple[900]!.withOpacity(0.4),
+              Colors.deepPurple[900]!.withOpacity(0.7),
               Colors.black.withOpacity(0.9),
             ],
-            stops: const [0.3, 0.9],
           ),
         ),
         child: BlocConsumer<TarotBloc, TarotState>(
@@ -135,12 +112,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                 ),
               );
             } else if (state is FalYorumuLoaded) {
-              // Son falı otomatik kaydet
-              final bloc = context.read<TarotBloc>();
-              final spreadType = bloc.currentSpreadType;
-              if (spreadType != null) {
-                _saveReadingToFirestore(state.yorum, context);
-              }
+              // Auto-save is handled in TarotBloc, no manual action needed here
             }
           },
           builder: (context, state) {
@@ -157,7 +129,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
               return Center(
                 child: Text(
                   loc!.pleaseWait,
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  style: GoogleFonts.cinzel(color: Colors.white, fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
               );
@@ -202,7 +174,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
                         loc!.errorMessage(state.message),
-                        style: const TextStyle(color: Colors.white, fontSize: 16),
+                        style: GoogleFonts.cinzel(color: Colors.white, fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -218,7 +190,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                     padding: const EdgeInsets.all(16.0),
                     child: Text(
                       loc!.errorMessage('Unexpected state: $state'),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      style: GoogleFonts.cinzel(color: Colors.white, fontSize: 16),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -232,7 +204,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
     );
   }
 
-  // Kapatma butonunu ekleyen yardımcı metod
   Widget _buildCloseButton(BuildContext context) {
     return Positioned(
       top: 40,
@@ -247,10 +218,17 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
             color: Colors.black54,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.purple[300]!.withOpacity(0.5)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: IconButton(
             icon: const Icon(Icons.close, color: Colors.white, size: 30),
-            onPressed: null, // TapAnimatedScale tarafından yönetiliyor
+            onPressed: null, // Handled by TapAnimatedScale
           ),
         ),
       ),
@@ -267,7 +245,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
           const SizedBox(height: 60),
           Text(
             position,
-            style: TextStyle(
+            style: GoogleFonts.cinzel(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.deepOrangeAccent,
@@ -360,7 +338,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
           const SizedBox(height: 20),
           Text(
             card.name,
-            style: TextStyle(
+            style: GoogleFonts.cinzel(
               fontSize: 20,
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -419,7 +397,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
       children: [
         Text(
           loc!.keywords,
-          style: TextStyle(
+          style: GoogleFonts.cinzel(
             fontSize: 18,
             color: Colors.yellowAccent,
             fontWeight: FontWeight.bold,
@@ -432,9 +410,8 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
           children: keywords
               .map(
                 (keyword) => Chip(
-              label: Text(keyword),
+              label: Text(keyword, style: GoogleFonts.cinzel(color: Colors.white)),
               backgroundColor: Colors.orange[700],
-              labelStyle: const TextStyle(color: Colors.white),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           )
@@ -471,11 +448,10 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
         children: [
           Text(
             loc!.meaning,
-            style: TextStyle(
+            style: GoogleFonts.cinzel(
               fontSize: 20,
               color: Colors.yellowAccent,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Arial',
             ),
           ),
           const SizedBox(height: 12),
@@ -493,11 +469,10 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                       const SizedBox(width: 8),
                       Text(
                         loc.lightMeaning,
-                        style: TextStyle(
+                        style: GoogleFonts.cinzel(
                           color: Colors.green[400],
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          fontFamily: 'Arial',
                         ),
                       ),
                     ],
@@ -508,10 +483,9 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         '* $meaning',
-                        style: TextStyle(
+                        style: GoogleFonts.cinzel(
                           color: Colors.white70,
                           fontSize: 16,
-                          fontFamily: 'Arial',
                         ),
                       ),
                     ),
@@ -523,11 +497,10 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                       const SizedBox(width: 8),
                       Text(
                         loc.shadowMeaning,
-                        style: TextStyle(
+                        style: GoogleFonts.cinzel(
                           color: Colors.red[400],
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          fontFamily: 'Arial',
                         ),
                       ),
                     ],
@@ -538,10 +511,9 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         '* $meaning',
-                        style: TextStyle(
+                        style: GoogleFonts.cinzel(
                           color: Colors.white70,
                           fontSize: 16,
-                          fontFamily: 'Arial',
                         ),
                       ),
                     ),
@@ -582,11 +554,10 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
         children: [
           Text(
             loc!.fortuneTelling,
-            style: TextStyle(
+            style: GoogleFonts.cinzel(
               fontSize: 20,
               color: Colors.yellowAccent,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Arial',
             ),
           ),
           const SizedBox(height: 12),
@@ -595,10 +566,9 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(
                 '• $fortune',
-                style: TextStyle(
+                style: GoogleFonts.cinzel(
                   color: Colors.white70,
                   fontSize: 16,
-                  fontFamily: 'Arial',
                 ),
               ),
             ),
@@ -643,7 +613,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                             padding: const EdgeInsets.only(top: 24, bottom: 16),
                             child: Text(
                               title.replaceAll('###', '').trim(),
-                              style: TextStyle(
+                              style: GoogleFonts.cinzel(
                                 color: Colors.deepOrangeAccent,
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -680,11 +650,10 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                           padding: const EdgeInsets.all(20),
                           child: Text(
                             content,
-                            style: TextStyle(
+                            style: GoogleFonts.cinzel(
                               color: Colors.white,
                               fontSize: 16,
                               height: 1.5,
-                              fontFamily: 'Arial',
                             ),
                             textAlign: TextAlign.justify,
                           ),
@@ -696,7 +665,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
                             child: Text(
                               loc!.swipeForMore,
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: GoogleFonts.cinzel(
                                 color: Colors.yellowAccent,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -754,15 +723,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
           Expanded(
             child: _buildActionButton(
               context: context,
-              label: S.of(context)!.save,
-              icon: Icons.save,
-              onPressed: () => _saveReadingToFirestore(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}', context),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildActionButton(
-              context: context,
               label: S.of(context)!.share,
               icon: Icons.share,
               onPressed: () => _shareReading(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}'),
@@ -788,23 +748,40 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with SingleTi
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 18, color: Colors.white),
-      label: Text(
-        label,
-        style: GoogleFonts.cinzel(
-          fontSize: 14,
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.deepPurple[900]!.withOpacity(0.9),
+    return TapAnimatedScale(
+      onTap: onPressed,
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 4,
-        shadowColor: Colors.black54,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple[700]!, Colors.purple[900]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 18, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.cinzel(
+                fontSize: 14,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
