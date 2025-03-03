@@ -1,6 +1,3 @@
-// lib/screens/tarot_reading_screen.dart
-// ignore_for_file: unused_local_variable
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,8 +7,8 @@ import 'package:lottie/lottie.dart';
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/screens/profile_page.dart';
-import 'package:tarot_fal/screens/purchase_sheet.dart';
 import 'package:tarot_fal/screens/card_selection_animation.dart';
+import '../data/payment_maganer.dart';
 import '../data/tarot_event_state.dart';
 import '../models/animations/tap_animations_scale.dart';
 
@@ -44,15 +41,15 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
     super.dispose();
   }
 
-  void _showPurchaseSheet(BuildContext context, double requiredTokens) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => BlocProvider.value(
-        value: BlocProvider.of<TarotBloc>(context),
-        child: PurchaseSheet(requiredTokens: requiredTokens),
-      ),
+  void _showPaymentDialog(BuildContext context, double requiredTokens) {
+    PaymentManager.showPaymentDialog(
+      context,
+      requiredTokens: requiredTokens,
+      onSuccess: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context)!.couponRedeemed("Tokens added successfully"))),
+        );
+      },
     );
   }
 
@@ -93,6 +90,8 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
                     ),
                   ),
                 );
+              } else if (state is InsufficientResources) {
+                _showPaymentDialog(context, state.requiredTokens);
               } else if (state is CouponRedeemed) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(loc!.couponRedeemed(state.message))),
@@ -520,8 +519,8 @@ class CategorySelectionSheet extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildCategoryTile(
                     context: context,
-                    title: "Spiritual & Mystical",
-                    description: "Explore your inner self, dreams, and cosmic connections.",
+                    title: loc.spiritualMystical, // .arb dosyasına eklenecek
+                    description: loc.spiritualMysticalDescription, // .arb dosyasına eklenecek
                     icon: Icons.star_border,
                     categoryKey: 'spiritual',
                   ),
@@ -648,6 +647,11 @@ class CategorySelectionSheet extends StatelessWidget {
   }
 }
 
+
+
+
+
+
 class SpreadSelectionSheet extends StatefulWidget {
   final String categoryKey;
 
@@ -669,32 +673,45 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
-    return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple[900]!, Colors.black87],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.deepPurple[900]!, Colors.black87],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: _buildSheetHeader(loc!.spreadSelection, loc.chooseSpread),
           ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            _buildSheetHeader(loc!.spreadSelection, loc.chooseSpread),
-            _buildCustomPromptSection(context),
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(16),
-                children: _buildSpreadOptions(context),
-              ),
+          SliverToBoxAdapter(
+            child: _buildCustomPromptSection(context),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                final spreads = _getSpreadsForCategory(widget.categoryKey);
+                if (index >= spreads.length) return null;
+                final spread = spreads[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildSpreadTile(
+                    context: context,
+                    title: spread['title'],
+                    description: spread['description'],
+                    cardCount: spread['cardCount'],
+                    event: spread['event'],
+                    cost: spread['cost'],
+                  ),
+                );
+              },
+              childCount: _getSpreadsForCategory(widget.categoryKey).length,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -791,139 +808,225 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
     );
   }
 
-  List<Widget> _buildSpreadOptions(BuildContext context) {
-    final loc = S.of(context);
-    final String? customPrompt = _promptController.text.trim().isNotEmpty ? _promptController.text.trim() : null;
-    final List<Map<String, dynamic>> spreads = _getSpreadsForCategory(widget.categoryKey);
-
-    return spreads.map((spread) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12), // Replace with bottom: 12
-        child: _buildSpreadTile(
-          context: context,
-          title: spread['title'],
-          description: spread['description'],
-          cardCount: spread['cardCount'],
-          event: spread['event'],
-          cost: spread['cost'],
-        ),
-      );
-    }).toList();
-  }
-
   List<Map<String, dynamic>> _getSpreadsForCategory(String categoryKey) {
+    final loc = S.of(context);
     switch (categoryKey) {
       case 'love':
         return [
           {
-            'title': 'Single Card',
-            'description': 'A quick insight into your love life.',
+            'title': loc!.singleCard,
+            'description': loc.singleCardDescription,
             'cardCount': 1,
             'event': () => DrawSingleCard(customPrompt: null),
             'cost': SpreadType.singleCard.costInCredits,
           },
           {
-            'title': 'Relationship Spread',
-            'description': 'Explore the dynamics of your relationship.',
+            'title': loc.relationshipSpread,
+            'description': loc.relationshipSpreadDescription,
             'cardCount': 7,
             'event': () => DrawRelationshipSpread(customPrompt: null),
             'cost': SpreadType.relationshipSpread.costInCredits,
           },
           {
-            'title': 'Broken Heart',
-            'description': 'Heal and understand emotional pain.',
+            'title': loc.brokenHeart,
+            'description': loc.brokenHeartDescription,
             'cardCount': 5,
             'event': () => DrawBrokenHeart(customPrompt: null),
             'cost': SpreadType.brokenHeart.costInCredits,
           },
-        ];
-      case 'career':
-        return [
           {
-            'title': 'Past Present Future',
-            'description': 'Understand your career journey over time.',
+            'title': loc.pastPresentFuture,
+            'description': loc.pastPresentFutureDescriptionLove,
             'cardCount': 3,
             'event': () => DrawPastPresentFuture(customPrompt: null),
             'cost': SpreadType.pastPresentFuture.costInCredits,
           },
           {
-            'title': 'Five Card Path',
-            'description': 'Map out your career progression.',
-            'cardCount': 5,
-            'event': () => DrawFiveCardPath(customPrompt: null),
-            'cost': SpreadType.fiveCardPath.costInCredits,
-          },
-          {
-            'title': 'Career Path Spread',
-            'description': 'Detailed guidance for professional growth.',
-            'cardCount': 5,
-            'event': () => DrawCareerPathSpread(customPrompt: null),
-            'cost': SpreadType.careerPathSpread.costInCredits,
-          },
-        ];
-      case 'money':
-        return [
-          {
-            'title': 'Problem Solution',
-            'description': 'Address financial challenges and solutions.',
-            'cardCount': 3,
-            'event': () => DrawProblemSolution(customPrompt: null),
-            'cost': SpreadType.problemSolution.costInCredits,
-          },
-          {
-            'title': 'Horseshoe Spread',
-            'description': 'A broad view of your financial outlook.',
-            'cardCount': 7,
-            'event': () => DrawHorseshoeSpread(customPrompt: null),
-            'cost': SpreadType.horseshoeSpread.costInCredits,
-          },
-        ];
-      case 'general':
-        return [
-          {
-            'title': 'Celtic Cross',
-            'description': 'A comprehensive life overview.',
-            'cardCount': 10,
-            'event': () => DrawCelticCross(customPrompt: null),
-            'cost': SpreadType.celticCross.costInCredits,
-          },
-          {
-            'title': 'Yearly Spread',
-            'description': 'Insights for the year ahead.',
-            'cardCount': 12,
-            'event': () => DrawYearlySpread(customPrompt: null),
-            'cost': SpreadType.yearlySpread.costInCredits,
-          },
-          {
-            'title': 'Astrological Cross',
-            'description': 'Align your path with the stars.',
-            'cardCount': 5,
-            'event': () => DrawAstroLogicalCross(customPrompt: null),
-            'cost': SpreadType.astroLogicalCross.costInCredits,
-          },
-        ];
-      case 'spiritual':
-        return [
-          {
-            'title': 'Mind Body Spirit',
-            'description': 'Harmonize your inner self.',
+            'title': loc.mindBodySpirit,
+            'description': loc.mindBodySpiritDescriptionLove,
             'cardCount': 3,
             'event': () => DrawMindBodySpirit(customPrompt: null),
             'cost': SpreadType.mindBodySpirit.costInCredits,
           },
           {
-            'title': 'Dream Interpretation',
-            'description': 'Decode the messages in your dreams.',
+            'title': loc.fullMoonSpread,
+            'description': loc.fullMoonSpreadDescriptionLove,
+            'cardCount': 5,
+            'event': () => DrawFullMoonSpread(customPrompt: null),
+            'cost': SpreadType.fullMoonSpread.costInCredits,
+          },
+        ];
+      case 'career':
+        return [
+          {
+            'title': loc!.singleCard,
+            'description': loc.singleCardDescription,
+            'cardCount': 1,
+            'event': () => DrawSingleCard(customPrompt: null),
+            'cost': SpreadType.singleCard.costInCredits,
+          },
+          {
+            'title': loc.pastPresentFuture,
+            'description': loc.pastPresentFutureDescription,
+            'cardCount': 3,
+            'event': () => DrawPastPresentFuture(customPrompt: null),
+            'cost': SpreadType.pastPresentFuture.costInCredits,
+          },
+          {
+            'title': loc.fiveCardPath,
+            'description': loc.fiveCardPathDescription,
+            'cardCount': 5,
+            'event': () => DrawFiveCardPath(customPrompt: null),
+            'cost': SpreadType.fiveCardPath.costInCredits,
+          },
+          {
+            'title': loc.careerPathSpread,
+            'description': loc.careerPathSpreadDescription,
+            'cardCount': 5,
+            'event': () => DrawCareerPathSpread(customPrompt: null),
+            'cost': SpreadType.careerPathSpread.costInCredits,
+          },
+          {
+            'title': loc.problemSolution,
+            'description': loc.problemSolutionDescriptionCareer,
+            'cardCount': 3,
+            'event': () => DrawProblemSolution(customPrompt: null),
+            'cost': SpreadType.problemSolution.costInCredits,
+          },
+          {
+            'title': loc.horseshoeSpread,
+            'description': loc.horseshoeSpreadDescriptionCareer,
+            'cardCount': 7,
+            'event': () => DrawHorseshoeSpread(customPrompt: null),
+            'cost': SpreadType.horseshoeSpread.costInCredits,
+          },
+        ];
+      case 'money':
+        return [
+          {
+            'title': loc!.singleCard,
+            'description': loc.singleCardDescription,
+            'cardCount': 1,
+            'event': () => DrawSingleCard(customPrompt: null),
+            'cost': SpreadType.singleCard.costInCredits,
+          },
+          {
+            'title': loc.problemSolution,
+            'description': loc.problemSolutionDescriptionMoney,
+            'cardCount': 3,
+            'event': () => DrawProblemSolution(customPrompt: null),
+            'cost': SpreadType.problemSolution.costInCredits,
+          },
+          {
+            'title': loc.horseshoeSpread,
+            'description': loc.horseshoeSpreadDescriptionMoney,
+            'cardCount': 7,
+            'event': () => DrawHorseshoeSpread(customPrompt: null),
+            'cost': SpreadType.horseshoeSpread.costInCredits,
+          },
+          {
+            'title': loc.pastPresentFuture,
+            'description': loc.pastPresentFutureDescriptionMoney,
+            'cardCount': 3,
+            'event': () => DrawPastPresentFuture(customPrompt: null),
+            'cost': SpreadType.pastPresentFuture.costInCredits,
+          },
+          {
+            'title': loc.careerPathSpread,
+            'description': loc.careerPathSpreadDescriptionMoney,
+            'cardCount': 5,
+            'event': () => DrawCareerPathSpread(customPrompt: null),
+            'cost': SpreadType.careerPathSpread.costInCredits,
+          },
+        ];
+      case 'general':
+        return [
+          {
+            'title': loc!.singleCard,
+            'description': loc.singleCardDescription,
+            'cardCount': 1,
+            'event': () => DrawSingleCard(customPrompt: null),
+            'cost': SpreadType.singleCard.costInCredits,
+          },
+          {
+            'title': loc.celticCrossReading,
+            'description': loc.celticCrossDescription,
+            'cardCount': 10,
+            'event': () => DrawCelticCross(customPrompt: null),
+            'cost': SpreadType.celticCross.costInCredits,
+          },
+          {
+            'title': loc.yearlySpreadReading,
+            'description': loc.yearlySpreadDescription,
+            'cardCount': 12,
+            'event': () => DrawYearlySpread(customPrompt: null),
+            'cost': SpreadType.yearlySpread.costInCredits,
+          },
+          {
+            'title': loc.astroLogicalCross,
+            'description': loc.astroLogicalCrossDescriptionGeneral,
+            'cardCount': 5,
+            'event': () => DrawAstroLogicalCross(customPrompt: null),
+            'cost': SpreadType.astroLogicalCross.costInCredits,
+          },
+          {
+            'title': loc.horseshoeSpread,
+            'description': loc.horseshoeSpreadDescriptionGeneral,
+            'cardCount': 7,
+            'event': () => DrawHorseshoeSpread(customPrompt: null),
+            'cost': SpreadType.horseshoeSpread.costInCredits,
+          },
+          {
+            'title': loc.pastPresentFuture,
+            'description': loc.pastPresentFutureDescriptionGeneral,
+            'cardCount': 3,
+            'event': () => DrawPastPresentFuture(customPrompt: null),
+            'cost': SpreadType.pastPresentFuture.costInCredits,
+          },
+        ];
+      case 'spiritual':
+        return [
+          {
+            'title': loc!.singleCard,
+            'description': loc.singleCardDescription,
+            'cardCount': 1,
+            'event': () => DrawSingleCard(customPrompt: null),
+            'cost': SpreadType.singleCard.costInCredits,
+          },
+          {
+            'title': loc.mindBodySpirit,
+            'description': loc.mindBodySpiritDescriptionSpiritual,
+            'cardCount': 3,
+            'event': () => DrawMindBodySpirit(customPrompt: null),
+            'cost': SpreadType.mindBodySpirit.costInCredits,
+          },
+          {
+            'title': loc.dreamInterpretation,
+            'description': loc.dreamInterpretationDescriptionSpiritual,
             'cardCount': 3,
             'event': () => DrawDreamInterpretation(customPrompt: null),
             'cost': SpreadType.dreamInterpretation.costInCredits,
           },
           {
-            'title': 'Full Moon Spread',
-            'description': 'Harness lunar energy for clarity.',
+            'title': loc.fullMoonSpread,
+            'description': loc.fullMoonSpreadDescriptionSpiritual,
             'cardCount': 5,
             'event': () => DrawFullMoonSpread(customPrompt: null),
             'cost': SpreadType.fullMoonSpread.costInCredits,
+          },
+          {
+            'title': loc.astroLogicalCross,
+            'description': loc.astroLogicalCrossDescriptionSpiritual,
+            'cardCount': 5,
+            'event': () => DrawAstroLogicalCross(customPrompt: null),
+            'cost': SpreadType.astroLogicalCross.costInCredits,
+          },
+          {
+            'title': loc.celticCrossReading,
+            'description': loc.celticCrossDescriptionSpiritual,
+            'cardCount': 10,
+            'event': () => DrawCelticCross(customPrompt: null),
+            'cost': SpreadType.celticCross.costInCredits,
           },
         ];
       default:
@@ -943,7 +1046,7 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
     return TapAnimatedScale(
       onTap: () {
         HapticFeedback.selectionClick();
-        Navigator.pop(context); // Close SpreadSelectionSheet
+        Navigator.pop(context); // Kapat SpreadSelectionSheet
         context.read<TarotBloc>().add(event() as TarotEvent);
         Navigator.push(
           context,
@@ -954,6 +1057,10 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
       },
       child: Container(
         padding: const EdgeInsets.all(16),
+        constraints: BoxConstraints(
+          minHeight: 120, // Minimum yükseklik
+          maxWidth: MediaQuery.of(context).size.width * 0.9, // Ekranın %90'ına kadar genişler
+        ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -966,45 +1073,54 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.purple[300]!.withOpacity(0.5)),
         ),
-        child: Stack(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Column(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.cinzel(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GoogleFonts.cinzel(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.purple[700],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        loc!.cardCount(cardCount),
-                        style: GoogleFonts.cinzel(color: Colors.white, fontSize: 12),
-                      ),
-                    ),
-                  ],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  description,
-                  style: GoogleFonts.cinzel(fontSize: 14, color: Colors.grey[300]),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.purple[700],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    loc!.cardCount(cardCount),
+                    style: GoogleFonts.cinzel(color: Colors.white, fontSize: 12),
+                  ),
                 ),
               ],
             ),
-            Positioned(
-              bottom: 0,
-              right: 0,
+            const SizedBox(height: 8),
+            Flexible(
+              child: Text(
+                description,
+                style: GoogleFonts.cinzel(
+                  fontSize: 14,
+                  color: Colors.grey[300],
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.bottomRight,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(

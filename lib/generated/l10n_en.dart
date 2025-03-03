@@ -193,12 +193,6 @@ class SEn extends S {
   String get keywords => 'Keywords:';
 
   @override
-  String get lightMeaning => 'Light:';
-
-  @override
-  String get shadowMeaning => 'Shadow:';
-
-  @override
   String get swipeForMore => 'Swipe for more';
 
   @override
@@ -313,6 +307,12 @@ class SEn extends S {
 
   @override
   String get close => 'Close';
+
+  @override
+  String get lightMeaning => 'Light (Positive):';
+
+  @override
+  String get shadowMeaning => 'Shadow (Negative):';
 
   @override
   String get customPromptTitle => 'Custom Prompt';
@@ -476,4 +476,259 @@ class SEn extends S {
 
   @override
   String get celticCrossFinalOutcome => 'Final Outcome';
+
+  @override
+  String get brokenHeart => 'Broken Heart';
+
+  @override
+  String get brokenHeartDescription => 'Heal and understand emotional pain.';
+
+  @override
+  String get careerPathSpread => 'Career Path Spread';
+
+  @override
+  String get careerPathSpreadDescription => 'Detailed guidance for professional growth.';
+
+  @override
+  String get spiritualMystical => 'Spiritual & Mystical';
+
+  @override
+  String get spiritualMysticalDescription => 'Explore your inner self, dreams, and cosmic connections.';
+
+  @override
+  String get pastPresentFutureDescriptionLove => 'Understand the influences of past, present, and future in your love life.';
+
+  @override
+  String get mindBodySpiritDescriptionLove => 'Harmonize your mind, body, and spirit in the context of love.';
+
+  @override
+  String get fullMoonSpreadDescriptionLove => 'Uncover hidden messages in your love life with lunar energy.';
+
+  @override
+  String get problemSolutionDescriptionCareer => 'Get guidance to address challenges in your career.';
+
+  @override
+  String get horseshoeSpreadDescriptionCareer => 'Gain a broad perspective on your career.';
+
+  @override
+  String get problemSolutionDescriptionMoney => 'Get guidance to address financial challenges.';
+
+  @override
+  String get horseshoeSpreadDescriptionMoney => 'Gain a broad perspective on your finances.';
+
+  @override
+  String get pastPresentFutureDescriptionMoney => 'Explore your financial past, present, and future.';
+
+  @override
+  String get careerPathSpreadDescriptionMoney => 'Detailed guidance for financial growth.';
+
+  @override
+  String get astroLogicalCrossDescriptionGeneral => 'Align your path with the stars.';
+
+  @override
+  String get horseshoeSpreadDescriptionGeneral => 'Gain a broad perspective on your life.';
+
+  @override
+  String get pastPresentFutureDescriptionGeneral => 'Understand the influences of past, present, and future in your life.';
+
+  @override
+  String get mindBodySpiritDescriptionSpiritual => 'Harmonize your inner self with mind, body, and spirit.';
+
+  @override
+  String get dreamInterpretationDescriptionSpiritual => 'Decode the messages in your dreams with a spiritual perspective.';
+
+  @override
+  String get fullMoonSpreadDescriptionSpiritual => 'Gain spiritual clarity with lunar energy.';
+
+  @override
+  String get astroLogicalCrossDescriptionSpiritual => 'Align your spiritual path with the stars.';
+
+  @override
+  String get celticCrossDescriptionSpiritual => 'Receive a comprehensive analysis for your spiritual life.';
+
+  @override
+  String get spiritualDescription => 'Explore your inner self, dreams, and cosmic connections.';
+
+  @override
+  String get mindBodySpirit => 'Mind Body Spirit';
+
+  @override
+  String get mindBodySpiritDescription => 'Harmonize your inner self.';
+
+  @override
+  String get astroLogicalCross => 'Astrological Cross';
+
+  @override
+  String get astroLogicalCrossDescription => 'Align your path with the stars.';
+
+  @override
+  String get dreamInterpretation => 'Dream Interpretation';
+
+  @override
+  String get dreamInterpretationDescription => 'Decode the messages in your dreams.';
+
+  @override
+  String get horseshoeSpread => 'Horseshoe Spread';
+
+  @override
+  String get horseshoeSpreadDescription => 'A broad view of your situation.';
+
+  @override
+  String get fullMoonSpread => 'Full Moon Spread';
+
+  @override
+  String get fullMoonSpreadDescription => 'Harness lunar energy for clarity.';
+
+  @override
+  String get unveilingMysticalPath => 'Unveiling the Mystical Path...';
+
+  @override
+  String get instructionsFlipAll => 'Flip all cards with a single tap.';
+
+  @override
+  String get instructionsReshuffle => 'Reshuffle the cards for a new draw.';
+
+  @override
+  String get instructionsViewResults => 'View the results once all cards are revealed.';
+
+  @override
+  String get problem => 'Problem';
+
+  @override
+  String get solution => 'Solution';
+
+  @override
+  String get dreamPast => 'Dream Past';
+
+  @override
+  String get dreamPresent => 'Dream Present';
+
+  @override
+  String get dreamFuture => 'Dream Future';
+
+  @override
+  String get fiveCardPathPast => 'Past';
+
+  @override
+  String get fiveCardPathPresent => 'Present';
+
+  @override
+  String get fiveCardPathChallenge => 'Challenge';
+
+  @override
+  String get fiveCardPathFuture => 'Future';
+
+  @override
+  String get fiveCardPathOutcome => 'Outcome';
+
+  @override
+  String get relationshipSelf => 'Self';
+
+  @override
+  String get relationshipPartner => 'Partner';
+
+  @override
+  String get relationshipPast => 'Past';
+
+  @override
+  String get relationshipPresent => 'Present';
+
+  @override
+  String get relationshipFuture => 'Future';
+
+  @override
+  String get relationshipStrengths => 'Strengths';
+
+  @override
+  String get relationshipChallenges => 'Challenges';
+
+  @override
+  String get mindBody => 'Mind-Body';
+
+  @override
+  String get mindSpirit => 'Mind-Spirit';
+
+  @override
+  String get bodySpirit => 'Body-Spirit';
+
+  @override
+  String get astroPast => 'Astro Past';
+
+  @override
+  String get astroPresent => 'Astro Present';
+
+  @override
+  String get astroFuture => 'Astro Future';
+
+  @override
+  String get astroChallenge => 'Astro Challenge';
+
+  @override
+  String get astroOutcome => 'Astro Outcome';
+
+  @override
+  String get brokenHeartCause => 'Cause';
+
+  @override
+  String get brokenHeartEmotion => 'Emotion';
+
+  @override
+  String get brokenHeartLesson => 'Lesson';
+
+  @override
+  String get brokenHeartHope => 'Hope';
+
+  @override
+  String get brokenHeartHealing => 'Healing';
+
+  @override
+  String get horseshoePast => 'Past';
+
+  @override
+  String get horseshoePresent => 'Present';
+
+  @override
+  String get horseshoeFuture => 'Future';
+
+  @override
+  String get horseshoeStrengths => 'Strengths';
+
+  @override
+  String get horseshoeObstacles => 'Obstacles';
+
+  @override
+  String get horseshoeAdvice => 'Advice';
+
+  @override
+  String get horseshoeOutcome => 'Outcome';
+
+  @override
+  String get careerPast => 'Career Past';
+
+  @override
+  String get careerPresent => 'Career Present';
+
+  @override
+  String get careerChallenge => 'Career Challenge';
+
+  @override
+  String get careerPotential => 'Career Potential';
+
+  @override
+  String get careerOutcome => 'Career Outcome';
+
+  @override
+  String get fullMoonPast => 'Full Moon Past';
+
+  @override
+  String get fullMoonPresent => 'Full Moon Present';
+
+  @override
+  String get fullMoonChallenge => 'Full Moon Challenge';
+
+  @override
+  String get fullMoonHope => 'Full Moon Hope';
+
+  @override
+  String get fullMoonOutcome => 'Full Moon Outcome';
 }

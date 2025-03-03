@@ -407,18 +407,6 @@ abstract class S {
   /// **'Keywords:'**
   String get keywords;
 
-  /// No description provided for @lightMeaning.
-  ///
-  /// In en, this message translates to:
-  /// **'Light:'**
-  String get lightMeaning;
-
-  /// No description provided for @shadowMeaning.
-  ///
-  /// In en, this message translates to:
-  /// **'Shadow:'**
-  String get shadowMeaning;
-
   /// No description provided for @swipeForMore.
   ///
   /// In en, this message translates to:
@@ -646,6 +634,18 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @lightMeaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Light (Positive):'**
+  String get lightMeaning;
+
+  /// No description provided for @shadowMeaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Shadow (Negative):'**
+  String get shadowMeaning;
 
   /// Title for the custom prompt input dialog.
   ///
@@ -928,6 +928,516 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Final Outcome'**
   String get celticCrossFinalOutcome;
+
+  /// No description provided for @brokenHeart.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken Heart'**
+  String get brokenHeart;
+
+  /// No description provided for @brokenHeartDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Heal and understand emotional pain.'**
+  String get brokenHeartDescription;
+
+  /// No description provided for @careerPathSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Career Path Spread'**
+  String get careerPathSpread;
+
+  /// No description provided for @careerPathSpreadDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed guidance for professional growth.'**
+  String get careerPathSpreadDescription;
+
+  /// No description provided for @spiritualMystical.
+  ///
+  /// In en, this message translates to:
+  /// **'Spiritual & Mystical'**
+  String get spiritualMystical;
+
+  /// No description provided for @spiritualMysticalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore your inner self, dreams, and cosmic connections.'**
+  String get spiritualMysticalDescription;
+
+  /// No description provided for @pastPresentFutureDescriptionLove.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand the influences of past, present, and future in your love life.'**
+  String get pastPresentFutureDescriptionLove;
+
+  /// No description provided for @mindBodySpiritDescriptionLove.
+  ///
+  /// In en, this message translates to:
+  /// **'Harmonize your mind, body, and spirit in the context of love.'**
+  String get mindBodySpiritDescriptionLove;
+
+  /// No description provided for @fullMoonSpreadDescriptionLove.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncover hidden messages in your love life with lunar energy.'**
+  String get fullMoonSpreadDescriptionLove;
+
+  /// No description provided for @problemSolutionDescriptionCareer.
+  ///
+  /// In en, this message translates to:
+  /// **'Get guidance to address challenges in your career.'**
+  String get problemSolutionDescriptionCareer;
+
+  /// No description provided for @horseshoeSpreadDescriptionCareer.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain a broad perspective on your career.'**
+  String get horseshoeSpreadDescriptionCareer;
+
+  /// No description provided for @problemSolutionDescriptionMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Get guidance to address financial challenges.'**
+  String get problemSolutionDescriptionMoney;
+
+  /// No description provided for @horseshoeSpreadDescriptionMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain a broad perspective on your finances.'**
+  String get horseshoeSpreadDescriptionMoney;
+
+  /// No description provided for @pastPresentFutureDescriptionMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore your financial past, present, and future.'**
+  String get pastPresentFutureDescriptionMoney;
+
+  /// No description provided for @careerPathSpreadDescriptionMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed guidance for financial growth.'**
+  String get careerPathSpreadDescriptionMoney;
+
+  /// No description provided for @astroLogicalCrossDescriptionGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Align your path with the stars.'**
+  String get astroLogicalCrossDescriptionGeneral;
+
+  /// No description provided for @horseshoeSpreadDescriptionGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain a broad perspective on your life.'**
+  String get horseshoeSpreadDescriptionGeneral;
+
+  /// No description provided for @pastPresentFutureDescriptionGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Understand the influences of past, present, and future in your life.'**
+  String get pastPresentFutureDescriptionGeneral;
+
+  /// No description provided for @mindBodySpiritDescriptionSpiritual.
+  ///
+  /// In en, this message translates to:
+  /// **'Harmonize your inner self with mind, body, and spirit.'**
+  String get mindBodySpiritDescriptionSpiritual;
+
+  /// No description provided for @dreamInterpretationDescriptionSpiritual.
+  ///
+  /// In en, this message translates to:
+  /// **'Decode the messages in your dreams with a spiritual perspective.'**
+  String get dreamInterpretationDescriptionSpiritual;
+
+  /// No description provided for @fullMoonSpreadDescriptionSpiritual.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain spiritual clarity with lunar energy.'**
+  String get fullMoonSpreadDescriptionSpiritual;
+
+  /// No description provided for @astroLogicalCrossDescriptionSpiritual.
+  ///
+  /// In en, this message translates to:
+  /// **'Align your spiritual path with the stars.'**
+  String get astroLogicalCrossDescriptionSpiritual;
+
+  /// No description provided for @celticCrossDescriptionSpiritual.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive a comprehensive analysis for your spiritual life.'**
+  String get celticCrossDescriptionSpiritual;
+
+  /// No description provided for @spiritualDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore your inner self, dreams, and cosmic connections.'**
+  String get spiritualDescription;
+
+  /// No description provided for @mindBodySpirit.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind Body Spirit'**
+  String get mindBodySpirit;
+
+  /// No description provided for @mindBodySpiritDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Harmonize your inner self.'**
+  String get mindBodySpiritDescription;
+
+  /// No description provided for @astroLogicalCross.
+  ///
+  /// In en, this message translates to:
+  /// **'Astrological Cross'**
+  String get astroLogicalCross;
+
+  /// No description provided for @astroLogicalCrossDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Align your path with the stars.'**
+  String get astroLogicalCrossDescription;
+
+  /// No description provided for @dreamInterpretation.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream Interpretation'**
+  String get dreamInterpretation;
+
+  /// No description provided for @dreamInterpretationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Decode the messages in your dreams.'**
+  String get dreamInterpretationDescription;
+
+  /// No description provided for @horseshoeSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Horseshoe Spread'**
+  String get horseshoeSpread;
+
+  /// No description provided for @horseshoeSpreadDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A broad view of your situation.'**
+  String get horseshoeSpreadDescription;
+
+  /// No description provided for @fullMoonSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Moon Spread'**
+  String get fullMoonSpread;
+
+  /// No description provided for @fullMoonSpreadDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Harness lunar energy for clarity.'**
+  String get fullMoonSpreadDescription;
+
+  /// No description provided for @unveilingMysticalPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Unveiling the Mystical Path...'**
+  String get unveilingMysticalPath;
+
+  /// No description provided for @instructionsFlipAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip all cards with a single tap.'**
+  String get instructionsFlipAll;
+
+  /// No description provided for @instructionsReshuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reshuffle the cards for a new draw.'**
+  String get instructionsReshuffle;
+
+  /// No description provided for @instructionsViewResults.
+  ///
+  /// In en, this message translates to:
+  /// **'View the results once all cards are revealed.'**
+  String get instructionsViewResults;
+
+  /// No description provided for @problem.
+  ///
+  /// In en, this message translates to:
+  /// **'Problem'**
+  String get problem;
+
+  /// No description provided for @solution.
+  ///
+  /// In en, this message translates to:
+  /// **'Solution'**
+  String get solution;
+
+  /// No description provided for @dreamPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream Past'**
+  String get dreamPast;
+
+  /// No description provided for @dreamPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream Present'**
+  String get dreamPresent;
+
+  /// No description provided for @dreamFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream Future'**
+  String get dreamFuture;
+
+  /// No description provided for @fiveCardPathPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get fiveCardPathPast;
+
+  /// No description provided for @fiveCardPathPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get fiveCardPathPresent;
+
+  /// No description provided for @fiveCardPathChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge'**
+  String get fiveCardPathChallenge;
+
+  /// No description provided for @fiveCardPathFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Future'**
+  String get fiveCardPathFuture;
+
+  /// No description provided for @fiveCardPathOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome'**
+  String get fiveCardPathOutcome;
+
+  /// No description provided for @relationshipSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Self'**
+  String get relationshipSelf;
+
+  /// No description provided for @relationshipPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner'**
+  String get relationshipPartner;
+
+  /// No description provided for @relationshipPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get relationshipPast;
+
+  /// No description provided for @relationshipPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get relationshipPresent;
+
+  /// No description provided for @relationshipFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Future'**
+  String get relationshipFuture;
+
+  /// No description provided for @relationshipStrengths.
+  ///
+  /// In en, this message translates to:
+  /// **'Strengths'**
+  String get relationshipStrengths;
+
+  /// No description provided for @relationshipChallenges.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenges'**
+  String get relationshipChallenges;
+
+  /// No description provided for @mindBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind-Body'**
+  String get mindBody;
+
+  /// No description provided for @mindSpirit.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind-Spirit'**
+  String get mindSpirit;
+
+  /// No description provided for @bodySpirit.
+  ///
+  /// In en, this message translates to:
+  /// **'Body-Spirit'**
+  String get bodySpirit;
+
+  /// No description provided for @astroPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Astro Past'**
+  String get astroPast;
+
+  /// No description provided for @astroPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Astro Present'**
+  String get astroPresent;
+
+  /// No description provided for @astroFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Astro Future'**
+  String get astroFuture;
+
+  /// No description provided for @astroChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Astro Challenge'**
+  String get astroChallenge;
+
+  /// No description provided for @astroOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Astro Outcome'**
+  String get astroOutcome;
+
+  /// No description provided for @brokenHeartCause.
+  ///
+  /// In en, this message translates to:
+  /// **'Cause'**
+  String get brokenHeartCause;
+
+  /// No description provided for @brokenHeartEmotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Emotion'**
+  String get brokenHeartEmotion;
+
+  /// No description provided for @brokenHeartLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson'**
+  String get brokenHeartLesson;
+
+  /// No description provided for @brokenHeartHope.
+  ///
+  /// In en, this message translates to:
+  /// **'Hope'**
+  String get brokenHeartHope;
+
+  /// No description provided for @brokenHeartHealing.
+  ///
+  /// In en, this message translates to:
+  /// **'Healing'**
+  String get brokenHeartHealing;
+
+  /// No description provided for @horseshoePast.
+  ///
+  /// In en, this message translates to:
+  /// **'Past'**
+  String get horseshoePast;
+
+  /// No description provided for @horseshoePresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get horseshoePresent;
+
+  /// No description provided for @horseshoeFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Future'**
+  String get horseshoeFuture;
+
+  /// No description provided for @horseshoeStrengths.
+  ///
+  /// In en, this message translates to:
+  /// **'Strengths'**
+  String get horseshoeStrengths;
+
+  /// No description provided for @horseshoeObstacles.
+  ///
+  /// In en, this message translates to:
+  /// **'Obstacles'**
+  String get horseshoeObstacles;
+
+  /// No description provided for @horseshoeAdvice.
+  ///
+  /// In en, this message translates to:
+  /// **'Advice'**
+  String get horseshoeAdvice;
+
+  /// No description provided for @horseshoeOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome'**
+  String get horseshoeOutcome;
+
+  /// No description provided for @careerPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Career Past'**
+  String get careerPast;
+
+  /// No description provided for @careerPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Career Present'**
+  String get careerPresent;
+
+  /// No description provided for @careerChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Career Challenge'**
+  String get careerChallenge;
+
+  /// No description provided for @careerPotential.
+  ///
+  /// In en, this message translates to:
+  /// **'Career Potential'**
+  String get careerPotential;
+
+  /// No description provided for @careerOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Career Outcome'**
+  String get careerOutcome;
+
+  /// No description provided for @fullMoonPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Moon Past'**
+  String get fullMoonPast;
+
+  /// No description provided for @fullMoonPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Moon Present'**
+  String get fullMoonPresent;
+
+  /// No description provided for @fullMoonChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Moon Challenge'**
+  String get fullMoonChallenge;
+
+  /// No description provided for @fullMoonHope.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Moon Hope'**
+  String get fullMoonHope;
+
+  /// No description provided for @fullMoonOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Moon Outcome'**
+  String get fullMoonOutcome;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

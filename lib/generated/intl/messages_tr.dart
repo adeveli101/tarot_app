@@ -89,8 +89,34 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "astroChallenge": MessageLookupByLibrary.simpleMessage("Astro Zorluk"),
+    "astroFuture": MessageLookupByLibrary.simpleMessage("Astro Gelecek"),
+    "astroLogicalCross": MessageLookupByLibrary.simpleMessage("Astrolojik Haç"),
+    "astroLogicalCrossDescription": MessageLookupByLibrary.simpleMessage(
+      "Yolunuzu yıldızlarla hizalayın.",
+    ),
+    "astroLogicalCrossDescriptionGeneral": MessageLookupByLibrary.simpleMessage(
+      "Yolunuzu yıldızlarla hizalayın.",
+    ),
+    "astroLogicalCrossDescriptionSpiritual":
+        MessageLookupByLibrary.simpleMessage(
+          "Manevi yolunuzu yıldızlarla hizalayın.",
+        ),
     "astroLogicalCrossError": m0,
+    "astroOutcome": MessageLookupByLibrary.simpleMessage("Astro Sonuç"),
+    "astroPast": MessageLookupByLibrary.simpleMessage("Astro Geçmiş"),
+    "astroPresent": MessageLookupByLibrary.simpleMessage("Astro Şimdiki"),
+    "bodySpirit": MessageLookupByLibrary.simpleMessage("Beden-Ruh"),
+    "brokenHeart": MessageLookupByLibrary.simpleMessage("Kalp Kırıklığı"),
+    "brokenHeartCause": MessageLookupByLibrary.simpleMessage("Neden"),
+    "brokenHeartDescription": MessageLookupByLibrary.simpleMessage(
+      "Duygusal acıyı anla ve iyileştir.",
+    ),
+    "brokenHeartEmotion": MessageLookupByLibrary.simpleMessage("Duygu"),
     "brokenHeartError": m1,
+    "brokenHeartHealing": MessageLookupByLibrary.simpleMessage("İyileşme"),
+    "brokenHeartHope": MessageLookupByLibrary.simpleMessage("Umut"),
+    "brokenHeartLesson": MessageLookupByLibrary.simpleMessage("Ders"),
     "cancel": MessageLookupByLibrary.simpleMessage("İptal"),
     "cardCount": m2,
     "cardDeckEmpty": MessageLookupByLibrary.simpleMessage("Kart destesi boş"),
@@ -111,10 +137,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "cardsLoadingErrorGeneric": m4,
     "cards_loading_error": m5,
     "career": MessageLookupByLibrary.simpleMessage("Kariyer"),
+    "careerChallenge": MessageLookupByLibrary.simpleMessage("Kariyer Zorluk"),
     "careerDescription": MessageLookupByLibrary.simpleMessage(
       "İş hayatınız ve kariyeriniz hakkında rehberlik alın",
     ),
+    "careerOutcome": MessageLookupByLibrary.simpleMessage("Kariyer Sonuç"),
+    "careerPast": MessageLookupByLibrary.simpleMessage("Kariyer Geçmişi"),
+    "careerPathSpread": MessageLookupByLibrary.simpleMessage("Kariyer Açılımı"),
+    "careerPathSpreadDescription": MessageLookupByLibrary.simpleMessage(
+      "Kariyerin için detaylı rehberlik.",
+    ),
+    "careerPathSpreadDescriptionMoney": MessageLookupByLibrary.simpleMessage(
+      "Finansal büyüme için detaylı rehberlik alın.",
+    ),
     "careerPathSpreadError": m6,
+    "careerPotential": MessageLookupByLibrary.simpleMessage(
+      "Kariyer Potansiyel",
+    ),
+    "careerPresent": MessageLookupByLibrary.simpleMessage("Kariyer Şimdiki"),
     "careerReading": MessageLookupByLibrary.simpleMessage(
       "Kariyer Açılımı Yap",
     ),
@@ -134,6 +174,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "celticCrossDescription": MessageLookupByLibrary.simpleMessage(
       "Detaylı ve kapsamlı analiz",
+    ),
+    "celticCrossDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
+      "Manevi hayatınız için kapsamlı bir analiz alın.",
     ),
     "celticCrossExternalInfluences": MessageLookupByLibrary.simpleMessage(
       "Dış Etkiler",
@@ -192,18 +235,49 @@ class MessageLookup extends MessageLookupByLibrary {
     "divineSymphony": MessageLookupByLibrary.simpleMessage(
       "Kartların İlahi Senfonisi",
     ),
+    "dreamFuture": MessageLookupByLibrary.simpleMessage("Rüya Gelecek"),
+    "dreamInterpretation": MessageLookupByLibrary.simpleMessage("Rüya Yorumu"),
+    "dreamInterpretationDescription": MessageLookupByLibrary.simpleMessage(
+      "Rüyalarınızdaki mesajları çözün.",
+    ),
+    "dreamInterpretationDescriptionSpiritual":
+        MessageLookupByLibrary.simpleMessage(
+          "Rüyalarınızdaki mesajları manevi bir bakış açısıyla çözün.",
+        ),
     "dreamInterpretationError": m11,
+    "dreamPast": MessageLookupByLibrary.simpleMessage("Rüya Geçmişi"),
+    "dreamPresent": MessageLookupByLibrary.simpleMessage("Rüya Şimdiki Zaman"),
     "errorMessage": m12,
     "fiveCardPath": MessageLookupByLibrary.simpleMessage("Beş Kart Yol Ayrımı"),
+    "fiveCardPathChallenge": MessageLookupByLibrary.simpleMessage("Zorluk"),
     "fiveCardPathDescription": MessageLookupByLibrary.simpleMessage(
       "Kariyer seçimleriniz için detaylı analiz",
     ),
+    "fiveCardPathFuture": MessageLookupByLibrary.simpleMessage("Gelecek"),
+    "fiveCardPathOutcome": MessageLookupByLibrary.simpleMessage("Sonuç"),
+    "fiveCardPathPast": MessageLookupByLibrary.simpleMessage("Geçmiş"),
+    "fiveCardPathPresent": MessageLookupByLibrary.simpleMessage("Şimdiki"),
     "fiveCardPathReadingError": m13,
     "flipAllCards": MessageLookupByLibrary.simpleMessage(
       "Bütün Kartları Çevir",
     ),
     "fortuneInsight": m14,
     "fortuneTelling": MessageLookupByLibrary.simpleMessage("Fal Yorumu:"),
+    "fullMoonChallenge": MessageLookupByLibrary.simpleMessage("Dolunay Zorluk"),
+    "fullMoonHope": MessageLookupByLibrary.simpleMessage("Dolunay Umut"),
+    "fullMoonOutcome": MessageLookupByLibrary.simpleMessage("Dolunay Sonuç"),
+    "fullMoonPast": MessageLookupByLibrary.simpleMessage("Dolunay Geçmiş"),
+    "fullMoonPresent": MessageLookupByLibrary.simpleMessage("Dolunay Şimdiki"),
+    "fullMoonSpread": MessageLookupByLibrary.simpleMessage("Dolunay Açılımı"),
+    "fullMoonSpreadDescription": MessageLookupByLibrary.simpleMessage(
+      "Berraklık için ay enerjisini kullanın.",
+    ),
+    "fullMoonSpreadDescriptionLove": MessageLookupByLibrary.simpleMessage(
+      "Dolunay enerjisiyle aşk hayatınızdaki gizli mesajları keşfedin.",
+    ),
+    "fullMoonSpreadDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
+      "Dolunay enerjisiyle manevi berraklık kazanın.",
+    ),
     "fullMoonSpreadError": m15,
     "futureSuggestions": MessageLookupByLibrary.simpleMessage(
       "Yakın geleceğiniz için şu önerilere kulak verin: [YAKIN_GELECEK_ÖNERİLER]",
@@ -222,7 +296,36 @@ class MessageLookup extends MessageLookupByLibrary {
     "guidingWhispersAndSuggestions": MessageLookupByLibrary.simpleMessage(
       "Yol Gösterici Fısıltılar & Öneriler",
     ),
+    "horseshoeAdvice": MessageLookupByLibrary.simpleMessage("Öneri"),
+    "horseshoeFuture": MessageLookupByLibrary.simpleMessage("Gelecek"),
+    "horseshoeObstacles": MessageLookupByLibrary.simpleMessage("Engeller"),
+    "horseshoeOutcome": MessageLookupByLibrary.simpleMessage("Sonuç"),
+    "horseshoePast": MessageLookupByLibrary.simpleMessage("Geçmiş"),
+    "horseshoePresent": MessageLookupByLibrary.simpleMessage("Şimdiki"),
+    "horseshoeSpread": MessageLookupByLibrary.simpleMessage("At Nalı Açılımı"),
+    "horseshoeSpreadDescription": MessageLookupByLibrary.simpleMessage(
+      "Durumunuza geniş bir bakış.",
+    ),
+    "horseshoeSpreadDescriptionCareer": MessageLookupByLibrary.simpleMessage(
+      "Kariyerinizde geniş bir bakış açısı kazanın.",
+    ),
+    "horseshoeSpreadDescriptionGeneral": MessageLookupByLibrary.simpleMessage(
+      "Hayatınızın genelinde geniş bir bakış açısı kazanın.",
+    ),
+    "horseshoeSpreadDescriptionMoney": MessageLookupByLibrary.simpleMessage(
+      "Mali durumunuzda geniş bir bakış açısı kazanın.",
+    ),
     "horseshoeSpreadError": m16,
+    "horseshoeStrengths": MessageLookupByLibrary.simpleMessage("Güçler"),
+    "instructionsFlipAll": MessageLookupByLibrary.simpleMessage(
+      "Tüm kartları tek dokunuşla çevirin.",
+    ),
+    "instructionsReshuffle": MessageLookupByLibrary.simpleMessage(
+      "Kartları yeniden karıştırarak yeni bir çekiliş yapın.",
+    ),
+    "instructionsViewResults": MessageLookupByLibrary.simpleMessage(
+      "Tüm kartlar açıldığında sonucu görün.",
+    ),
     "insufficientCredits": MessageLookupByLibrary.simpleMessage(
       "Devam etmek için yeterli krediniz yok.",
     ),
@@ -235,7 +338,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "lifeDynamicsHighlighted": MessageLookupByLibrary.simpleMessage(
       "Bu kartlar hayatınızdaki önemli dinamikleri vurguluyor.",
     ),
-    "lightMeaning": MessageLookupByLibrary.simpleMessage("Işık:"),
+    "lightMeaning": MessageLookupByLibrary.simpleMessage("Işık (Olumlu):"),
     "loveDescription": MessageLookupByLibrary.simpleMessage(
       "İlişkileriniz hakkında derinlemesine bilgi alın",
     ),
@@ -244,7 +347,19 @@ class MessageLookup extends MessageLookupByLibrary {
       "Aşk & İlişkiler",
     ),
     "meaning": MessageLookupByLibrary.simpleMessage("Anlamı"),
+    "mindBody": MessageLookupByLibrary.simpleMessage("Zihin-Beden"),
+    "mindBodySpirit": MessageLookupByLibrary.simpleMessage("Zihin Beden Ruh"),
+    "mindBodySpiritDescription": MessageLookupByLibrary.simpleMessage(
+      "İç benliğinizi uyumlu hale getirin.",
+    ),
+    "mindBodySpiritDescriptionLove": MessageLookupByLibrary.simpleMessage(
+      "Aşk bağlamında zihin, beden ve ruhunuzu uyumlaştırın.",
+    ),
+    "mindBodySpiritDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
+      "İçsel benliğinizi zihin, beden ve ruhla uyumlaştırın.",
+    ),
     "mindBodySpiritError": m18,
+    "mindSpirit": MessageLookupByLibrary.simpleMessage("Zihin-Ruh"),
     "money": MessageLookupByLibrary.simpleMessage("Para"),
     "moneyDescription": MessageLookupByLibrary.simpleMessage(
       "Finansal konularda içgörü kazanın",
@@ -264,6 +379,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "pastPresentFutureDescription": MessageLookupByLibrary.simpleMessage(
       "Kariyer yolunuz için rehberlik",
     ),
+    "pastPresentFutureDescriptionGeneral": MessageLookupByLibrary.simpleMessage(
+      "Hayatınızdaki geçmiş, şimdiki ve gelecekteki etkileri anlayın.",
+    ),
+    "pastPresentFutureDescriptionLove": MessageLookupByLibrary.simpleMessage(
+      "Aşk hayatınızdaki geçmiş, şimdiki ve gelecekteki etkileri anlayın.",
+    ),
+    "pastPresentFutureDescriptionMoney": MessageLookupByLibrary.simpleMessage(
+      "Mali geçmişinizi, şu anınızı ve geleceğinizi keşfedin.",
+    ),
     "pastPresentFutureReadingError": m20,
     "pleaseWait": MessageLookupByLibrary.simpleMessage("Lütfen Bekleyin."),
     "pointsToWatch": MessageLookupByLibrary.simpleMessage(
@@ -273,8 +397,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "potentialPitfalls": MessageLookupByLibrary.simpleMessage(
       "Dikkat etmeniz gereken potansiyel tuzaklar: [DİKKAT_EDİLMESİ_GEREKEN_NOKTALAR]",
     ),
+    "problem": MessageLookupByLibrary.simpleMessage("Sorun"),
     "problemSolution": MessageLookupByLibrary.simpleMessage(
       "Problem-Çözüm Açılımı Yap",
+    ),
+    "problemSolutionDescriptionCareer": MessageLookupByLibrary.simpleMessage(
+      "Kariyerinizdeki zorlukları çözmek için rehberlik alın.",
+    ),
+    "problemSolutionDescriptionMoney": MessageLookupByLibrary.simpleMessage(
+      "Finansal zorlukları çözmek için rehberlik alın.",
     ),
     "problemSolutionReadingError": m21,
     "profile": MessageLookupByLibrary.simpleMessage("Profil"),
@@ -283,6 +414,12 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "purchaseCredits": MessageLookupByLibrary.simpleMessage("Kredi Satın Al"),
     "redeem": MessageLookupByLibrary.simpleMessage("Kullan"),
+    "relationshipChallenges": MessageLookupByLibrary.simpleMessage("Zorluklar"),
+    "relationshipFuture": MessageLookupByLibrary.simpleMessage("Gelecek"),
+    "relationshipPartner": MessageLookupByLibrary.simpleMessage("Partner"),
+    "relationshipPast": MessageLookupByLibrary.simpleMessage("Geçmiş"),
+    "relationshipPresent": MessageLookupByLibrary.simpleMessage("Şimdiki"),
+    "relationshipSelf": MessageLookupByLibrary.simpleMessage("Kendiniz"),
     "relationshipSpread": MessageLookupByLibrary.simpleMessage(
       "İlişki Açılımı",
     ),
@@ -290,6 +427,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "İlişkinizin detaylı analizi",
     ),
     "relationshipSpreadReadingError": m22,
+    "relationshipStrengths": MessageLookupByLibrary.simpleMessage(
+      "Güçlü Yönler",
+    ),
     "reshuffleCards": MessageLookupByLibrary.simpleMessage(
       "Kartları Yeniden Karıştır",
     ),
@@ -299,13 +439,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsHelp": MessageLookupByLibrary.simpleMessage(
       "Dil ayarlarınızı yapın ve mistik tokenlarınızı buradan yönetin.",
     ),
-    "shadowMeaning": MessageLookupByLibrary.simpleMessage("Gölge:"),
+    "shadowMeaning": MessageLookupByLibrary.simpleMessage("Gölge (Olumsuz):"),
     "singleCard": MessageLookupByLibrary.simpleMessage("Tek Kart Açılımı Yap"),
     "singleCardDescription": MessageLookupByLibrary.simpleMessage(
       "Hızlı cevap için ideal",
     ),
     "singleCardReadingError": m23,
+    "solution": MessageLookupByLibrary.simpleMessage("Çözüm"),
     "specialNote": MessageLookupByLibrary.simpleMessage("Özel Not"),
+    "spiritualDescription": MessageLookupByLibrary.simpleMessage(
+      "İç benliğinizi, rüyalarınızı ve kozmik bağlantılarınızı keşfedin.",
+    ),
+    "spiritualMystical": MessageLookupByLibrary.simpleMessage(
+      "Manevi ve Mistik",
+    ),
+    "spiritualMysticalDescription": MessageLookupByLibrary.simpleMessage(
+      "İçsel benliğinizi, rüyalarınızı ve kozmik bağlantılarınızı keşfedin.",
+    ),
     "spreadInfoBanner": MessageLookupByLibrary.simpleMessage(
       "Her açılım farklı sayıda kart ve yorum içerir",
     ),
@@ -344,6 +494,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unifiedDestinyReflectionTitle": MessageLookupByLibrary.simpleMessage(
       "Birleşik Kaderin Yansımaları",
+    ),
+    "unveilingMysticalPath": MessageLookupByLibrary.simpleMessage(
+      "Mistik Yolu Açığa Çıkarıyoruz...",
     ),
     "userInfo": MessageLookupByLibrary.simpleMessage("Kullanıcı Bilgileri"),
     "viewResults": MessageLookupByLibrary.simpleMessage("Sonuçları Gör"),

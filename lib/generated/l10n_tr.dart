@@ -193,12 +193,6 @@ class STr extends S {
   String get keywords => 'Anahtar Kelimeler:';
 
   @override
-  String get lightMeaning => 'Işık:';
-
-  @override
-  String get shadowMeaning => 'Gölge:';
-
-  @override
   String get swipeForMore => 'Daha fazla bilgi için kaydırın';
 
   @override
@@ -313,6 +307,12 @@ class STr extends S {
 
   @override
   String get close => 'Kapat';
+
+  @override
+  String get lightMeaning => 'Işık (Olumlu):';
+
+  @override
+  String get shadowMeaning => 'Gölge (Olumsuz):';
 
   @override
   String get customPromptTitle => 'Özel İstek';
@@ -476,4 +476,259 @@ class STr extends S {
 
   @override
   String get celticCrossFinalOutcome => 'Sonuç';
+
+  @override
+  String get brokenHeart => 'Kalp Kırıklığı';
+
+  @override
+  String get brokenHeartDescription => 'Duygusal acıyı anla ve iyileştir.';
+
+  @override
+  String get careerPathSpread => 'Kariyer Açılımı';
+
+  @override
+  String get careerPathSpreadDescription => 'Kariyerin için detaylı rehberlik.';
+
+  @override
+  String get spiritualMystical => 'Manevi ve Mistik';
+
+  @override
+  String get spiritualMysticalDescription => 'İçsel benliğinizi, rüyalarınızı ve kozmik bağlantılarınızı keşfedin.';
+
+  @override
+  String get pastPresentFutureDescriptionLove => 'Aşk hayatınızdaki geçmiş, şimdiki ve gelecekteki etkileri anlayın.';
+
+  @override
+  String get mindBodySpiritDescriptionLove => 'Aşk bağlamında zihin, beden ve ruhunuzu uyumlaştırın.';
+
+  @override
+  String get fullMoonSpreadDescriptionLove => 'Dolunay enerjisiyle aşk hayatınızdaki gizli mesajları keşfedin.';
+
+  @override
+  String get problemSolutionDescriptionCareer => 'Kariyerinizdeki zorlukları çözmek için rehberlik alın.';
+
+  @override
+  String get horseshoeSpreadDescriptionCareer => 'Kariyerinizde geniş bir bakış açısı kazanın.';
+
+  @override
+  String get problemSolutionDescriptionMoney => 'Finansal zorlukları çözmek için rehberlik alın.';
+
+  @override
+  String get horseshoeSpreadDescriptionMoney => 'Mali durumunuzda geniş bir bakış açısı kazanın.';
+
+  @override
+  String get pastPresentFutureDescriptionMoney => 'Mali geçmişinizi, şu anınızı ve geleceğinizi keşfedin.';
+
+  @override
+  String get careerPathSpreadDescriptionMoney => 'Finansal büyüme için detaylı rehberlik alın.';
+
+  @override
+  String get astroLogicalCrossDescriptionGeneral => 'Yolunuzu yıldızlarla hizalayın.';
+
+  @override
+  String get horseshoeSpreadDescriptionGeneral => 'Hayatınızın genelinde geniş bir bakış açısı kazanın.';
+
+  @override
+  String get pastPresentFutureDescriptionGeneral => 'Hayatınızdaki geçmiş, şimdiki ve gelecekteki etkileri anlayın.';
+
+  @override
+  String get mindBodySpiritDescriptionSpiritual => 'İçsel benliğinizi zihin, beden ve ruhla uyumlaştırın.';
+
+  @override
+  String get dreamInterpretationDescriptionSpiritual => 'Rüyalarınızdaki mesajları manevi bir bakış açısıyla çözün.';
+
+  @override
+  String get fullMoonSpreadDescriptionSpiritual => 'Dolunay enerjisiyle manevi berraklık kazanın.';
+
+  @override
+  String get astroLogicalCrossDescriptionSpiritual => 'Manevi yolunuzu yıldızlarla hizalayın.';
+
+  @override
+  String get celticCrossDescriptionSpiritual => 'Manevi hayatınız için kapsamlı bir analiz alın.';
+
+  @override
+  String get spiritualDescription => 'İç benliğinizi, rüyalarınızı ve kozmik bağlantılarınızı keşfedin.';
+
+  @override
+  String get mindBodySpirit => 'Zihin Beden Ruh';
+
+  @override
+  String get mindBodySpiritDescription => 'İç benliğinizi uyumlu hale getirin.';
+
+  @override
+  String get astroLogicalCross => 'Astrolojik Haç';
+
+  @override
+  String get astroLogicalCrossDescription => 'Yolunuzu yıldızlarla hizalayın.';
+
+  @override
+  String get dreamInterpretation => 'Rüya Yorumu';
+
+  @override
+  String get dreamInterpretationDescription => 'Rüyalarınızdaki mesajları çözün.';
+
+  @override
+  String get horseshoeSpread => 'At Nalı Açılımı';
+
+  @override
+  String get horseshoeSpreadDescription => 'Durumunuza geniş bir bakış.';
+
+  @override
+  String get fullMoonSpread => 'Dolunay Açılımı';
+
+  @override
+  String get fullMoonSpreadDescription => 'Berraklık için ay enerjisini kullanın.';
+
+  @override
+  String get unveilingMysticalPath => 'Mistik Yolu Açığa Çıkarıyoruz...';
+
+  @override
+  String get instructionsFlipAll => 'Tüm kartları tek dokunuşla çevirin.';
+
+  @override
+  String get instructionsReshuffle => 'Kartları yeniden karıştırarak yeni bir çekiliş yapın.';
+
+  @override
+  String get instructionsViewResults => 'Tüm kartlar açıldığında sonucu görün.';
+
+  @override
+  String get problem => 'Sorun';
+
+  @override
+  String get solution => 'Çözüm';
+
+  @override
+  String get dreamPast => 'Rüya Geçmişi';
+
+  @override
+  String get dreamPresent => 'Rüya Şimdiki Zaman';
+
+  @override
+  String get dreamFuture => 'Rüya Gelecek';
+
+  @override
+  String get fiveCardPathPast => 'Geçmiş';
+
+  @override
+  String get fiveCardPathPresent => 'Şimdiki';
+
+  @override
+  String get fiveCardPathChallenge => 'Zorluk';
+
+  @override
+  String get fiveCardPathFuture => 'Gelecek';
+
+  @override
+  String get fiveCardPathOutcome => 'Sonuç';
+
+  @override
+  String get relationshipSelf => 'Kendiniz';
+
+  @override
+  String get relationshipPartner => 'Partner';
+
+  @override
+  String get relationshipPast => 'Geçmiş';
+
+  @override
+  String get relationshipPresent => 'Şimdiki';
+
+  @override
+  String get relationshipFuture => 'Gelecek';
+
+  @override
+  String get relationshipStrengths => 'Güçlü Yönler';
+
+  @override
+  String get relationshipChallenges => 'Zorluklar';
+
+  @override
+  String get mindBody => 'Zihin-Beden';
+
+  @override
+  String get mindSpirit => 'Zihin-Ruh';
+
+  @override
+  String get bodySpirit => 'Beden-Ruh';
+
+  @override
+  String get astroPast => 'Astro Geçmiş';
+
+  @override
+  String get astroPresent => 'Astro Şimdiki';
+
+  @override
+  String get astroFuture => 'Astro Gelecek';
+
+  @override
+  String get astroChallenge => 'Astro Zorluk';
+
+  @override
+  String get astroOutcome => 'Astro Sonuç';
+
+  @override
+  String get brokenHeartCause => 'Neden';
+
+  @override
+  String get brokenHeartEmotion => 'Duygu';
+
+  @override
+  String get brokenHeartLesson => 'Ders';
+
+  @override
+  String get brokenHeartHope => 'Umut';
+
+  @override
+  String get brokenHeartHealing => 'İyileşme';
+
+  @override
+  String get horseshoePast => 'Geçmiş';
+
+  @override
+  String get horseshoePresent => 'Şimdiki';
+
+  @override
+  String get horseshoeFuture => 'Gelecek';
+
+  @override
+  String get horseshoeStrengths => 'Güçler';
+
+  @override
+  String get horseshoeObstacles => 'Engeller';
+
+  @override
+  String get horseshoeAdvice => 'Öneri';
+
+  @override
+  String get horseshoeOutcome => 'Sonuç';
+
+  @override
+  String get careerPast => 'Kariyer Geçmişi';
+
+  @override
+  String get careerPresent => 'Kariyer Şimdiki';
+
+  @override
+  String get careerChallenge => 'Kariyer Zorluk';
+
+  @override
+  String get careerPotential => 'Kariyer Potansiyel';
+
+  @override
+  String get careerOutcome => 'Kariyer Sonuç';
+
+  @override
+  String get fullMoonPast => 'Dolunay Geçmiş';
+
+  @override
+  String get fullMoonPresent => 'Dolunay Şimdiki';
+
+  @override
+  String get fullMoonChallenge => 'Dolunay Zorluk';
+
+  @override
+  String get fullMoonHope => 'Dolunay Umut';
+
+  @override
+  String get fullMoonOutcome => 'Dolunay Sonuç';
 }

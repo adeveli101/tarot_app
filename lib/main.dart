@@ -1,23 +1,22 @@
-// lib/main.dart
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/generated/l10n.dart';
-import 'package:tarot_fal/screens/purchase_sheet.dart';
 import 'package:tarot_fal/screens/settings_screen.dart';
-import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
+import 'data/payment_maganer.dart';
 import 'data/tarot_event_state.dart';
 import 'firebase_options.dart';
 import 'gemini_service.dart';
 import 'models/animations/tap_animations_scale.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,23 +24,6 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await dotenv.load(fileName: ".env");
-
-  // Satın alma işlemlerini başlat
-  final InAppPurchase inAppPurchase = InAppPurchase.instance;
-  final bool available = await inAppPurchase.isAvailable();
-  if (available) {
-    final productIds = SpreadType.allProductIds;
-    final ProductDetailsResponse response = await inAppPurchase.queryProductDetails(productIds.toSet());
-    if (response.error != null) {
-      if (kDebugMode) {
-        print('Ürün detayları yüklenirken hata: ${response.error}');
-      }
-    }
-  } else {
-    if (kDebugMode) {
-      print('InAppPurchase servisi kullanılamıyor.');
-    }
-  }
 
   final prefs = await SharedPreferences.getInstance();
   final String? savedLanguage = prefs.getString('language');
@@ -52,26 +34,27 @@ Future<void> main() async {
     locale: savedLanguage ?? 'tr', // Varsayılan dil Türkçe
   );
 
-  final purchaseService = PurchaseService();
-  purchaseService.initialize(tarotBloc); // PurchaseService'i TarotBloc ile başlat
+  // PaymentManager'ı başlatıyoruz
+  final paymentManager = PaymentManager();
+  paymentManager.initialize();
 
   runApp(MyApp(
     initialLocale: savedLanguage != null ? Locale(savedLanguage) : null,
     tarotBloc: tarotBloc,
-    purchaseService: purchaseService,
+    paymentManager: paymentManager,
   ));
 }
 
 class MyApp extends StatefulWidget {
   final Locale? initialLocale;
   final TarotBloc tarotBloc;
-  final PurchaseService purchaseService;
+  final PaymentManager paymentManager;
 
   const MyApp({
     super.key,
     this.initialLocale,
     required this.tarotBloc,
-    required this.purchaseService,
+    required this.paymentManager,
   });
 
   @override
@@ -118,7 +101,7 @@ class MyAppState extends State<MyApp> {
   @override
   void dispose() {
     _tarotBloc.close();
-    widget.purchaseService.dispose();
+    widget.paymentManager.dispose();
     super.dispose();
   }
 
@@ -127,6 +110,7 @@ class MyAppState extends State<MyApp> {
     return BlocProvider.value(
       value: _tarotBloc,
       child: MaterialApp(
+        navigatorKey: navigatorKey, // Global navigator key eklendi
         title: 'Tarot Falı',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -135,7 +119,7 @@ class MyAppState extends State<MyApp> {
             brightness: Brightness.dark,
           ),
           scaffoldBackgroundColor: Colors.grey[900],
-          fontFamily: GoogleFonts.cinzel().fontFamily, // Cinzel fontu varsayılan olarak ayarlandı
+          fontFamily: GoogleFonts.cinzel().fontFamily,
         ),
         localizationsDelegates: const [
           S.delegate,
@@ -204,7 +188,6 @@ class LanguageSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final loc = S.of(context);
     return Scaffold(
       backgroundColor: Colors.grey[900],
       body: Center(

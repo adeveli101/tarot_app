@@ -90,8 +90,36 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "astroChallenge": MessageLookupByLibrary.simpleMessage("Astro Challenge"),
+    "astroFuture": MessageLookupByLibrary.simpleMessage("Astro Future"),
+    "astroLogicalCross": MessageLookupByLibrary.simpleMessage(
+      "Astrological Cross",
+    ),
+    "astroLogicalCrossDescription": MessageLookupByLibrary.simpleMessage(
+      "Align your path with the stars.",
+    ),
+    "astroLogicalCrossDescriptionGeneral": MessageLookupByLibrary.simpleMessage(
+      "Align your path with the stars.",
+    ),
+    "astroLogicalCrossDescriptionSpiritual":
+        MessageLookupByLibrary.simpleMessage(
+          "Align your spiritual path with the stars.",
+        ),
     "astroLogicalCrossError": m0,
+    "astroOutcome": MessageLookupByLibrary.simpleMessage("Astro Outcome"),
+    "astroPast": MessageLookupByLibrary.simpleMessage("Astro Past"),
+    "astroPresent": MessageLookupByLibrary.simpleMessage("Astro Present"),
+    "bodySpirit": MessageLookupByLibrary.simpleMessage("Body-Spirit"),
+    "brokenHeart": MessageLookupByLibrary.simpleMessage("Broken Heart"),
+    "brokenHeartCause": MessageLookupByLibrary.simpleMessage("Cause"),
+    "brokenHeartDescription": MessageLookupByLibrary.simpleMessage(
+      "Heal and understand emotional pain.",
+    ),
+    "brokenHeartEmotion": MessageLookupByLibrary.simpleMessage("Emotion"),
     "brokenHeartError": m1,
+    "brokenHeartHealing": MessageLookupByLibrary.simpleMessage("Healing"),
+    "brokenHeartHope": MessageLookupByLibrary.simpleMessage("Hope"),
+    "brokenHeartLesson": MessageLookupByLibrary.simpleMessage("Lesson"),
     "cancel": MessageLookupByLibrary.simpleMessage("Cancel"),
     "cardCount": m2,
     "cardDeckEmpty": MessageLookupByLibrary.simpleMessage("Card deck is empty"),
@@ -112,10 +140,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "cardsLoadingErrorGeneric": m4,
     "cards_loading_error": m5,
     "career": MessageLookupByLibrary.simpleMessage("Career"),
+    "careerChallenge": MessageLookupByLibrary.simpleMessage("Career Challenge"),
     "careerDescription": MessageLookupByLibrary.simpleMessage(
       "Get guidance on your career path",
     ),
+    "careerOutcome": MessageLookupByLibrary.simpleMessage("Career Outcome"),
+    "careerPast": MessageLookupByLibrary.simpleMessage("Career Past"),
+    "careerPathSpread": MessageLookupByLibrary.simpleMessage(
+      "Career Path Spread",
+    ),
+    "careerPathSpreadDescription": MessageLookupByLibrary.simpleMessage(
+      "Detailed guidance for professional growth.",
+    ),
+    "careerPathSpreadDescriptionMoney": MessageLookupByLibrary.simpleMessage(
+      "Detailed guidance for financial growth.",
+    ),
     "careerPathSpreadError": m6,
+    "careerPotential": MessageLookupByLibrary.simpleMessage("Career Potential"),
+    "careerPresent": MessageLookupByLibrary.simpleMessage("Career Present"),
     "careerReading": MessageLookupByLibrary.simpleMessage(
       "Perform Career Reading",
     ),
@@ -135,6 +177,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "celticCrossDescription": MessageLookupByLibrary.simpleMessage(
       "Detailed and comprehensive analysis",
+    ),
+    "celticCrossDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
+      "Receive a comprehensive analysis for your spiritual life.",
     ),
     "celticCrossExternalInfluences": MessageLookupByLibrary.simpleMessage(
       "External Influences",
@@ -197,16 +242,55 @@ class MessageLookup extends MessageLookupByLibrary {
     "divineSymphony": MessageLookupByLibrary.simpleMessage(
       "The Divine Symphony of the Cards",
     ),
+    "dreamFuture": MessageLookupByLibrary.simpleMessage("Dream Future"),
+    "dreamInterpretation": MessageLookupByLibrary.simpleMessage(
+      "Dream Interpretation",
+    ),
+    "dreamInterpretationDescription": MessageLookupByLibrary.simpleMessage(
+      "Decode the messages in your dreams.",
+    ),
+    "dreamInterpretationDescriptionSpiritual":
+        MessageLookupByLibrary.simpleMessage(
+          "Decode the messages in your dreams with a spiritual perspective.",
+        ),
     "dreamInterpretationError": m11,
+    "dreamPast": MessageLookupByLibrary.simpleMessage("Dream Past"),
+    "dreamPresent": MessageLookupByLibrary.simpleMessage("Dream Present"),
     "errorMessage": m12,
     "fiveCardPath": MessageLookupByLibrary.simpleMessage("Five Card Path"),
+    "fiveCardPathChallenge": MessageLookupByLibrary.simpleMessage("Challenge"),
     "fiveCardPathDescription": MessageLookupByLibrary.simpleMessage(
       "Detailed analysis for career choices",
     ),
+    "fiveCardPathFuture": MessageLookupByLibrary.simpleMessage("Future"),
+    "fiveCardPathOutcome": MessageLookupByLibrary.simpleMessage("Outcome"),
+    "fiveCardPathPast": MessageLookupByLibrary.simpleMessage("Past"),
+    "fiveCardPathPresent": MessageLookupByLibrary.simpleMessage("Present"),
     "fiveCardPathReadingError": m13,
     "flipAllCards": MessageLookupByLibrary.simpleMessage("Flip All Cards"),
     "fortuneInsight": m14,
     "fortuneTelling": MessageLookupByLibrary.simpleMessage("Fortune Telling:"),
+    "fullMoonChallenge": MessageLookupByLibrary.simpleMessage(
+      "Full Moon Challenge",
+    ),
+    "fullMoonHope": MessageLookupByLibrary.simpleMessage("Full Moon Hope"),
+    "fullMoonOutcome": MessageLookupByLibrary.simpleMessage(
+      "Full Moon Outcome",
+    ),
+    "fullMoonPast": MessageLookupByLibrary.simpleMessage("Full Moon Past"),
+    "fullMoonPresent": MessageLookupByLibrary.simpleMessage(
+      "Full Moon Present",
+    ),
+    "fullMoonSpread": MessageLookupByLibrary.simpleMessage("Full Moon Spread"),
+    "fullMoonSpreadDescription": MessageLookupByLibrary.simpleMessage(
+      "Harness lunar energy for clarity.",
+    ),
+    "fullMoonSpreadDescriptionLove": MessageLookupByLibrary.simpleMessage(
+      "Uncover hidden messages in your love life with lunar energy.",
+    ),
+    "fullMoonSpreadDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
+      "Gain spiritual clarity with lunar energy.",
+    ),
     "fullMoonSpreadError": m15,
     "futureSuggestions": MessageLookupByLibrary.simpleMessage(
       "For your near future, consider these suggestions: [NEAR_FUTURE_SUGGESTIONS]",
@@ -223,7 +307,36 @@ class MessageLookup extends MessageLookupByLibrary {
     "guidingWhispersAndSuggestions": MessageLookupByLibrary.simpleMessage(
       "Guiding Whispers & Suggestions",
     ),
+    "horseshoeAdvice": MessageLookupByLibrary.simpleMessage("Advice"),
+    "horseshoeFuture": MessageLookupByLibrary.simpleMessage("Future"),
+    "horseshoeObstacles": MessageLookupByLibrary.simpleMessage("Obstacles"),
+    "horseshoeOutcome": MessageLookupByLibrary.simpleMessage("Outcome"),
+    "horseshoePast": MessageLookupByLibrary.simpleMessage("Past"),
+    "horseshoePresent": MessageLookupByLibrary.simpleMessage("Present"),
+    "horseshoeSpread": MessageLookupByLibrary.simpleMessage("Horseshoe Spread"),
+    "horseshoeSpreadDescription": MessageLookupByLibrary.simpleMessage(
+      "A broad view of your situation.",
+    ),
+    "horseshoeSpreadDescriptionCareer": MessageLookupByLibrary.simpleMessage(
+      "Gain a broad perspective on your career.",
+    ),
+    "horseshoeSpreadDescriptionGeneral": MessageLookupByLibrary.simpleMessage(
+      "Gain a broad perspective on your life.",
+    ),
+    "horseshoeSpreadDescriptionMoney": MessageLookupByLibrary.simpleMessage(
+      "Gain a broad perspective on your finances.",
+    ),
     "horseshoeSpreadError": m16,
+    "horseshoeStrengths": MessageLookupByLibrary.simpleMessage("Strengths"),
+    "instructionsFlipAll": MessageLookupByLibrary.simpleMessage(
+      "Flip all cards with a single tap.",
+    ),
+    "instructionsReshuffle": MessageLookupByLibrary.simpleMessage(
+      "Reshuffle the cards for a new draw.",
+    ),
+    "instructionsViewResults": MessageLookupByLibrary.simpleMessage(
+      "View the results once all cards are revealed.",
+    ),
     "insufficientCredits": MessageLookupByLibrary.simpleMessage(
       "You don\'t have enough credits to proceed.",
     ),
@@ -236,7 +349,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "lifeDynamicsHighlighted": MessageLookupByLibrary.simpleMessage(
       "These cards highlight important dynamics in your life.",
     ),
-    "lightMeaning": MessageLookupByLibrary.simpleMessage("Light:"),
+    "lightMeaning": MessageLookupByLibrary.simpleMessage("Light (Positive):"),
     "loveDescription": MessageLookupByLibrary.simpleMessage(
       "Gain deep insights into your relationships",
     ),
@@ -245,7 +358,19 @@ class MessageLookup extends MessageLookupByLibrary {
       "Love & Relationships",
     ),
     "meaning": MessageLookupByLibrary.simpleMessage("Meaning"),
+    "mindBody": MessageLookupByLibrary.simpleMessage("Mind-Body"),
+    "mindBodySpirit": MessageLookupByLibrary.simpleMessage("Mind Body Spirit"),
+    "mindBodySpiritDescription": MessageLookupByLibrary.simpleMessage(
+      "Harmonize your inner self.",
+    ),
+    "mindBodySpiritDescriptionLove": MessageLookupByLibrary.simpleMessage(
+      "Harmonize your mind, body, and spirit in the context of love.",
+    ),
+    "mindBodySpiritDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
+      "Harmonize your inner self with mind, body, and spirit.",
+    ),
     "mindBodySpiritError": m18,
+    "mindSpirit": MessageLookupByLibrary.simpleMessage("Mind-Spirit"),
     "money": MessageLookupByLibrary.simpleMessage("Money"),
     "moneyDescription": MessageLookupByLibrary.simpleMessage(
       "Gain insights into financial matters",
@@ -265,6 +390,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "pastPresentFutureDescription": MessageLookupByLibrary.simpleMessage(
       "Guidance for your career path",
     ),
+    "pastPresentFutureDescriptionGeneral": MessageLookupByLibrary.simpleMessage(
+      "Understand the influences of past, present, and future in your life.",
+    ),
+    "pastPresentFutureDescriptionLove": MessageLookupByLibrary.simpleMessage(
+      "Understand the influences of past, present, and future in your love life.",
+    ),
+    "pastPresentFutureDescriptionMoney": MessageLookupByLibrary.simpleMessage(
+      "Explore your financial past, present, and future.",
+    ),
     "pastPresentFutureReadingError": m20,
     "pleaseWait": MessageLookupByLibrary.simpleMessage("Please wait."),
     "pointsToWatch": MessageLookupByLibrary.simpleMessage(
@@ -274,8 +408,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "potentialPitfalls": MessageLookupByLibrary.simpleMessage(
       "Potential pitfalls to watch out for: [POTENTIAL_PITFALLS]",
     ),
+    "problem": MessageLookupByLibrary.simpleMessage("Problem"),
     "problemSolution": MessageLookupByLibrary.simpleMessage(
       "Perform Problem-Solution Spread",
+    ),
+    "problemSolutionDescriptionCareer": MessageLookupByLibrary.simpleMessage(
+      "Get guidance to address challenges in your career.",
+    ),
+    "problemSolutionDescriptionMoney": MessageLookupByLibrary.simpleMessage(
+      "Get guidance to address financial challenges.",
     ),
     "problemSolutionReadingError": m21,
     "profile": MessageLookupByLibrary.simpleMessage("Profile"),
@@ -287,6 +428,14 @@ class MessageLookup extends MessageLookupByLibrary {
       "Reading saved successfully",
     ),
     "redeem": MessageLookupByLibrary.simpleMessage("Redeem"),
+    "relationshipChallenges": MessageLookupByLibrary.simpleMessage(
+      "Challenges",
+    ),
+    "relationshipFuture": MessageLookupByLibrary.simpleMessage("Future"),
+    "relationshipPartner": MessageLookupByLibrary.simpleMessage("Partner"),
+    "relationshipPast": MessageLookupByLibrary.simpleMessage("Past"),
+    "relationshipPresent": MessageLookupByLibrary.simpleMessage("Present"),
+    "relationshipSelf": MessageLookupByLibrary.simpleMessage("Self"),
     "relationshipSpread": MessageLookupByLibrary.simpleMessage(
       "Relationship Spread",
     ),
@@ -294,6 +443,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Detailed analysis of your relationship",
     ),
     "relationshipSpreadReadingError": m22,
+    "relationshipStrengths": MessageLookupByLibrary.simpleMessage("Strengths"),
     "reshuffleCards": MessageLookupByLibrary.simpleMessage("Reshuffle Cards"),
     "returnToHome": MessageLookupByLibrary.simpleMessage("Return to Home"),
     "save": MessageLookupByLibrary.simpleMessage("Save"),
@@ -302,7 +452,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "settingsHelp": MessageLookupByLibrary.simpleMessage(
       "Adjust your language and manage your mystical tokens here.",
     ),
-    "shadowMeaning": MessageLookupByLibrary.simpleMessage("Shadow:"),
+    "shadowMeaning": MessageLookupByLibrary.simpleMessage("Shadow (Negative):"),
     "share": MessageLookupByLibrary.simpleMessage("Share"),
     "singleCard": MessageLookupByLibrary.simpleMessage(
       "Perform Single Card Reading",
@@ -311,7 +461,17 @@ class MessageLookup extends MessageLookupByLibrary {
       "Ideal for quick answers",
     ),
     "singleCardReadingError": m23,
+    "solution": MessageLookupByLibrary.simpleMessage("Solution"),
     "specialNote": MessageLookupByLibrary.simpleMessage("Special Note"),
+    "spiritualDescription": MessageLookupByLibrary.simpleMessage(
+      "Explore your inner self, dreams, and cosmic connections.",
+    ),
+    "spiritualMystical": MessageLookupByLibrary.simpleMessage(
+      "Spiritual & Mystical",
+    ),
+    "spiritualMysticalDescription": MessageLookupByLibrary.simpleMessage(
+      "Explore your inner self, dreams, and cosmic connections.",
+    ),
     "spreadInfoBanner": MessageLookupByLibrary.simpleMessage(
       "Each spread offers a different number of cards and interpretations",
     ),
@@ -348,6 +508,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unifiedDestinyReflectionTitle": MessageLookupByLibrary.simpleMessage(
       "Reflections of Unified Destiny",
+    ),
+    "unveilingMysticalPath": MessageLookupByLibrary.simpleMessage(
+      "Unveiling the Mystical Path...",
     ),
     "userInfo": MessageLookupByLibrary.simpleMessage("User Info"),
     "viewResults": MessageLookupByLibrary.simpleMessage("View Results"),

@@ -1,11 +1,10 @@
-// lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:lottie/lottie.dart';
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/generated/l10n.dart';
+import '../data/payment_maganer.dart';
 import '../data/tarot_event_state.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -23,48 +22,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class SettingsScreenState extends State<SettingsScreen> {
-  final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   bool _isPurchasing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeInAppPurchase();
-  }
-
-  void _initializeInAppPurchase() {
-    _inAppPurchase.restorePurchases();
-  }
-
-  Future<void> _purchaseProduct(String productId, String title, double price) async {
-    setState(() => _isPurchasing = true);
-    final purchaseParam = PurchaseParam(
-      productDetails: ProductDetails(
-        id: productId,
-        title: title,
-        description: 'Purchase $title',
-        price: '$price USD',
-        rawPrice: price,
-        currencyCode: 'USD',
-      ),
-    );
-    try {
-      if (productId == 'premium_subscription') {
-        await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
-      } else {
-        await _inAppPurchase.buyConsumable(purchaseParam: purchaseParam);
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(S.of(context)!.couponRedeemed("$title purchased successfully"))),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(S.of(context)!.couponInvalid("Purchase failed: $e"))),
-      );
-    } finally {
-      setState(() => _isPurchasing = false);
-    }
-  }
 
   Widget _buildBackground() {
     return Stack(
@@ -171,7 +129,7 @@ class SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                loc.profile, // Using "profile" as a close match for "User Info"
+                loc.profile,
                 style: GoogleFonts.cinzel(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -183,7 +141,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Mystical Tokens", // Direct string since "mysticalTokens" exists in .arb
+                    "Mystical Tokens",
                     style: GoogleFonts.cinzel(
                       color: Colors.white70,
                       fontSize: 16,
@@ -204,7 +162,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Daily Free Readings", // Direct string since "dailyFreeReadings" is missing
+                    "Daily Free Readings",
                     style: GoogleFonts.cinzel(
                       color: Colors.white70,
                       fontSize: 16,
@@ -229,7 +187,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildLanguageSettings(BuildContext context, S loc) {
     return _buildSection(
-      title: "Language / Dil", // Direct string since "language" is missing
+      title: "Language / Dil",
       children: [
         LanguageCard(
           language: 'English',
@@ -265,36 +223,46 @@ class SettingsScreenState extends State<SettingsScreen> {
         _buildPurchaseCard(
           context: context,
           title: "10 Tokens",
-          price: 0.99,
-          productId: '10_credits',
+          onTap: () => _showPaymentDialog(context),
           isDisabled: _isPurchasing,
         ),
         const SizedBox(height: 12),
         _buildPurchaseCard(
           context: context,
           title: "50 Tokens",
-          price: 4.99,
-          productId: '50_credits',
+          onTap: () => _showPaymentDialog(context),
           isDisabled: _isPurchasing,
         ),
         const SizedBox(height: 12),
         _buildPurchaseCard(
           context: context,
           title: "100 Tokens",
-          price: 9.99,
-          productId: '100_credits',
+          onTap: () => _showPaymentDialog(context),
           isDisabled: _isPurchasing,
         ),
         const SizedBox(height: 12),
         _buildPurchaseCard(
           context: context,
           title: "Premium Subscription",
-          price: 9.99,
-          productId: 'premium_subscription',
+          onTap: () => _showPaymentDialog(context),
           isDisabled: _isPurchasing,
         ),
       ],
     );
+  }
+
+  void _showPaymentDialog(BuildContext context) {
+    setState(() => _isPurchasing = true);
+    PaymentManager.showPaymentDialog(
+      context,
+      requiredTokens: 0.0, // Ayarlar ekranında belirli bir gereksinim yok, genel satın alma için 0
+      onSuccess: () {
+        setState(() => _isPurchasing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context)!.couponRedeemed("Purchase completed successfully"))),
+        );
+      },
+    ).then((_) => setState(() => _isPurchasing = false));
   }
 
   Widget _buildSection({required String title, required List<Widget> children}) {
@@ -359,14 +327,11 @@ class SettingsScreenState extends State<SettingsScreen> {
   Widget _buildPurchaseCard({
     required BuildContext context,
     required String title,
-    required double price,
-    required String productId,
+    required VoidCallback onTap,
     required bool isDisabled,
   }) {
     return GestureDetector(
-      onTap: isDisabled
-          ? null
-          : () => _purchaseProduct(productId, title, price),
+      onTap: isDisabled ? null : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
@@ -399,7 +364,7 @@ class SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             Text(
-              '\$$price',
+              '', // Fiyat bilgisi PaymentDialog içinde gösterilecek
               style: GoogleFonts.cinzel(
                 color: Colors.white,
                 fontSize: 18,

@@ -167,6 +167,7 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
           },
           'fortuneTelling': value.fortuneTelling,
           'img': value.img,
+        // ignore: unnecessary_null_comparison
         }..removeWhere((k, v) => v == null),
       ));
       final prefs = await SharedPreferences.getInstance();

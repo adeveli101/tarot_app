@@ -1,8 +1,10 @@
 import 'dart:math';
+import 'dart:ui';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:lottie/lottie.dart';
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/data/tarot_event_state.dart';
@@ -10,10 +12,9 @@ import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/screens/reading_result.dart';
+import '../data/payment_maganer.dart';
 import '../models/animations/tap_animations_scale.dart';
-
-
-
+import 'package:vector_math/vector_math.dart' show lerpDouble;
 
 class CardSelectionAnimationScreen extends StatefulWidget {
   final int cardCount;
@@ -24,38 +25,55 @@ class CardSelectionAnimationScreen extends StatefulWidget {
   CardSelectionAnimationScreenState createState() => CardSelectionAnimationScreenState();
 }
 
-class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen>
-    with TickerProviderStateMixin {
+class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen> with TickerProviderStateMixin {
   final TarotRepository repository = TarotRepository();
-  late AnimationController _cardAnimationController;
-  AnimationController? _entryAnimationController;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  late AnimationController _cardFlipController;
+  late AnimationController _entryController;
+  late AnimationController _hoverController;
+  late AnimationController _scaleController;
   List<TarotCard> selectedCards = [];
-  late List<bool> revealed;
-  bool loading = true;
+  List<bool> revealed = [];
+  bool isLoading = true;
+  bool isFlippingAll = false;
 
   @override
   void initState() {
     super.initState();
-    _cardAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    _entryAnimationController = AnimationController(
+    _cardFlipController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
+    );
+    _entryController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
     )..forward();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _initializeCards();
-      }
-    });
+    _hoverController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _initializeCards();
+    _loadAudioAssets();
   }
 
   @override
   void dispose() {
-    _cardAnimationController.dispose();
-    _entryAnimationController?.dispose();
+    _cardFlipController.dispose();
+    _entryController.dispose();
+    _hoverController.dispose();
+    _scaleController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadAudioAssets() async {
+    await _audioPlayer.setSource(AssetSource('audio/card_flip.mp3'));
+    await _audioPlayer.setSource(AssetSource('audio/card_flip_all.mp3'));
+    await _audioPlayer.setSource(AssetSource('audio/shuffle.mp3'));
   }
 
   Future<void> _initializeCards() async {
@@ -65,59 +83,121 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
         setState(() {
           selectedCards = repository.drawRandomCards(widget.cardCount);
           revealed = List<bool>.filled(widget.cardCount, false);
-          loading = false;
+          isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error loading cards: $e")),
+          SnackBar(content: Text(S.of(context)!.errorMessage("Error loading cards: $e"))),
         );
-        setState(() => loading = false);
+        setState(() => isLoading = false);
       }
     }
   }
 
   void _flipCard(int index) {
-    if (!revealed[index]) {
-      setState(() => revealed[index] = true);
-      _cardAnimationController.forward().then((_) => _cardAnimationController.reverse());
+    if (!isFlippingAll) {
+      if (!revealed[index]) {
+        _audioPlayer.play(AssetSource('audio/card_flip.mp3'));
+        HapticFeedback.lightImpact();
+        _cardFlipController.forward(from: 0).then((_) {
+          setState(() => revealed[index] = true);
+          _scaleController.forward().then((_) => _scaleController.reverse());
+          if (revealed.every((r) => r)) _navigateToResults();
+        });
+      } else {
+        // Kartı tekrar ters çevir
+        _audioPlayer.play(AssetSource('audio/card_flip.mp3'));
+        HapticFeedback.lightImpact();
+        _cardFlipController.reverse().then((_) {
+          setState(() => revealed[index] = false);
+        });
+      }
     }
   }
 
-  void _flipAllCards() {
-    if (mounted) {
-      setState(() => revealed = List<bool>.filled(widget.cardCount, true));
-      _cardAnimationController.forward().then((_) => _cardAnimationController.reverse());
+  Future<void> _flipAllCards() async {
+    if (isFlippingAll || revealed.every((r) => r)) return;
+    setState(() => isFlippingAll = true);
+    _audioPlayer.play(AssetSource('audio/card_flip_all.mp3'));
+    HapticFeedback.heavyImpact();
+    for (int i = 0; i < widget.cardCount; i++) {
+      if (!revealed[i]) {
+        _cardFlipController.forward(from: 0).then((_) {
+          setState(() => revealed[i] = true);
+          _scaleController.forward().then((_) => _scaleController.reverse());
+        });
+        await Future.delayed(const Duration(milliseconds: 150));
+      }
     }
+    setState(() => isFlippingAll = false);
+    _navigateToResults();
   }
 
   void _reshuffleCards() {
-    if (mounted) {
-      setState(() {
-        selectedCards = repository.drawRandomCards(widget.cardCount);
-        revealed = List<bool>.filled(widget.cardCount, false);
-      });
-      _entryAnimationController?.reset();
-      _entryAnimationController?.forward();
-    }
+    _audioPlayer.play(AssetSource('audio/shuffle.mp3'));
+    HapticFeedback.mediumImpact();
+    setState(() {
+      selectedCards = repository.drawRandomCards(widget.cardCount);
+      revealed = List<bool>.filled(widget.cardCount, false);
+    });
+    _entryController.reset();
+    _entryController.forward();
   }
 
   Future<void> _navigateToResults() async {
     final bloc = context.read<TarotBloc>();
-    if (!revealed.every((v) => v)) _flipAllCards();
-
     if (bloc.state is InsufficientResources) {
-      _showPurchaseSheet(context, (bloc.state as InsufficientResources).requiredTokens);
+      _showPaymentDialog(context, (bloc.state as InsufficientResources).requiredTokens);
       return;
     }
 
-    if (bloc.currentSpreadType == SpreadType.singleCard) {
-      bloc.add(DrawSingleCard());
-    } else if (bloc.currentSpreadType == SpreadType.pastPresentFuture) {
-      bloc.add(DrawPastPresentFuture());
-    } else if (bloc.currentSpreadType == SpreadType.celticCross) {
-      bloc.add(DrawCelticCross());
+    switch (bloc.currentSpreadType) {
+      case SpreadType.singleCard:
+        bloc.add(DrawSingleCard());
+        break;
+      case SpreadType.pastPresentFuture:
+        bloc.add(DrawPastPresentFuture());
+        break;
+      case SpreadType.celticCross:
+        bloc.add(DrawCelticCross());
+        break;
+      case SpreadType.yearlySpread:
+        bloc.add(DrawYearlySpread());
+        break;
+      case SpreadType.problemSolution:
+        bloc.add(DrawProblemSolution());
+        break;
+      case SpreadType.fiveCardPath:
+        bloc.add(DrawFiveCardPath());
+        break;
+      case SpreadType.relationshipSpread:
+        bloc.add(DrawRelationshipSpread());
+        break;
+      case SpreadType.mindBodySpirit:
+        bloc.add(DrawMindBodySpirit());
+        break;
+      case SpreadType.astroLogicalCross:
+        bloc.add(DrawAstroLogicalCross());
+        break;
+      case SpreadType.brokenHeart:
+        bloc.add(DrawBrokenHeart());
+        break;
+      case SpreadType.dreamInterpretation:
+        bloc.add(DrawDreamInterpretation());
+        break;
+      case SpreadType.horseshoeSpread:
+        bloc.add(DrawHorseshoeSpread());
+        break;
+      case SpreadType.careerPathSpread:
+        bloc.add(DrawCareerPathSpread());
+        break;
+      case SpreadType.fullMoonSpread:
+        bloc.add(DrawFullMoonSpread());
+        break;
+      default:
+        break;
     }
 
     await Future.delayed(const Duration(milliseconds: 500));
@@ -129,15 +209,15 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     }
   }
 
-  void _showPurchaseSheet(BuildContext context, double requiredTokens) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => BlocProvider.value(
-        value: BlocProvider.of<TarotBloc>(context),
-        child: InsufficientResourcesScreen(requiredCredits: requiredTokens),
-      ),
+  void _showPaymentDialog(BuildContext context, double requiredTokens) {
+    PaymentManager.showPaymentDialog(
+      context,
+      requiredTokens: requiredTokens,
+      onSuccess: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context)!.couponRedeemed("Tokens added successfully"))),
+        );
+      },
     );
   }
 
@@ -164,13 +244,18 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                 Center(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.asset('assets/tarot_card_images/${card.img}', height: 150, fit: BoxFit.cover),
+                    child: Image.asset(
+                      'assets/tarot_card_images/${card.img}',
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, color: Colors.white70, size: 50),
+                    ),
                   ),
                 ),
               const SizedBox(height: 12),
               _buildDetailRow("Arcana", card.arcana),
               _buildDetailRow("Suit", card.suit),
-              _buildDetailRow("Number", card.number),
+              _buildDetailRow("Number", card.number.toString()),
               if (card.archetype != null) _buildDetailRow("Archetype", card.archetype!),
               if (card.hebrewAlphabet != null) _buildDetailRow("Hebrew Alphabet", card.hebrewAlphabet!),
               if (card.numerology != null) _buildDetailRow("Numerology", card.numerology!),
@@ -201,7 +286,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [Colors.deepPurple[700]!, Colors.purple[900]!]),
+                      gradient: const LinearGradient(colors: [Colors.deepPurple, Colors.purpleAccent]),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text("Close", style: GoogleFonts.cinzel(color: Colors.white)),
@@ -219,15 +304,16 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text("$label: ", style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold)),
-          Text(value, style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white70)),
+          Expanded(child: Text(value, style: GoogleFonts.cinzel(fontSize: 14, color: Colors.white70))),
         ],
       ),
     );
   }
 
-  Widget _buildCardWidget(int index, {required double cardWidth, required double cardHeight}) {
+  Widget _buildCardWidget(int index) {
     if (index >= selectedCards.length) return const SizedBox.shrink();
     final TarotCard card = selectedCards[index];
     final bool isRevealed = revealed[index];
@@ -235,35 +321,44 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     return GestureDetector(
       onTap: () => _flipCard(index),
       onLongPress: () => _showDetailedCardInfo(card),
+      onPanUpdate: (_) => _hoverController.forward(),
+      onPanEnd: (_) => _hoverController.reverse(),
       child: AnimatedBuilder(
-        animation: _entryAnimationController ?? AnimationController(vsync: this),
+        animation: _entryController,
         builder: (context, child) {
-          final animationValue = _entryAnimationController?.value ?? 0;
-          final offset = Offset.lerp(
-            const Offset(0, -1), // Ekran dışından yukarıdan gelme
-            Offset.zero,
-            Curves.easeOutBack.transform(animationValue),
-          )!;
+          final entryValue = _entryController.value;
+          final offset = Offset.lerp(const Offset(0, 50), Offset.zero, Curves.easeOutBack.transform(entryValue))!;
           return Transform.translate(
             offset: offset,
             child: Opacity(
-              opacity: animationValue,
-              child: AnimatedScale(
-                scale: isRevealed ? 1.05 : 1.0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                child: AnimatedBuilder(
-                  animation: _cardAnimationController,
-                  builder: (context, child) {
-                    final angle = isRevealed ? 0.0 : pi;
-                    final transform = Matrix4.rotationY(angle * _cardAnimationController.value);
-                    return Transform(
-                      transform: transform,
-                      alignment: Alignment.center,
-                      child: isRevealed ? _buildCardFront(card, cardWidth, cardHeight) : _buildCardBack(cardWidth, cardHeight),
-                    );
-                  },
-                ),
+              opacity: entryValue,
+              child: AnimatedBuilder(
+                animation: _cardFlipController,
+                builder: (context, child) {
+                  final flipValue = _cardFlipController.value;
+                  final angle = isRevealed ? 0.0 : pi;
+                  final transform = Matrix4.rotationY(lerpDouble(pi, 0, flipValue) ?? 0.0 * (isRevealed ? 1 : -1))..setEntry(3, 2, 0.001);
+                  return Transform(
+                    transform: transform,
+                    alignment: Alignment.center,
+                    child: AnimatedBuilder(
+                      animation: _hoverController,
+                      builder: (context, child) {
+                        final hoverScale = 1.0 + (_hoverController.value * 0.1);
+                        return AnimatedBuilder(
+                          animation: _scaleController,
+                          builder: (context, child) {
+                            final scale = 1.0 + (_scaleController.value * 0.05);
+                            return Transform.scale(
+                              scale: hoverScale * scale,
+                              child: isRevealed ? _buildCardFront(card) : _buildCardBack(),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ),
           );
@@ -272,193 +367,230 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
-  Widget _buildCardBack(double width, double height) {
+  Widget _buildCardBack() {
     return Container(
-      width: width,
-      height: height,
+      width: 90,
+      height: 140,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        gradient: LinearGradient(colors: [Colors.deepPurple[900]!, Colors.purple[700]!]),
+        borderRadius: BorderRadius.circular(10),
+        gradient: const LinearGradient(colors: [Colors.deepPurple, Colors.purpleAccent]),
         image: const DecorationImage(
           image: AssetImage('assets/tarot_card_images/card_back.png'),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(Colors.black54, BlendMode.dstATop),
         ),
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 8, offset: const Offset(0, 4)),
+        ],
       ),
     );
   }
 
-  Widget _buildCardFront(TarotCard card, double width, double height) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(colors: [Colors.purple[900]!, Colors.deepPurple[700]!]),
-            image: DecorationImage(
-              image: AssetImage('assets/tarot_card_images/${card.img}'),
-              fit: BoxFit.contain,
-              onError: (exception, stackTrace) => const Icon(Icons.broken_image, color: Colors.white70, size: 50),
+  Widget _buildCardFront(TarotCard card) {
+    return Container(
+      width: 90,
+      height: 140,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: const LinearGradient(colors: [Colors.purpleAccent, Colors.deepPurple]),
+        image: DecorationImage(
+          image: AssetImage('assets/tarot_card_images/${card.img}'),
+          fit: BoxFit.contain,
+          onError: (exception, stackTrace) => const Icon(Icons.broken_image, color: Colors.white70, size: 40),
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 8, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            color: Colors.black.withOpacity(0.6),
+            child: Text(
+              card.name,
+              style: GoogleFonts.cinzel(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: width,
-          child: Text(
-            card.name,
-            style: GoogleFonts.cinzel(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildCardLayout(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height; // screenHeight eklenerek tanımlandı
+    final screenHeight = MediaQuery.of(context).size.height;
     final bloc = context.read<TarotBloc>();
-    final spreadType = bloc.currentSpreadType;
+    final spreadType = bloc.currentSpreadType ?? SpreadType.singleCard;
 
-    // Simetrik kart boyutları
-    double cardWidth = screenWidth * 0.25; // Ekranın %25’i, simetrik bir oran
-    double cardHeight = cardWidth * 1.5;
-    double padding = 16.0;
+    const double cardWidth = 90.0;
+    const double cardHeight = 140.0;
+    const double padding = 10.0;
 
-    // Celtic Cross için ek alan bırakma
-    if (spreadType == SpreadType.celticCross && widget.cardCount == 10) {
-      return _buildCelticCrossLayout(cardWidth, cardHeight, screenWidth, screenHeight, padding);
-    } else if (spreadType == SpreadType.pastPresentFuture && widget.cardCount == 3) {
-      return _buildPastPresentFutureLayout(cardWidth, cardHeight, screenWidth, padding);
-    } else {
-      return _buildGenericLayout(cardWidth, cardHeight, screenWidth, padding);
-    }
-  }
-
-  Widget _buildGenericLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
-    int maxCardsPerRow = (screenWidth / (cardWidth + padding * 2)).floor();
-    if (maxCardsPerRow < 1) maxCardsPerRow = 1;
-
-    if (widget.cardCount == 1) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.2), // screenHeight burada kullanılacak
-          child: _buildCardWidget(0, cardWidth: cardWidth, cardHeight: cardHeight),
+    Widget buildCardGrid(List<int> indices, {double? customSpacing}) {
+      final crossAxisCount = (screenWidth / (cardWidth + (customSpacing ?? padding) * 2)).floor().clamp(1, 6);
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: customSpacing ?? padding,
+          crossAxisSpacing: customSpacing ?? padding,
+          childAspectRatio: cardWidth / cardHeight,
         ),
+        itemCount: indices.length,
+        itemBuilder: (context, index) => _buildCardWidget(indices[index]),
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: padding,
-        runSpacing: padding,
-        children: List.generate(widget.cardCount, (index) => SizedBox(
-          width: cardWidth,
-          child: _buildCardWidget(index, cardWidth: cardWidth, cardHeight: cardHeight),
-        )),
-      ),
-    );
-  }
+    Widget buildSpreadLayout(List<int> indices, List<String> positions, {double? customSpacing, MainAxisAlignment alignment = MainAxisAlignment.center}) {
+      return Row(
+        mainAxisAlignment: alignment,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: List.generate(indices.length, (index) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: customSpacing ?? padding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildCardWidget(indices[index]),
+                const SizedBox(height: 4),
+                Container(
+                  width: cardWidth,
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Text(
+                    positions[index],
+                    style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      );
+    }
 
-  Widget _buildPastPresentFutureLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: screenWidth * 0.2),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(widget.cardCount, (index) => Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding),
-            child: _buildCardWidget(index, cardWidth: cardWidth, cardHeight: cardHeight),
-          )),
-        ),
-      ),
-    );
+    switch (spreadType) {
+      case SpreadType.singleCard:
+        return Center(child: buildCardGrid([0], customSpacing: 20));
+      case SpreadType.pastPresentFuture:
+        return Center(
+          child: buildSpreadLayout(
+            [0, 1, 2],
+            [S.of(context)!.celticCrossPast, S.of(context)!.celticCrossCurrentSituation, S.of(context)!.celticCrossFuture],
+            customSpacing: 20,
+          ),
+        );
+      case SpreadType.celticCross:
+        return _buildCelticCrossLayout(cardWidth, cardHeight, screenWidth, screenHeight, padding);
+      case SpreadType.yearlySpread:
+        return buildCardGrid(List.generate(widget.cardCount, (i) => i), customSpacing: 15);
+      case SpreadType.problemSolution:
+        return Center(
+          child: buildSpreadLayout(
+            [0, 1],
+            [S.of(context)!.problem, S.of(context)!.solution],
+            customSpacing: 30,
+          ),
+        );
+      case SpreadType.fiveCardPath:
+        return _buildFiveCardPathLayout(cardWidth, cardHeight, screenWidth, padding);
+      case SpreadType.relationshipSpread:
+        return _buildRelationshipSpreadLayout(cardWidth, cardHeight, screenWidth, padding);
+      case SpreadType.mindBodySpirit:
+        return _buildMindBodySpiritLayout(cardWidth, cardHeight, screenWidth, padding);
+      case SpreadType.astroLogicalCross:
+        return _buildAstrologicalCrossLayout(cardWidth, cardHeight, screenWidth, padding);
+      case SpreadType.brokenHeart:
+        return _buildBrokenHeartLayout(cardWidth, cardHeight, screenWidth, padding);
+      case SpreadType.dreamInterpretation:
+        return Center(
+          child: buildSpreadLayout(
+            [0, 1, 2],
+            [S.of(context)!.dreamPast, S.of(context)!.dreamPresent, S.of(context)!.dreamFuture],
+            customSpacing: 20,
+          ),
+        );
+      case SpreadType.horseshoeSpread:
+        return _buildHorseshoeSpreadLayout(cardWidth, cardHeight, screenWidth, padding);
+      case SpreadType.careerPathSpread:
+        return _buildCareerPathSpreadLayout(cardWidth, cardHeight, screenWidth, padding);
+      case SpreadType.fullMoonSpread:
+        return _buildFullMoonSpreadLayout(cardWidth, cardHeight, screenWidth, padding);
+      default:
+        return buildCardGrid(List.generate(widget.cardCount, (i) => i));
+    }
   }
 
   Widget _buildCelticCrossLayout(double cardWidth, double cardHeight, double screenWidth, double screenHeight, double padding) {
-    // Dil desteği için S sınıfını kullan
     final loc = S.of(context)!;
+    final maxWidth = min(screenWidth * 0.9, 500);
+    final adjustedCardWidth = min(cardWidth, maxWidth / 5);
+    final adjustedCardHeight = adjustedCardWidth * 1.4;
 
-    // Ekran boyutlarına göre ayarlamalar
-    final maxWidth = screenWidth * 0.9;
-
-    // Kart boyutlarını ayarla
-    final adjustedCardWidth = min(cardWidth, maxWidth / 4.5);
-    final adjustedCardHeight = adjustedCardWidth * 1.5;
-
-    // Etiket oluşturma fonksiyonu
-    Widget buildLabel(String text) {
-      return Container(
-        width: adjustedCardWidth,
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Text(
-          text,
-          style: GoogleFonts.cinzel(
-            fontSize: 10,
-            color: Colors.white70,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-        ),
-      );
-    }
-
-    // Kart ve etiket birleşimi
     Widget buildCardWithLabel(int index, String text) {
       return Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildCardWidget(index, cardWidth: adjustedCardWidth, cardHeight: adjustedCardHeight),
+          _buildCardWidget(index),
           const SizedBox(height: 4),
-          buildLabel(text),
+          Container(
+            width: adjustedCardWidth,
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Text(
+              text,
+              style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       );
     }
 
     return Center(
       child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
         child: SizedBox(
-          width: maxWidth,
+          width: maxWidth.toDouble(),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Üst kart - SUBCO
               Padding(
-                padding: EdgeInsets.symmetric(vertical: padding * 2),
+                padding: const EdgeInsets.only(bottom: 15),
                 child: buildCardWithLabel(0, loc.celticCrossSubconscious),
               ),
-
-              // İkinci sıra - 4 kart yan yana
-              Container(
-                margin: EdgeInsets.symmetric(vertical: padding),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    buildCardWithLabel(1, loc.celticCrossChallenge),
-                    buildCardWithLabel(2, loc.celticCrossPast),
-                    buildCardWithLabel(3, loc.celticCrossCurrentSituation),
-                    buildCardWithLabel(4, loc.celticCrossFuture),
-                  ],
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  buildCardWithLabel(1, loc.celticCrossChallenge),
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      buildCardWithLabel(2, loc.celticCrossPast),
+                      const SizedBox(height: 8),
+                      buildCardWithLabel(3, loc.celticCrossCurrentSituation),
+                      const SizedBox(height: 8),
+                      buildCardWithLabel(4, loc.celticCrossFuture),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+                  buildCardWithLabel(5, loc.celticCrossNearFuture),
+                ],
               ),
-
-              // Orta kart - NEAR
               Padding(
-                padding: EdgeInsets.symmetric(vertical: padding * 2),
-                child: buildCardWithLabel(5, loc.celticCrossNearFuture),
-              ),
-
-              // Alt sıra - 4 kart yan yana
-              Container(
-                margin: EdgeInsets.only(bottom: padding * 2),
+                padding: const EdgeInsets.only(top: 15),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -476,41 +608,534 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+  Widget _buildFiveCardPathLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    final loc = S.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(0),
+                const SizedBox(width: 10),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildCardWidget(1),
+                    const SizedBox(height: 10),
+                    _buildCardWidget(2),
+                    const SizedBox(height: 10),
+                    _buildCardWidget(3),
+                  ],
+                ),
+                const SizedBox(width: 10),
+                _buildCardWidget(4),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.fiveCardPathPast, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 10),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(width: cardWidth, child: Text(loc.fiveCardPathPresent, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                    const SizedBox(height: 10),
+                    Container(width: cardWidth, child: Text(loc.fiveCardPathChallenge, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                    const SizedBox(height: 10),
+                    Container(width: cardWidth, child: Text(loc.fiveCardPathFuture, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                  ],
+                ),
+                const SizedBox(width: 10),
+                Container(width: cardWidth, child: Text(loc.fiveCardPathOutcome, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Widget _buildRelationshipSpreadLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    final loc = S.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(0),
+                const SizedBox(width: 10),
+                _buildCardWidget(1),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(2),
+                const SizedBox(width: 10),
+                _buildCardWidget(3),
+                const SizedBox(width: 10),
+                _buildCardWidget(4),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(5),
+                const SizedBox(width: 10),
+                _buildCardWidget(6),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.relationshipSelf, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 10),
+                Container(width: cardWidth, child: Text(loc.relationshipPartner, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.relationshipPast, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 10),
+                Container(width: cardWidth, child: Text(loc.relationshipPresent, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 10),
+                Container(width: cardWidth, child: Text(loc.relationshipFuture, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.relationshipStrengths, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 10),
+                Container(width: cardWidth, child: Text(loc.relationshipChallenges, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMindBodySpiritLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    final loc = S.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(0),
+                const SizedBox(width: 20),
+                _buildCardWidget(1),
+                const SizedBox(width: 20),
+                _buildCardWidget(2),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.mindBody, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 20),
+                Container(width: cardWidth, child: Text(loc.mindSpirit, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 20),
+                Container(width: cardWidth, child: Text(loc.bodySpirit, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAstrologicalCrossLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    final loc = S.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(0),
+                const SizedBox(width: 20),
+                _buildCardWidget(1),
+                const SizedBox(width: 20),
+                _buildCardWidget(2),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 20),
+                _buildCardWidget(3),
+                const SizedBox(width: 20),
+                _buildCardWidget(4),
+                const SizedBox(width: 20),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.astroPast, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 20),
+                Container(width: cardWidth, child: Text(loc.astroPresent, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 20),
+                Container(width: cardWidth, child: Text(loc.astroFuture, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 20),
+                Container(width: cardWidth, child: Text(loc.astroChallenge, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 20),
+                Container(width: cardWidth, child: Text(loc.astroOutcome, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 20),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrokenHeartLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    final loc = S.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(0),
+                const SizedBox(width: 15),
+                _buildCardWidget(1),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 15),
+                _buildCardWidget(2),
+                const SizedBox(width: 15),
+                _buildCardWidget(3),
+                const SizedBox(width: 15),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(4),
+                const SizedBox(width: 15),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.brokenHeartCause, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.brokenHeartEmotion, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.brokenHeartLesson, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.brokenHeartHope, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.brokenHeartHealing, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHorseshoeSpreadLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    final loc = S.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(0),
+                const SizedBox(width: 15),
+                _buildCardWidget(1),
+                const SizedBox(width: 15),
+                _buildCardWidget(2),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 15),
+                _buildCardWidget(3),
+                const SizedBox(width: 15),
+                _buildCardWidget(4),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 30),
+                _buildCardWidget(5),
+                const SizedBox(width: 30),
+                _buildCardWidget(6),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.horseshoePast, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.horseshoePresent, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.horseshoeFuture, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.horseshoeStrengths, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.horseshoeObstacles, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 30),
+                Container(width: cardWidth, child: Text(loc.horseshoeAdvice, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 30),
+                Container(width: cardWidth, child: Text(loc.horseshoeOutcome, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCareerPathSpreadLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    final loc = S.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(0),
+                const SizedBox(width: 15),
+                _buildCardWidget(1),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 15),
+                _buildCardWidget(2),
+                const SizedBox(width: 15),
+                _buildCardWidget(3),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(4),
+                const SizedBox(width: 15),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.careerPast, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.careerPresent, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.careerChallenge, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.careerPotential, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.careerOutcome, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFullMoonSpreadLayout(double cardWidth, double cardHeight, double screenWidth, double padding) {
+    final loc = S.of(context)!;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(0),
+                const SizedBox(width: 15),
+                _buildCardWidget(1),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 15),
+                _buildCardWidget(2),
+                const SizedBox(width: 15),
+                _buildCardWidget(3),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildCardWidget(4),
+                const SizedBox(width: 15),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.fullMoonPast, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.fullMoonPresent, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.fullMoonChallenge, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+                Container(width: cardWidth, child: Text(loc.fullMoonHope, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+              ],
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: cardWidth, child: Text(loc.fullMoonOutcome, style: GoogleFonts.cinzel(fontSize: 8, color: Colors.white70))),
+                const SizedBox(width: 15),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildActionButtons() {
     final loc = S.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildActionButton(loc!.flipAllCards, _flipAllCards, Icons.flip),
-          _buildActionButton(loc.reshuffleCards, _reshuffleCards, Icons.shuffle),
-          _buildActionButton(loc.viewResults, _navigateToResults, Icons.arrow_forward),
+          _buildActionButton(loc!.flipAllCards, _flipAllCards, Icons.flip, Colors.purple),
+          _buildActionButton(loc.reshuffleCards, _reshuffleCards, Icons.shuffle, Colors.deepPurple),
+          _buildActionButton(loc.viewResults, _navigateToResults, Icons.arrow_forward, Colors.purpleAccent),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(String label, VoidCallback onPressed, IconData icon) {
+  Widget _buildActionButton(String label, VoidCallback onPressed, IconData icon, Color color) {
     return TapAnimatedScale(
       onTap: onPressed,
       child: Container(
         width: 100,
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [Colors.deepPurple[700]!, Colors.purple[900]!]),
+          gradient: LinearGradient(colors: [color.withOpacity(0.8), color]),
           borderRadius: BorderRadius.circular(12),
+          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3))],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(height: 4),
+            Icon(icon, color: Colors.white, size: 24),
+            const SizedBox(height: 6),
             Text(
               label,
-              style: GoogleFonts.cinzel(fontSize: 12, color: Colors.white),
+              style: GoogleFonts.cinzel(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -521,10 +1146,34 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+  void _showHelpDialog(BuildContext context) {
+    final loc = S.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black87,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(loc.cardSelectionInstructions, style: GoogleFonts.cinzel(color: Colors.white, fontSize: 18)),
+        content: Text(
+          "${loc.flipAllCards}: ${loc.instructionsFlipAll}\n"
+              "${loc.reshuffleCards}: ${loc.instructionsReshuffle}\n"
+              "${loc.viewResults}: ${loc.instructionsViewResults}",
+          style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(loc.close, style: GoogleFonts.cinzel(color: Colors.purpleAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
-    if (loading || _entryAnimationController == null) {
+    if (isLoading) {
       return Scaffold(
         backgroundColor: Colors.black,
         body: Center(
@@ -536,15 +1185,21 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     return BlocConsumer<TarotBloc, TarotState>(
       listener: (context, state) {
         if (state is InsufficientResources) {
-          _showPurchaseSheet(context, state.requiredTokens);
+          _showPaymentDialog(context, state.requiredTokens);
         }
       },
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(loc!.cardSelection, style: GoogleFonts.cinzel(color: Colors.white)),
+            title: Text(loc!.cardSelection, style: GoogleFonts.cinzel(color: Colors.white, fontSize: 20)),
             backgroundColor: Colors.deepPurple[900],
             elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.info_outline, color: Colors.white),
+                onPressed: () => _showHelpDialog(context),
+              ),
+            ],
           ),
           body: Stack(
             children: [
@@ -554,125 +1209,30 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.deepPurple[900]!.withOpacity(0.7), Colors.black.withOpacity(0.9)],
+                    colors: [
+                      Colors.deepPurple[900]!.withOpacity(0.7),
+                      Colors.black.withOpacity(0.9),
+                    ],
                   ),
                 ),
               ),
               SafeArea(
-                child: Column(
-                  children: [
-                    Expanded(child: SingleChildScrollView(child: Center(child: _buildCardLayout(context)))),
-                    _buildActionButtons(),
-                  ],
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _buildCardLayout(context),
+                      const SizedBox(height: 20),
+                      _buildActionButtons(),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
         );
       },
-    );
-  }
-}
-
-
-
-
-class InsufficientResourcesScreen extends StatelessWidget {
-  final double requiredCredits;
-
-  const InsufficientResourcesScreen({super.key, this.requiredCredits = 1.0});
-
-  @override
-  Widget build(BuildContext context) {
-    final loc = S.of(context);
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      minChildSize: 0.4,
-      maxChildSize: 0.6,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple[900]!, Colors.black87],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              loc!.insufficientCreditsAndLimit,
-              style: GoogleFonts.cinzel(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              loc.insufficientCreditsMessage(requiredCredits),
-              style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            _buildPurchaseOption(context, "10 Credits", 0.99, '10_credits'),
-            const SizedBox(height: 12),
-            _buildPurchaseOption(context, "50 Credits", 4.99, '50_credits'),
-            const SizedBox(height: 12),
-            _buildPurchaseOption(context, "100 Credits", 9.99, '100_credits'),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(loc.cancel, style: GoogleFonts.cinzel(color: Colors.white70)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPurchaseOption(BuildContext context, String title, double price, String productId) {
-    return TapAnimatedScale(
-      onTap: () async {
-        final purchaseParam = PurchaseParam(
-          productDetails: ProductDetails(
-            id: productId,
-            title: title,
-            description: 'Purchase $title',
-            price: '$price USD',
-            rawPrice: price,
-            currencyCode: 'USD',
-          ),
-        );
-        try {
-          await InAppPurchase.instance.buyConsumable(purchaseParam: purchaseParam);
-          Navigator.pop(context);
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Purchase failed: $e')),
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.purple[700]!.withOpacity(0.8), Colors.deepPurple[900]!.withOpacity(0.6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
-            ),
-            Text('\$$price', style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white)),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -684,8 +1244,7 @@ class ReadingResultScreenWithTransition extends StatefulWidget {
   ReadingResultScreenWithTransitionState createState() => ReadingResultScreenWithTransitionState();
 }
 
-class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWithTransition>
-    with SingleTickerProviderStateMixin {
+class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWithTransition> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
 
   @override
@@ -716,6 +1275,7 @@ class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWi
 
   @override
   Widget build(BuildContext context) {
+    final loc = S.of(context);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -738,13 +1298,13 @@ class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWi
               ),
               const SizedBox(height: 20),
               Text(
-                'Unveiling the Mystical Path...',
+                loc?.unveilingMysticalPath ?? 'Unveiling the Mystical Path...',
                 style: GoogleFonts.cinzel(
                   fontSize: 18,
                   color: Colors.white70,
                   shadows: [
                     Shadow(
-                      color: Colors.purple.withOpacity(0.5),
+                      color: Colors.purpleAccent.withOpacity(0.5),
                       offset: const Offset(2, 2),
                       blurRadius: 4,
                     ),
