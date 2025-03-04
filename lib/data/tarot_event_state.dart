@@ -2,7 +2,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 
-// Events (unchanged)
+// Events
 abstract class TarotEvent extends Equatable {
   @override
   List<Object?> get props => [];
@@ -10,96 +10,128 @@ abstract class TarotEvent extends Equatable {
 
 class LoadTarotCards extends TarotEvent {}
 class ShuffleDeck extends TarotEvent {}
+
 class RedeemCoupon extends TarotEvent {
   final String couponCode;
   RedeemCoupon(this.couponCode);
   @override
   List<Object?> get props => [couponCode];
 }
+
+class UpdateLastCategory extends TarotEvent {
+  final String category;
+  UpdateLastCategory(this.category);
+  @override
+  List<Object?> get props => [category];
+}
+
+class UpdateUserInfo extends TarotEvent {
+  final String? name;
+  final int? age;
+  final String? gender;
+  UpdateUserInfo(this.name, this.age, this.gender);
+  @override
+  List<Object?> get props => [name, age, gender];
+}
+
 class DrawSingleCard extends TarotEvent {
   final String? customPrompt;
   DrawSingleCard({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawPastPresentFuture extends TarotEvent {
   final String? customPrompt;
   DrawPastPresentFuture({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawProblemSolution extends TarotEvent {
   final String? customPrompt;
   DrawProblemSolution({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawFiveCardPath extends TarotEvent {
   final String? customPrompt;
   DrawFiveCardPath({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawRelationshipSpread extends TarotEvent {
   final String? customPrompt;
   DrawRelationshipSpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawCelticCross extends TarotEvent {
   final String? customPrompt;
   DrawCelticCross({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawYearlySpread extends TarotEvent {
   final String? customPrompt;
   DrawYearlySpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawMindBodySpirit extends TarotEvent {
   final String? customPrompt;
   DrawMindBodySpirit({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawAstroLogicalCross extends TarotEvent {
   final String? customPrompt;
   DrawAstroLogicalCross({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawBrokenHeart extends TarotEvent {
   final String? customPrompt;
   DrawBrokenHeart({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawDreamInterpretation extends TarotEvent {
   final String? customPrompt;
   DrawDreamInterpretation({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawHorseshoeSpread extends TarotEvent {
   final String? customPrompt;
   DrawHorseshoeSpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawCareerPathSpread extends TarotEvent {
   final String? customPrompt;
   DrawCareerPathSpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawFullMoonSpread extends TarotEvent {
   final String? customPrompt;
   DrawFullMoonSpread({this.customPrompt});
   @override
   List<Object?> get props => [customPrompt];
 }
+
 class DrawCategoryReading extends TarotEvent {
   final String category;
   final int cardCount;
@@ -112,17 +144,47 @@ class DrawCategoryReading extends TarotEvent {
 // States
 abstract class TarotState extends Equatable {
   final bool isPremium;
-  final double userTokens; // Renamed from userCredits to userTokens
+  final double userTokens;
   final int dailyFreeFalCount;
+  final String? lastSelectedCategory;
+  final String? userName;
+  final int? userAge;
+  final String? userGender;
+  final bool userInfoCollected;
 
   const TarotState({
     required this.isPremium,
     required this.userTokens,
     required this.dailyFreeFalCount,
+    this.lastSelectedCategory,
+    this.userName,
+    this.userAge,
+    this.userGender,
+    this.userInfoCollected = false,
   });
 
   @override
-  List<Object?> get props => [isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [
+    isPremium,
+    userTokens,
+    dailyFreeFalCount,
+    lastSelectedCategory,
+    userName,
+    userAge,
+    userGender,
+    userInfoCollected,
+  ];
+
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  });
 }
 
 class TarotInitial extends TarotState {
@@ -130,7 +192,35 @@ class TarotInitial extends TarotState {
     super.isPremium = false,
     super.userTokens = 0.0,
     super.dailyFreeFalCount = 0,
+    super.lastSelectedCategory,
+    super.userName,
+    super.userAge,
+    super.userGender,
+    super.userInfoCollected = false,
   });
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return TarotInitial(
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class TarotLoading extends TarotState {
@@ -138,7 +228,35 @@ class TarotLoading extends TarotState {
     required super.isPremium,
     required super.userTokens,
     required super.dailyFreeFalCount,
+    super.lastSelectedCategory,
+    super.userName,
+    super.userAge,
+    super.userGender,
+    super.userInfoCollected,
   });
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return TarotLoading(
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class TarotError extends TarotState {
@@ -148,9 +266,39 @@ class TarotError extends TarotState {
         required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
+        super.lastSelectedCategory,
+        super.userName,
+        super.userAge,
+        super.userGender,
+        super.userInfoCollected,
       });
+
   @override
-  List<Object?> get props => [message, isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [message, ...super.props];
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return TarotError(
+      message,
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class TarotCardsLoaded extends TarotState {
@@ -160,9 +308,39 @@ class TarotCardsLoaded extends TarotState {
         required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
+        super.lastSelectedCategory,
+        super.userName,
+        super.userAge,
+        super.userGender,
+        super.userInfoCollected,
       });
+
   @override
-  List<Object?> get props => [cards, isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [cards, ...super.props];
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return TarotCardsLoaded(
+      cards,
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class CouponRedeemed extends TarotState {
@@ -172,9 +350,39 @@ class CouponRedeemed extends TarotState {
         required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
+        super.lastSelectedCategory,
+        super.userName,
+        super.userAge,
+        super.userGender,
+        super.userInfoCollected,
       });
+
   @override
-  List<Object?> get props => [message, isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [message, ...super.props];
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return CouponRedeemed(
+      message,
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class CouponInvalid extends TarotState {
@@ -184,9 +392,39 @@ class CouponInvalid extends TarotState {
         required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
+        super.lastSelectedCategory,
+        super.userName,
+        super.userAge,
+        super.userGender,
+        super.userInfoCollected,
       });
+
   @override
-  List<Object?> get props => [message, isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [message, ...super.props];
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return CouponInvalid(
+      message,
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class SingleCardDrawn extends TarotState {
@@ -196,9 +434,39 @@ class SingleCardDrawn extends TarotState {
         required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
+        super.lastSelectedCategory,
+        super.userName,
+        super.userAge,
+        super.userGender,
+        super.userInfoCollected,
       });
+
   @override
-  List<Object?> get props => [card, isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [card, ...super.props];
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return SingleCardDrawn(
+      card,
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class SpreadDrawn extends TarotState {
@@ -208,9 +476,39 @@ class SpreadDrawn extends TarotState {
         required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
+        super.lastSelectedCategory,
+        super.userName,
+        super.userAge,
+        super.userGender,
+        super.userInfoCollected,
       });
+
   @override
-  List<Object?> get props => [spread, isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [spread, ...super.props];
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return SpreadDrawn(
+      spread,
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class FalYorumuLoaded extends TarotState {
@@ -224,21 +522,83 @@ class FalYorumuLoaded extends TarotState {
         required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
+        super.lastSelectedCategory,
+        super.userName,
+        super.userAge,
+        super.userGender,
+        super.userInfoCollected,
       });
+
   @override
-  List<Object?> get props => [yorum, tokenCount, cost, isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [yorum, tokenCount, cost, ...super.props];
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return FalYorumuLoaded(
+      yorum,
+      tokenCount: tokenCount,
+      cost: cost,
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 class InsufficientResources extends TarotState {
-  final double requiredTokens; // Renamed from requiredCredits to requiredTokens
+  final double requiredTokens;
   const InsufficientResources(
       this.requiredTokens, {
         required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
+        super.lastSelectedCategory,
+        super.userName,
+        super.userAge,
+        super.userGender,
+        super.userInfoCollected,
       });
+
   @override
-  List<Object?> get props => [requiredTokens, isPremium, userTokens, dailyFreeFalCount];
+  List<Object?> get props => [requiredTokens, ...super.props];
+
+  @override
+  TarotState copyWith({
+    bool? isPremium,
+    double? userTokens,
+    int? dailyFreeFalCount,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+  }) {
+    return InsufficientResources(
+      requiredTokens,
+      isPremium: isPremium ?? this.isPremium,
+      userTokens: userTokens ?? this.userTokens,
+      dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+    );
+  }
 }
 
 // Spread Types (unchanged)

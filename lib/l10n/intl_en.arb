@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "tarotFortune": "Tarot",
+  "tarotFortune": "Astral Tarot",
   "errorMessage": "Error: {message}",
   "tryAgain": "Try Again",
   "pastPresentFuture": " Past-Present-Future Spread",
@@ -289,6 +289,37 @@
   "fullMoonPresent": "Full Moon Present",
   "fullMoonChallenge": "Full Moon Challenge",
   "fullMoonHope": "Full Moon Hope",
-  "fullMoonOutcome": "Full Moon Outcome"
+  "fullMoonOutcome": "Full Moon Outcome",
 
+
+  "mysticalTokens": "Mystical Tokens",
+  "@mysticalTokens": {
+    "description": "Currency used in the app for readings"
+  },
+
+
+  "errorLoadingReadings": "Error loading readings",
+  "unknownSpread": "Unknown spread",
+  "noInterpretation": "No interpretation available",
+
+  "premium": "Premium",
+  "unlimited": "Unlimited",
+  "english": "English",
+  "languageChangedToEnglish": "Language changed to English",
+  "turkish": "Turkish",
+  "languageChangedToTurkish": "Language changed to Turkish",
+  "tenTokens": "10 Tokens",
+  "fiftyTokens": "50 Tokens",
+  "hundredTokens": "100 Tokens",
+  "premiumSubscription": "Premium Subscription",
+
+  "drawCards": "Draw Cards",
+  "instructionsDrawCards": "Use this button to manually draw the cards.",
+
+  "selectToDraw": "Swipe to reveal your destiny",
+
+
+  "premiumDescription": "Unlimited readings and exclusive content",
+  "bundleDescription": "50 credits + Premium subscription",
+  "creditDescription": "{credits} credits for more readings"
 }

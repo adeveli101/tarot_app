@@ -82,7 +82,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                   style: GoogleFonts.cinzel(color: Colors.white, fontSize: 20),
                 ),
                 content: Text(
-                  "Adjust your language and manage your mystical tokens here.",
+                  loc.settingsHelp, // "Adjust your language and manage your mystical tokens here." localize
                   style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 14),
                 ),
                 actions: [
@@ -141,14 +141,14 @@ class SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Mystical Tokens",
+                    loc.mysticalTokens, // "Mystical Tokens" localize
                     style: GoogleFonts.cinzel(
                       color: Colors.white70,
                       fontSize: 16,
                     ),
                   ),
                   Text(
-                    state.isPremium ? "Premium" : "${state.userTokens.toStringAsFixed(1)} Tokens",
+                    state.isPremium ? loc.premium : "${state.userTokens.toStringAsFixed(1)} ${loc.mysticalTokens}", // "Premium" ve "Tokens" localize
                     style: GoogleFonts.cinzel(
                       color: Colors.white,
                       fontSize: 16,
@@ -162,14 +162,14 @@ class SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Daily Free Readings",
+                    loc.dailyFreeReadings, // "Daily Free Readings" localize
                     style: GoogleFonts.cinzel(
                       color: Colors.white70,
                       fontSize: 16,
                     ),
                   ),
                   Text(
-                    state.isPremium ? "Unlimited" : "${state.dailyFreeFalCount}/3",
+                    state.isPremium ? loc.unlimited : "${state.dailyFreeFalCount}/3",
                     style: GoogleFonts.cinzel(
                       color: Colors.white,
                       fontSize: 16,
@@ -187,28 +187,28 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildLanguageSettings(BuildContext context, S loc) {
     return _buildSection(
-      title: "Language / Dil",
+      title: loc.language, // "Language / Dil" localize
       children: [
         LanguageCard(
-          language: 'English',
+          language: loc.english,
           locale: const Locale('en'),
           isSelected: widget.currentLocale.languageCode == 'en',
           onTap: () {
             widget.onLocaleChange(const Locale('en'), context);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Language changed to English")),
+              SnackBar(content: Text(loc.languageChangedToEnglish)), // "Language changed to English" localize
             );
           },
         ),
         const SizedBox(height: 12),
         LanguageCard(
-          language: 'Türkçe',
+          language: loc.turkish,
           locale: const Locale('tr'),
           isSelected: widget.currentLocale.languageCode == 'tr',
           onTap: () {
             widget.onLocaleChange(const Locale('tr'), context);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Dil Türkçe olarak değiştirildi")),
+              SnackBar(content: Text(loc.languageChangedToTurkish)), // "Dil Türkçe olarak değiştirildi" localize
             );
           },
         ),
@@ -222,28 +222,28 @@ class SettingsScreenState extends State<SettingsScreen> {
       children: [
         _buildPurchaseCard(
           context: context,
-          title: "10 Tokens",
+          title: loc.tenTokens, // "10 Tokens" localize
           onTap: () => _showPaymentDialog(context),
           isDisabled: _isPurchasing,
         ),
         const SizedBox(height: 12),
         _buildPurchaseCard(
           context: context,
-          title: "50 Tokens",
+          title: loc.fiftyTokens, // "50 Tokens" localize
           onTap: () => _showPaymentDialog(context),
           isDisabled: _isPurchasing,
         ),
         const SizedBox(height: 12),
         _buildPurchaseCard(
           context: context,
-          title: "100 Tokens",
+          title: loc.hundredTokens, // "100 Tokens" localize
           onTap: () => _showPaymentDialog(context),
           isDisabled: _isPurchasing,
         ),
         const SizedBox(height: 12),
         _buildPurchaseCard(
           context: context,
-          title: "Premium Subscription",
+          title: loc.premiumSubscription, // "Premium Subscription" localize
           onTap: () => _showPaymentDialog(context),
           isDisabled: _isPurchasing,
         ),
@@ -252,6 +252,8 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showPaymentDialog(BuildContext context) {
+    final loc = S.of(context);
+
     setState(() => _isPurchasing = true);
     PaymentManager.showPaymentDialog(
       context,
@@ -259,7 +261,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       onSuccess: () {
         setState(() => _isPurchasing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context)!.couponRedeemed("Purchase completed successfully"))),
+          SnackBar(content: Text(loc!.couponRedeemed(loc.redeem))), // "Purchase completed successfully" localize
         );
       },
     ).then((_) => setState(() => _isPurchasing = false));

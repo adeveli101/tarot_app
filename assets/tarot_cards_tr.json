@@ -1,0 +1,2512 @@
+{
+  "description": "tarot kartları ve bunlar hakkındaki temel bilgiler, ayrıca ilgili taramalar için referanslar",
+  "cards": [
+    {
+      "name": "Aptal",
+      "number": "0",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m00.jpg",
+      "fortune_telling": [
+        "Yeni projeler ve başlangıçlar için dikkatli ol",
+        "Bir şeyi inançla kabul etmeye hazırlan",
+        "Yoluna yeni bir şey geliyor; peşinden git"
+      ],
+      "keywords": [
+        "özgürlük",
+        "inanç",
+        "deneyimsizlik",
+        "masumiyet"
+      ],
+      "meanings": {
+        "light": [
+          "Kendini sınırlamalardan kurtarmak",
+          "Neşe ve gençlik enerjisini ifade etmek",
+          "Açık fikirli olmak",
+          "İnançla bir adım atmak",
+          "Kendini içgüdülerine uyum sağlamak",
+          "Meraklı veya hevesli olmak",
+          "Potansiyelini keşfetmek",
+          "Yenilik ve değişimi kucaklamak"
+        ],
+        "shadow": [
+          "Saf ve kandırılmaya açık olmak",
+          "Gerekli olmayan riskler almak",
+          "Gerektiğinde ciddi olmamak",
+          "Aptalca veya dikkatsiz davranmak",
+          "Deneyim eksikliği",
+          "İyi kurulmuş geleneklere ve sınırlara saygı göstermemek",
+          "Uygunsuz davranmak"
+        ]
+      },
+      "Archetype": "İlahi Çılgın",
+      "Hebrew Alphabet": "Aleph/Öküz/1",
+      "Numerology": "0 (ölçeğin dışında; saf potansiyel)",
+      "Elemental": "Hava",
+      "Mythical/Spiritual": "Düşüşten önceki Adem. Christ olarak dolaşan kutsal çılgın. İnsan bedenine bürünmüş ilah. Kutsal Ruh.",
+      "Questions to Ask": ["Eğer özgürce bir adım atmaya karar versem ne yapardım?", "Ne kadar savunmasız ve açık olmaya hazırım?", "Geçmiş deneyimlerim bu yeni durumda nasıl yardımcı olabilir?"]
+    },
+    {
+      "name": "Büyücü",
+      "number": "1",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m01.jpg",
+      "fortune_telling": [
+        "Gününüzde güçlü bir erkek önemli bir rol oynayabilir",
+        "Mevcut durumunuzun çok daha büyük bir planın bir unsuru olarak görülmesi gerekir"
+      ],
+      "keywords": [
+        "yetenek",
+        "güçlendirme",
+        "aktivite"
+      ],
+      "meanings": {
+        "light": [
+          "Uygun eylemi almak",
+          "Yüksek bir güçten rehberlik almak",
+          "İlahi iradenin bir kanalı olmak",
+          "Eril enerjisini uygun ve yapıcı yollarla ifade etmek",
+          "Her yönüyle kendin olmak"
+        ],
+        "shadow": [
+          "Kendi egonu şişirmek",
+          "Yeteneklerini kötüye kullanmak",
+          "Başkalarını manipüle etmek veya aldatmak",
+          "Aşırı agresif olmak",
+          "Başkalarını etkilemek için ucuz illüzyonlar kullanmak",
+          "Zanaatını ustalaşmak için gerekli zaman ve çabayı harcamayı reddetmek",
+          "Kısayollar kullanmak"
+        ]
+      },
+      "Archetype": "Ego/Öz benlik",
+      "Hebrew Alphabet": "Beth/Ev/2",
+      "Numerology": "1 (kökenler, birlik, tohumlar)",
+      "Elemental": "Güneş/Merkür",
+      "Mythical/Spiritual": "Thoth, Mısırlı bilgelik tanrısı, Yunanlılar için Hermes ve Romalılar için Merkür olarak bilinir. Mucizeler gerçekleştiren Christ. Brahma, Yaratıcı.",
+      "Questions to Ask": ["Beni ne güçlendiriyor?", "Yeteneğim nasıl devreye girebilir?", "Yeteneklerimi ne kadar iyi kullanıyorum?"]
+    },
+    {
+      "name": "Başrahibe",
+      "number": "2",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m02.jpg",
+      "fortune_telling": [
+        "Gizemli bir kadın ortaya çıkar",
+        "Cinsel bir sır gün yüzüne çıkabilir",
+        "Biri bildiklerinden fazlasını açıklamayabilir"
+      ],
+      "keywords": [
+        "sezgi",
+        "yansıma",
+        "saflık",
+        "inisiyasyon"
+      ],
+      "meanings": {
+        "light": [
+          "Duygularına ve sezgilerine kulak vermek",
+          "Geleneksel olmayan maneviyatı keşfetmek",
+          "Sırları saklamak",
+          "Açık olmak",
+          "Eylem yerine yansımak",
+          "Başkalarını gözlemlemek",
+          "Saflığı korumak"
+        ],
+        "shadow": [
+          "Uzak durmak",
+          "Sırlar ve komplolarla takıntılı olmak",
+          "Ruhsal veya sezgisel rehberliği reddetmek",
+          "Hepsini açığa vurmak",
+          "İçgüdülerini yok saymak",
+          "Gerektiğinde dahil olmayı reddetmek"
+        ]
+      },
+      "Archetype": "Bakire/Kız",
+      "Hebrew Alphabet": "Gimel/Deve/3",
+      "Numerology": "2 (bölünme, tartışma, ikilik)",
+      "Elemental": "Ay",
+      "Mythical/Spiritual": "İlahi feminenin dişi yanı, özellikle Bakire Meryem veya İsis gibi bakirelik yoluyla ifade edildiğinde.",
+      "Questions to Ask": ["Geleneklere karşı çıkan biri ne yapabilir?", "Ne söylenmiyor veya ne gizleniyor?", "Gözlem yaparak ve yansıyarak neler başarılabilir?"]
+    },
+    {
+      "name": "İmparatoriçe",
+      "number": "3",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m03.jpg",
+      "fortune_telling": [
+        "Hamilelik kartlarda",
+        "Lüks bir cinsellik fırsatına dahil olma şansı geliyor",
+        "Bağımlılık eğilimine dikkat et"
+      ],
+      "keywords": [
+        "verimlilik",
+        "üretkenlik",
+        "olgunluk",
+        "besleme"
+      ],
+      "meanings": {
+        "light": [
+          "Kendini ve başkalarını beslemek",
+          "Meyve vermek",
+          "Vücudunu kutlamak",
+          "(Gerçek veya mecazi) çocuk sahibi olmak",
+          "Lükse dalmak",
+          "Çevrendekilere olumlu yollarla annelik yapmak",
+          "Cinselliğini yaşamak",
+          "İşleri halletmek"
+        ],
+        "shadow": [
+          "Aşırıya kaçmak",
+          "Açgözlülük yapmak",
+          "Birine fazla ilgiyle boğmak",
+          "Aşırı korumacılıkla birini zayıflatmak",
+          "Üretkenliği takıntı yaparak engellemek",
+          "Bağımlı davranışlara yenik düşmek"
+        ]
+      },
+      "Archetype": "Anne",
+      "Hebrew Alphabet": "Daleth/Kapı/4",
+      "Numerology": "3 (ifade, üretkenlik, çıktı)",
+      "Elemental": "Venüs",
+      "Mythical/Spiritual": "Gaia, Ana Dünya, Ishtar, Demeter—her formda olgun, üreme yapan dişi ilahi. Ayrıca Afrodit ve Turan.",
+      "Questions to Ask": ["Endişeli ama yetkin bir anne ne yapardı?", "Büyümeyi vurgulayacak ne yapabilirim?", "Kendi duyusallığımı ve cinselliğimi nasıl kutlayabilirim?"]
+    },
+    {
+      "name": "İmparator",
+      "number": "4",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m04.jpg",
+      "fortune_telling": [
+        "Bir baba figürü ortaya çıkar",
+        "Yeni bir işveren veya otorite figürü sana emir verecek",
+        "Yakın gelecekte disiplin veya düzeltme bekle"
+      ],
+      "keywords": [
+        "otorite",
+        "düzenleme",
+        "yönlendirme",
+        "yapı"
+      ],
+      "meanings": {
+        "light": [
+          "Otorite kullanmak",
+          "Sınırlar belirlemek",
+          "Çalışma akışını yönlendirmek",
+          "Açık yönergeler iletmek",
+          "Kendine ve başkalarına hakim olmak",
+          "Bilgelik ve deneyimle agresif maskülenliği dengelemek"
+        ],
+        "shadow": [
+          "Aşırı kontrol yapmak",
+          "Katı, demir yumruklu bir yaklaşımla başkalarının yaratıcılığını ezmek",
+          "Kendi yolunda ısrar etmek",
+          "Diktatör bir zihniyete sahip olmak",
+          "Hedeflere ulaşmak ve düzeni sağlamak için açık güç kullanmak"
+        ]
+      },
+      "Archetype": "Baba",
+      "Hebrew Alphabet": "He[as]/Pencere/5, veya bazı destelerde Tzaddi/Balık kancası/90",
+      "Numerology": "4 (istikrar, eşitlik, ısrar)",
+      "Elemental": "Mars/Koç",
+      "Mythical/Spiritual": "Erkek tanrılar, İbranice Tanrı, Hristiyan Tanrı, Allah ve Zeus dahil. Patriyarklar (İbrahim) ve yasa koyucular (Musa). Vishnu, Koruyucu.",
+      "Questions to Ask": ["Kontrol veya düzenleme meselesi bu durumu nasıl etkiler?", "Şefkatli ama katı bir baba ne yapardı?", "Daha fazla kontrolden neye ihtiyaç var?"]
+    },
+    {
+      "name": "Hiyerofant",
+      "number": "5",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m05.jpg",
+      "fortune_telling": [
+        "Bir yanlışın yakalanmasını ve buna göre cezalandırılmasını bekle",
+        "Bağışlanma için dua et ve yanlışlarını itiraf et",
+        "Hayatına daha deneyimli bir erkek, manevi lider veya baba figürü girecek"
+      ],
+      "keywords": [
+        "rehberlik",
+        "bilgi",
+        "vahiy",
+        "inanç"
+      ],
+      "meanings": {
+        "light": [
+          "Başkalarına öğretmek veya rehberlik etmek",
+          "Gerçeği aramak",
+          "Yüksek bir güçten rehberlik istemek",
+          "Başkalarının bilgelik ve deneyimlerini kabul etmek",
+          "Yemin etmek",
+          "Kalpten gelen ritüellere katılmak",
+          "Gönüllü olmak"
+        ],
+        "shadow": [
+          "Deneyimi başkalarını manipüle etmek veya yanlış yönlendirmek için bir araç olarak kullanmak",
+          "Dogmatik olmak",
+          "Gelenekleri, elzem veya gerekli olan şeylerden üstün tutmak",
+          "Boş ritüellerin hareketlerini yapmak",
+          "Bilgeliği gizlemek",
+          "Manevi gerçeklere veya tanrılara erişimi kısıtlamak"
+        ]
+      },
+      "Archetype": "Koruyucu/Kilise/İman",
+      "Hebrew Alphabet": "Vau/Çivi veya Diken/6",
+      "Numerology": "5 (istikrarsızlık, direnç, karşılaşma, evrim)",
+      "Elemental": "Boğa/Toprak",
+      "Mythical/Spiritual": "Christ, Apostol Peter, Buda, Muhammed. Her inanç ve gelenekte papalar, rahipler ve aracılar",
+      "Questions to Ask": ["Bu durumda gelenek veya din ne rol oynayabilir?", "Kuralları kim belirledi? Kim uygular? Neden?", "Deneyimli bir rehber bu durumda nasıl bir etki yaratabilir?"]
+    },
+    {
+      "name": "Âşıklar",
+      "number": "6",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m06.jpg",
+      "fortune_telling": [
+        "Yeni bir kişisel veya profesyonel ilişki filizleniyor",
+        "Cinsel fırsatlar bol",
+        "Beklenmedik bir şekilde bir arkadaş sevgiliye dönüşüyor"
+      ],
+      "keywords": [
+        "aşk",
+        "tutku",
+        "birlik",
+        "seçim"
+      ],
+      "meanings": {
+        "light": [
+          "Aşık olmak",
+          "Aşkını başkalarına göstermek",
+          "Tutku veya romantik duyguları ifade etmek",
+          "Kendinle benzer düşünen gruplarla veya insanlarla uyum sağlamak",
+          "İnsanları bir araya getirmek",
+          "İyi bilgilendirilmiş kararlar vermek"
+        ],
+        "shadow": [
+          "Zayıflatıcı tutku",
+          "Aşırı sevgi arzusuyla yıkıcı davranışları motive etmek",
+          "Birliği bozmak",
+          "Senin hakkında endişelenenlerin en iyi çıkarlarına karşı çalışmak",
+          "Yetersiz bilgilendirilmiş kararlar"
+        ]
+      },
+      "Archetype": "Sevgili/Cinsel Uyanış",
+      "Hebrew Alphabet": "Zain/Kılıç/7",
+      "Numerology": "6 (işbirliği, ortak çalışma, etkileşim)",
+      "Elemental": "İkizler",
+      "Mythical/Spiritual": "Açıkça, Adem ve Havva, RWS etkisindeki destelerde tasvir ediliyor. Ayrıca Venus ve Cupid, Afrodit ve Eros.",
+      "Questions to Ask": ["Seçimlerimi ne yönlendiriyor?", "Kalbim beni ne yapmaya yöneltiyor?", "Bu karar beni bir kişi olarak nasıl dönüştürebilir?"]
+    },
+    {
+      "name": "Araba",
+      "number": "7",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m07.jpg",
+      "fortune_telling": [
+        "Zafer kesin",
+        "Tüm planlarla ilerle",
+        "Başkalarının kıskançlığına dikkat et"
+      ],
+      "keywords": [
+        "ilerleme",
+        "zafer",
+        "triumph",
+        "başarı"
+      ],
+      "meanings": {
+        "light": [
+          "Engelleri aşmak",
+          "Güven ve otoriteyle ilerlemek",
+          "Başarının zirvesine ulaşmak",
+          "Başarının şanını yaşamak",
+          "Bir çabayı tam zaferle yönlendirmek",
+          "Kendini değerli bir lider olarak kurmak"
+        ],
+        "shadow": [
+          "Zaferlerine dayanmak",
+          "Başkalarının duygularını veya beklentilerini hiçe sayarak ilerlemek",
+          "Geçmiş başarılara değil gelecek fırsatlara odaklanmak",
+          "Düşüncesiz davranışları kontrol edememek"
+        ]
+      },
+      "Archetype": "Zafer Kazanan Kahraman",
+      "Hebrew Alphabet": "Cheth/Çit/8",
+      "Numerology": "7 (hayal gücü, iç çalışma, psikoloji)",
+      "Elemental": "Yengeç",
+      "Mythical/Spiritual": "Odysseus. Jason. Kutsal Kase arayışı. Christ'in Kudüs'e zaferle girişi.",
+      "Questions to Ask": ["Ne kadar ilerledim? Bir sonraki zorluk ne olacak?", "Geçmiş başarılarımı en iyi nasıl kullanabilirim?", "Gerçek ve anlamlı başarının kriterleri ne olurdu?"]
+    },
+    {
+      "name": "Güç",
+      "number": "8",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m08.jpg",
+      "fortune_telling": [
+        "Öz kontrolün test edilecek",
+        "Bir kadın partnerini veya sevgilisini değiştirmeye çalışacak",
+        "Sen güçlü ve yetkin bir kişisin"
+      ],
+      "keywords": [
+        "disiplin",
+        "cesaret",
+        "öz kontrol",
+        "güç",
+        "canlılık"
+      ],
+      "meanings": {
+        "light": [
+          "Kendine kısıtlamalar koyarak kendi yararına çalışmak",
+          "Tutkularını akıl ile kontrol etmek",
+          "İlgi alanına karşı çalışan dürtüleri reddetmek",
+          "Cesurca harekete geçmek"
+        ],
+        "shadow": [
+          "Zayıflığa teslim olmak, bu mutluluğuna ve sağlığına zarar verse bile",
+          "Bağımlılıkta kaybolmak",
+          "İçgüdülerinin seni ehlileştirmesine ve yenmesine izin vermek",
+          "Gerektiğinde duruş sergilemeyi reddetmek"
+        ]
+      },
+      "Archetype": "Yasa",
+      "Hebrew Alphabet": "Lamed/Açık Kollar/30 veya Theth/Yılan/9",
+      "Numerology": "8 (hareket, çalışma) veya 11 = 1 + 1 = 2 (tartışma, ikilik)",
+      "Elemental": "Terazi veya Aslan",
+      "Mythical/Spiritual": "Themis veya Justitia. Ma'at. Solomon'un bir bebeği bölmesi. Damocles'in Kılıcı. On Emir'in verilmesi.",
+      "Questions to Ask": ["Hayatın (veya işin) ne kadar dengede?", "Daha fazla nesnellik nasıl sağlanabilir?", "Herkes için adil bir eylem planı ne olurdu?"]
+    },
+    {
+      "name": "Münzevi",
+      "number": "9",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m09.jpg",
+      "fortune_telling": [
+        "Yalnız bir dönem başlıyor",
+        "Bir ilişkideki bir partner ayrılıyor",
+        "Aşk veya para arayışı sonuçsuz kalıyor"
+      ],
+      "keywords": [
+        "yalnızlık",
+        "deneyim",
+        "huzur",
+        "çekilme"
+      ],
+      "meanings": {
+        "light": [
+          "Bir guru olmak veya guru aramak",
+          "Bir inzivaya çekilmek",
+          "Manevi veya yaratıcı enerjileri şarj etmek",
+          "Deneyimsiz olanlara yol göstermek",
+          "Perspektif kazanmak için geri adım atmak"
+        ],
+        "shadow": [
+          "Yalnız bir hayat yaşamak",
+          "Başkalarıyla temastan korkmak",
+          "Herkes-şeyi-bilen biri olmak",
+          "Uzmanlık iddialarını abartmak",
+          "Yetersizlik korkusuyla yeteneklerini ve becerilerini gizlemek"
+        ]
+      },
+      "Archetype": "Kutsal Adam",
+      "Hebrew Alphabet": "Yod/El/10",
+      "Numerology": "9 (doluluk, hazırlık, olgunluk)",
+      "Elemental": "Başak",
+      "Mythical/Spiritual": "Christ, 40 gün çölde oruç tutarken. Zaman tanrısı Chronos. Father Time. Hermes.",
+      "Questions to Ask": ["Eğer sadece çekilirsem ve hareketsiz kalırsam ne olur?", "Duruma biraz perspektif nasıl kazanırım?", "Benden önce bu yolu kim geçti? Onun yardımını nasıl alabilirim?"]
+    },
+    {
+      "name": "Kader Çarkı",
+      "number": "10",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m10.jpg",
+      "fortune_telling": [
+        "Bazı olaylar gökyüzünün ellerinde",
+        "Bunu daha önce yaşadın",
+        "O zaman ne oldu?"
+      ],
+      "keywords": [
+        "şans",
+        "rastgelelik",
+        "döngüler",
+        "karma",
+        "kader",
+        "devrim"
+      ],
+      "meanings": {
+        "light": [
+          "Olayların doğal akışına izin vermek",
+          "Günlük olaylarda daha büyük bir deseni görmek",
+          "Şansına güvenmek",
+          "Döngüler için dikkatli olmak",
+          "Her şeyin bir gün geri döneceğine inanmak"
+        ],
+        "shadow": [
+          "Kumar oynayarak para kaybetmek",
+          "Bir planı hayata geçirmek için kendi payını yapmayı reddetmek",
+          "Hayata kaderci bir yaklaşım benimsemek",
+          "Olayların doğal akışına karşı koymak"
+        ]
+      },
+      "Archetype": "Kaderler/Kader",
+      "Hebrew Alphabet": "Koph/Avuç/20",
+      "Numerology": "10 (son, tamamlanma) ve 10 = 1 + 0 = 1 (başlangıç noktası, fırsat)",
+      "Elemental": "Jüpiter",
+      "Mythical/Spiritual": "Tanrı Makinesi. Deus ex Machina. Clotho, Lachesis ve Atropos. Fortuna.",
+      "Questions to Ask": ["Bu meydan okuma daha büyük bir desene nasıl uyuyor?", "Şansın durumumda ne rol oynuyor?", "Neyi kontrol edebilirim? Kontrolü ne zaman bırakmalıyım, bunu nasıl bilirim?"]
+    },
+    {
+      "name": "Adalet",
+      "number": "11",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m11.jpg",
+      "fortune_telling": [
+        "Yakında bir yasal karar verileceği",
+        "Biri bir karar alıyor",
+        "Gerçekleri öğrenmen gerekiyor"
+      ],
+      "keywords": [
+        "denge",
+        "yasa",
+        "adillik",
+        "nesnellik"
+      ],
+      "meanings": {
+        "light": [
+          "Nesnel bir karar vermek",
+          "Bir konuyu dikkatlice tartıp harekete geçmek",
+          "Duruma uygun bir tepki ölçeği belirlemek",
+          "Tüm gerçekleri öğrenmek",
+          "Delilleri değerlendirmek",
+          "Karar vermek"
+        ],
+        "shadow": [
+          "Sert eleştiri yapmak",
+          "Kurallara ve düzenlemelere takıntılı olmak",
+          "Kitaba uymakta ısrar etmek, bu yıkıcı veya karşı verimli olsa bile",
+          "Ani kararları zamanında hareketle karıştırmak",
+          "Kayırıcı davranmak"
+        ]
+      },
+      "Archetype": "İd",
+      "Hebrew Alphabet": "Theth/Yılan/9 veya Lamed/Açık Kollar/30",
+      "Numerology": "11 = 1 + 1 = 2 (tartışma, ikilik) veya 8 (hareket, dış çalışma)",
+      "Elemental": "Aslan veya Terazi",
+      "Mythical/Spiritual": "Samson. Herkül. Aslanın inindeki Daniel. Günahsız Christ.",
+      "Questions to Ask": ["Kendimi nasıl daha disipline edebilirim?", "Hangi davranışlar beni baştan çıkarıyor? Bunlara nasıl direnebilirim?", "Hangi içgüdülerle bugün hala mücadele ediyorum?"]
+    },
+    {
+      "name": "Asılmış Adam",
+      "number": "12",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m12.jpg",
+      "fortune_telling": [
+        "Bir hain ortaya çıkar",
+        "Arkadaşlarından biri sana karşı çalışıyor",
+        "Yollarınızı değiştirmezseniz sonuçlarına katlanırsınız"
+      ],
+      "keywords": [
+        "aydınlanma",
+        "fedakarlık",
+        "perspektif",
+        "askıya alma",
+        "terslikler"
+      ],
+      "meanings": {
+        "light": [
+          "Hoş olmayan olaylarda büyüme fırsatları görmek",
+          "Kişisel bakış açında dramatik bir değişim yaşamak",
+          "Hayatında veya işinde öngörülmemiş bir değişimi en iyi şekilde kullanmak",
+          "İnancı askıya almak",
+          "Fedakarlıklar yapmak"
+        ],
+        "shadow": [
+          "Kendine ve değerlerine sadık olmamak",
+          "Uygun olduğunda fedakarlık yapmayı reddetmek",
+          "Yeni durumlara uyum sağlamayı reddetmek",
+          "Başkalarını suçlamak",
+          "Başkalarının masraflarıyla kâr sağlamak"
+        ]
+      },
+      "Archetype": "Hain",
+      "Hebrew Alphabet": "Mem/Su/40",
+      "Numerology": "12 = 1 + 2 = 3 (ifade, üretkenlik, çıktı)",
+      "Elemental": "Su",
+      "Mythical/Spiritual": "Çarmıha gerilmiş Christ. İshak olarak fedakarlık. Prometheus zincirlenmiş. Yunus ve balina. Lazar. Her asılmış veya fedakar tanrı. Yahuda.",
+      "Questions to Ask": ["Perspektifimi nasıl radikal bir şekilde değiştirebilirim?", "Takılıp kalmış olmak aslında bir nimet olabilir mi?", "Kendi kendime bardağın yarısı dolu olduğunu nasıl gösterebilirim?"]
+    },
+    {
+      "name": "Ölüm",
+      "number": "13",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m13.jpg",
+      "fortune_telling": [
+        "Bir ilişki veya hastalık aniden sona eriyor",
+        "Seyahati ve risk almayı sınırlandır",
+        "Genel karamsarlık ve felaket"
+      ],
+      "keywords": [
+        "bitiş",
+        "sonuç",
+        "geçiş",
+        "yolculuk",
+        "ayrılış"
+      ],
+      "meanings": {
+        "light": [
+          "Hayatın hoş olmayan bir aşamasını sona erdirmek",
+          "Bir şeyin sonucunu tanıyıp kutlamak",
+          "Kötü alışkanlıkları bırakmak",
+          "Yeni bir kişi olmak",
+          "Bir kişiyi, yeri veya şeyi diğeri için bırakmak",
+          "Bırakmak"
+        ],
+        "shadow": [
+          "Ölüm ve ölme üzerine takıntılı olmak",
+          "Eski alışkanlıkları veya sağlıksız ilişkileri bırakmayı reddetmek",
+          "Her şeyin ve herkesin sonsuza dek aynı kalması gerektiğini ısrar etmek",
+          "Kendine iyi bakmamak"
+        ]
+      },
+      "Archetype": "Ölüm",
+      "Hebrew Alphabet": "Nun/Balık/50",
+      "Numerology": "13 = 1 + 3 = 4 (istikrar, ısrar)",
+      "Elemental": "Akrep",
+      "Mythical/Spiritual": "Christ mezarda. Hades. Hypnos. Thanatos. Yeraltı yolculuk hikayeleri.",
+      "Questions to Ask": ["Ne bitmeli?", "Bu durumdaki bir bitiş aslında bir nimet olabilir mi?", "Sonra ne olacak?"]
+    },
+    {
+      "name": "İlahi Denge",
+      "number": "14",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m14.jpg",
+      "fortune_telling": [
+        "Biri aşırı alkol veya uyuşturucu kullanıyor",
+        "Diyete geri dönme zamanı"
+      ],
+      "keywords": [
+        "karıştırma",
+        "sentez",
+        "arabuluculuk",
+        "birleşme",
+        "uyum"
+      ],
+      "meanings": {
+        "light": [
+          "Zıtları bir araya getirmek",
+          "Eylemlerini veya duygularını ılımlı hale getirmek",
+          "Orta yol bulmak",
+          "Uzlaşmalar yapmak",
+          "Herkesi memnun eden çözümler sentezlemek",
+          "Eskiyle yeniyi yapmak"
+        ],
+        "shadow": [
+          "Aşırılıklara gitmek",
+          "Grup çabalarını bozmak",
+          "Sağlıklı yaşam yaklaşımlarını yok saymak",
+          "Bağımlı olmak",
+          "Aşırılık yapmak",
+          "Bir şeyi veya birini parçalamak",
+          "İttifakları bozmak"
+        ]
+      },
+      "Archetype": "Arabulucu",
+      "Hebrew Alphabet": "Samekh/Temel/60",
+      "Numerology": "14 = 1 + 4 = 5 (katalizör, istikrarsızlık, karşılaşma)",
+      "Elemental": "Yay",
+      "Mythical/Spiritual": "Burada görülen melek tanrıça Iris olabilir. Buna ek olarak, rahipler, rahiplikler veya transfigüre olmuş Christ.",
+      "Questions to Ask": ["Aşırılıklardan nasıl kaçınabilirim?", "İlgili herkesin ortak noktası nedir?", "Tanıdık şeyleri birleştirerek nasıl yeni bir şey yaratabilirim?"]
+    },
+    {
+      "name": "Şeytan",
+      "number": "15",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m15.jpg",
+      "fortune_telling": [
+        "Zina ve sadakatsizlik",
+        "Sana doğru gelen bir dizi aşırı kötü şans",
+        "Kötü etkilere ve koyun postunda kurtlara dikkat et"
+      ],
+      "keywords": [
+        "gölge",
+        "materyalizm",
+        "bağlılık",
+        "yanılgı"
+      ],
+      "meanings": {
+        "light": [
+          "Hayatın sunduğu lüksleri takdir etmek",
+          "Kendi cildinde rahat olmak",
+          "Cinselliğini yaşamak",
+          "Kişisel bir eşyaya pahalı bir harcama yapmak",
+          "Herkesin karanlık bir tarafı olduğunu kabul etmek",
+          "Sağlıksız dürtülerle sağlıklı yollarla başa çıkmak"
+        ],
+        "shadow": [
+          "Görünüşlere aşırı vurgu yapmak",
+          "Her zaman daha fazlasını istemek",
+          "İnsanlardan veya ilişkilerden daha çok mülkiyeti değerlendirmek",
+          "Hayatını temel içgüdülerin yönetmesine izin vermek",
+          "Bencil olmak",
+          "Kendi karanlık dürtülerini dış güçlere veya diğer insanlara atfetmek"
+        ]
+      },
+      "Archetype": "Gölge, Diğer",
+      "Hebrew Alphabet": "Ayin/Göz/70",
+      "Numerology": "15 = 1 + 5 = 6 (ayar, işbirliği)",
+      "Elemental": "Oğlak",
+      "Mythical/Spiritual": "Kuşkusuz, İncil'deki Şeytan. Düşmüş melekler, Lucifer dahil. Bacchus ve Pan. Her türden baştan çıkarıcılar ve yılanlar.",
+      "Questions to Ask": ["Beni ne köleleştiriyor? Kendimi nasıl özgür bırakabilirim?", "Maddi şeylere verdiğim önemi nasıl yeniden değerlendirebilirim?", "Arzularım beni ne kadar tanımlıyor?"]
+    },
+    {
+      "name": "Kule",
+      "number": "16",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m16.jpg",
+      "fortune_telling": [
+        "Yaklaşan felaket",
+        "Planları iptal et ve kararları tersine çevir",
+        "Biri seni bir iki basamak aşağı indirmek istiyor",
+        "Kendini tutma; gerçekten neyi kastettiğini söyle"
+      ],
+      "keywords": [
+        "yıkım",
+        "çalkantı",
+        "yapı söküm",
+        "felaket",
+        "yok etme"
+      ],
+      "meanings": {
+        "light": [
+          "Eski, kısıtlayıcı alışkanlıklardan ve zihniyetlerden çıkmak",
+          "Yeni büyüme için yol açmak",
+          "Şişirilmiş bir egonun etkisini dağıtmak",
+          "Temellere dönmek",
+          "Zararlı yanılgıları ortadan kaldırmak",
+          "Ani bir içgörü almak"
+        ],
+        "shadow": [
+          "Büyümeyi bastıran geleneklere tutunmak",
+          "Bilinçli körlük",
+          "Değişime ihtiyaç duyulduğuna dair kanıtları reddetmek",
+          "Yüksek bir güçten rehberliği yok saymak",
+          "Kasıtlı olarak yıkıcı davranışlara katılmak"
+        ]
+      },
+      "Archetype": "Paramparça Ego",
+      "Hebrew Alphabet": "Pe[as]/Açık Ağız/80",
+      "Numerology": "16 = 1 + 6 = 7 (psikoloji, hayal gücü, iç çalışma)",
+      "Elemental": "Mars",
+      "Mythical/Spiritual": "Babil Kulesi. Sodom ve Gomorra'nın yok edilmesi. Shiva'nın yıkıcı dansı. Zeus ve Thor'un şimşekleri.",
+      "Questions to Ask": ["Bu durum perspektifimi nasıl dramatik bir şekilde değiştirebilir?", "Bu kayıp yeni bir büyüme kapısını nasıl açabilir?", "İlerlemeye devam etmeden önce hangi tutumların yıkılması gerekiyor?"]
+    },
+    {
+      "name": "Yıldız",
+      "number": "17",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m17.jpg",
+      "fortune_telling": [
+        "Bir astroloji haritası çizdir",
+        "Biri fazla yıldızlı",
+        "Şu anda olanlar uzun zamandır önceden belirlenmiş"
+      ],
+      "keywords": [
+        "umut",
+        "iyimserlik",
+        "açıklık",
+        "kesinlik",
+        "inanç",
+        "özlem",
+        "gerçek"
+      ],
+      "meanings": {
+        "light": [
+          "En iyisini ummak",
+          "İyi şeylerin iyi insanlara olduğuna inanmak",
+          "Olayları en olumlu ışıkta görmek",
+          "Cömert bir ruh benimsemek",
+          "Yukarıdan rehberlik aramak",
+          "Olasılığa ihtimalden öte kucaklamak"
+        ],
+        "shadow": [
+          "Hoş olmayan gerçekleri inkar etmek",
+          "Kişisel sorumluluğu reddedip 'Şeyler sadece oluyor!' demek",
+          "İşaretleri ve kehanetleri yok saymak",
+          "Gerçeklik yerine yanılsamayı tercih etmek",
+          "Pessimizm ve ruhun cimriliği yaymak"
+        ]
+      },
+      "Archetype": "Göksel Rehber",
+      "Hebrew Alphabet": "Tzaddi/Balık Kancası/90 veya bazı destelerde He[as]/Pencere/5",
+      "Numerology": "17 = 1 + 7 = 8 (eylem, hareket, hız)",
+      "Elemental": "Kova",
+      "Mythical/Spiritual": "Bilgeleri yönlendiren yıldız. Afrodit. Venüs. Pleiades. Moses'in kayadan su çıkarması.",
+      "Questions to Ask": ["Yüksek gücüm beni ne yapmam için yönlendirebilir?", "Daha az utangaç ve korumacı nasıl olabilirim?", "Hayatın bolluğuna kendimi nasıl daha iyi uyum sağlayabilirim?"]
+    },
+    {
+      "name": "Ay",
+      "number": "18",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m18.jpg",
+      "fortune_telling": [
+        "Ay sonuna doğru sorunlara dikkat et",
+        "Tanidığın biri ayda ulumaya daha sık ihtiyaç duyuyor",
+        "Biri önemli bir kararda fikrini değiştirecek"
+      ],
+      "keywords": [
+        "gizem",
+        "fantezi",
+        "hayal gücü",
+        "hayaller",
+        "belirsizlik"
+      ],
+      "meanings": {
+        "light": [
+          "Sağlıklı fanteziler ve hayallere dalmak",
+          "Hayal gücünü kullanmak",
+          "Büyü yapmak veya günlük yaşamın büyüsünü kutlamak",
+          "Kendini doğanın döngülerine uyum sağlamak",
+          "Bilinmeyeni kucaklamak"
+        ],
+        "shadow": [
+          "Fanteziyi gerçeklikten ayıramamak",
+          "Sanrılar yaşamak",
+          "Fantastik veya büyülü şeylerin değerini kaybetmek",
+          "Amansızca mantıklı bir zihniyet benimsemek",
+          "Yaşamın gizemlerini takdir etmeyi başaramamak"
+        ]
+      },
+      "Archetype": "Kutsal Dişil/Yaşlı Kadın",
+      "Hebrew Alphabet": "Koph/Başın Arka Kısmı/100",
+      "Numerology": "18 = 1 + 8 = 9 (doluluk, hazırlık, olgunluk)",
+      "Elemental": "Balık",
+      "Mythical/Spiritual": "Kali, zaman, sonsuz gece ve dişil ilke ile ilişkilendirilen koyu tenli ilahi anne. Hecate, gece ve karanlık tanrıçası, Anubis gibi başkalarına yeraltı yolculuklarında yardım eder.",
+      "Questions to Ask": ["Korkularımla yüzleşip ileriye nasıl hareket edebilirim?", "Kişisel karanlığımda bana rehberlik edecek yardımcılar kimler olabilir?", "Bilinmeyeni sağlıklı yollarla nasıl ele alabilirim?"]
+    },
+    {
+      "name": "Güneş",
+      "number": "19",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m19.jpg",
+      "fortune_telling": [
+        "Her şey güllerle (veya ayçiçekleriyle, durum neyse) dolu",
+        "Aklınızdaki her neyse, bugün gidin, çünkü kaybedemezsiniz"
+      ],
+      "keywords": [
+        "sevinç",
+        "parlaklık",
+        "doğrulama",
+        "dikkat",
+        "enerji"
+      ],
+      "meanings": {
+        "light": [
+          "Şeyleri net görmek",
+          "Yoğun sevinç yaşamak",
+          "Kendi başarılarını kutlamak",
+          "Kendini yaptığın işte iyi olduğunu bilmek",
+          "Kişisel dehan için tanınma kazanmak"
+        ],
+        "shadow": [
+          "Kendi başarılarınla kamaşmak",
+          "Kendi imajına kapılmak",
+          "Aceleye gelmek ve dikkat dağınıklığı yaşamak",
+          "Kendini tükenme noktasına kadar zorlamak",
+          "Yeteneklerini abartmak veya başarılarını yanlış temsil etmek"
+        ]
+      },
+      "Archetype": "Kutsal Eril",
+      "Hebrew Alphabet": "Resh/Baş/200",
+      "Numerology": "19 = 1 + 9 = 10 (tamamlanma, tükenme) 1 + 0 = 1 (başlangıç noktası, fırsat)",
+      "Elemental": "Güneş",
+      "Mythical/Spiritual": "Tanrı Baba. Güneş tanrıları, Ra, Apollo ve Helios dahil. Vaftiz anı. Yeni bir inancı kendi olarak sahiplenmek.",
+      "Questions to Ask": ["Bana gelen ilgiyi en iyi nasıl değerlendirebilirim?", "En yüksek manevi hedeflerim neler?", "Etrafımdaki enerjiyle kamaşmaktan nasıl kaçınabilirim?"]
+    },
+    {
+      "name": "Yargı",
+      "number": "20",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m20.jpg",
+      "fortune_telling": [
+        "Bittiğini düşündüğün eski bir konu bugün tekrar ortaya çıkacak",
+        "Büyük değişikliklere hazır ol: ayrılıklar, eski arkadaşlardan aniden gelen aramalar ve beklenmedik aksaklıklar",
+        "Tanrı sana dikkat çekmeye çalışıyor"
+      ],
+      "keywords": [
+        "canlanma",
+        "yenilenme",
+        "diriliş",
+        "değerlendirme",
+        "davet"
+      ],
+      "meanings": {
+        "light": [
+          "Bir uyanış çağrısı almak",
+          "Hayatta yeni bir amaç keşfetmek",
+          "Tamamen ve tamamen kendin olmak",
+          "Hak edilmiş bir ödül almak",
+          "Bir değerlendirme veya sınavdan geçmek",
+          "Hayatın yeni bir aşamasının başlangıcını hoş karşılamak"
+        ],
+        "shadow": [
+          "Terazide tartılıp yetersiz bulunmak",
+          "Belirlenmiş bir standarda uymamak",
+          "Aptalca davranırken veya yanlış yaparken yakalanmak",
+          "Bildiğin bir sınav için hazırlanmayı reddetmek",
+          "Kendini yeniden yaratma fırsatını reddetmek"
+        ]
+      },
+      "Archetype": "Diriliş",
+      "Hebrew Alphabet": "Sin/Diş/300",
+      "Numerology": "20 = 2 + 0 = 2 (bölünme, ikilik)",
+      "Elemental": "Ateş",
+      "Mythical/Spiritual": "Dirilen Christ. Vahiy'deki Son Yargı. Kendi küllerinden yeni bir hayata yükselen anka kuşu.",
+      "Questions to Ask": ["Kendim hakkında fark etmem gereken en önemli şey nedir?", "Evren bana neyi fark ettirmeye çalışıyor olabilir?", "Kendimi yeniden yaratırsam ne olurum?"]
+    },
+    {
+      "name": "Dünya",
+      "number": "21",
+      "arcana": "Büyük Arkana",
+      "suit": "Trump",
+      "img": "m21.jpg",
+      "fortune_telling": [
+        "Loto kazanıyorsun",
+        "Kalbinin arzusunu elde ediyorsun",
+        "Her zaman sahip olmayı hayal ettiğin her şeye sahip oluyorsun"
+      ],
+      "keywords": [
+        "bütünlük",
+        "entegrasyon",
+        "toplamlık",
+        "tamamlanmışlık",
+        "doluluk"
+      ],
+      "meanings": {
+        "light": [
+          "Her şeye sahip olmak",
+          "Kendini mümkün olduğunca tamamen tanıyıp sevmek",
+          "Tüm şeylerin ve insanların birbirine bağlantısını görmek",
+          "Perspektifini geliştirmek",
+          "Hayatı dolu dolu yaşamak",
+          "Hayatın anlamını anlamak"
+        ],
+        "shadow": [
+          "Kendine sahip olduklarını keyifle yaşamanı engelleyen açgözlülüğe ve kıskançlığa izin vermek",
+          "Günlük olaylardaki daha büyük tasarımı görememek",
+          "Her şeyin dokunulabilir, sayılabilir veya ölçülebilir olduğuna inanmak",
+          "Çevrendeki insanlarda ilahi yansımayı görememek"
+        ]
+      },
+      "Archetype": "Aydınlanma",
+      "Hebrew Alphabet": "Tau/Çapraz/400",
+      "Numerology": "21 = 2 + 1 = 3 (ifade, sonuç)",
+      "Elemental": "Satürn",
+      "Mythical/Spiritual": "Yükselen Christ. Buda'nın aydınlanmayı elde etmesi. Alfa ve omega. Simyacının büyük çalışmasının tamamlanması.",
+      "Questions to Ask": ["Benim için her şeye sahip olmak ne anlama gelir?", "Kendimin çevremle bağlantısının ne kadar farkındayım?", "Şu anda, bugün her şeye sahip olmama ne engel oluyor?"]
+    },
+    {
+      "name": "Kupa Ağı",
+      "number": "1",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c01.jpg",
+      "fortune_telling": [
+        "Romantizm kartlarda",
+        "Yeni bir ilişki veya evlilik köşeyi dönüyor",
+        "Dualar yanıtlanıyor"
+      ],
+      "keywords": [
+        "sezgi",
+        "maneviyat",
+        "sevgi",
+        "motivasyon"
+      ],
+      "meanings": {
+        "light": [
+          "Duygularına güvenmek",
+          "Kendini ruha açmak",
+          "Sevgi kabul etmek ve karşılık vermek",
+          "Kendini neyin motive ettiğini keşfetmek",
+          "Sevgini başkalarına ifade etme fırsatını değerlendirmek",
+          "Sessiz, küçük sesi dinlemek"
+        ],
+        "shadow": [
+          "Duygularını gizlemek",
+          "Sevmek veya sevilmek için bir fırsatı reddetmek",
+          "Manevi özlemlerini uyuşturmak",
+          "Kalbinin tavsiyesini reddetmek",
+          "Kendi duygularının kuklası olmak",
+          "Histeri veya takıntıya kapılmak"
+        ]
+      },
+      "Numerology": "1 (Köken: başlangıç noktası, tohum, fırsat)",
+      "Astrology": "Yengeç, Akrep, Balık",
+      "Affirmation": "\"Kalbinin tavsiyesine kulak veriyorum.\"",
+      "Questions to Ask": ["Şu anda ne hissediyorum?", "Kendimi manevi rehberliğe nasıl açabilirim?", "Beni en çok ne motive ediyor - zevk mi acı mı? Neden?"]
+    },
+    {
+      "name": "İki Kupa",
+      "number": "2",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c02.jpg",
+      "fortune_telling": [
+        "Biri sana gizli bir aşk besliyor",
+        "İlişkilerin karşılıklı olmalı; bir sülükten kurtul"
+      ],
+      "keywords": [
+        "birlik",
+        "çekim",
+        "birleşme",
+        "sevgi"
+      ],
+      "meanings": {
+        "light": [
+          "Birine çekilmek",
+          "Birine veya bir şeye özlem duymak",
+          "İsteklerine göre hareket etmek",
+          "Bir duygunun karşılıklı olduğunu keşfetmek",
+          "Kendini iyi hissettiren şeyleri yapmak",
+          "Birleşme",
+          "Kırık bağları iyileştirmek",
+          "İki insanın birbirine farklı hissettiğini kabul edip ilerlemek"
+        ],
+        "shadow": [
+          "Köprüleri yakmak",
+          "Sağlıksız bir karşılıklı bağımlılıkta kapılmak",
+          "Seçtiğin birkaç kişiden başka herkesi dışlamak",
+          "Duyguların karşılık vermeyen birine takıntı yapmak",
+          "İdeal eş bulma konusunda çaresizliğe kapılmak",
+          "Gerçek yönelimini kendinden gizlemek"
+        ]
+      },
+      "Numerology": "2 (Diğer: ikilik, bölünme, tartışma)",
+      "Astrology": "Venüs Yengeçte",
+      "Affirmation": "\"Kalbimin gerçekten ne istediğine uyum sağlıyorum.\"",
+      "Questions to Ask": ["Bu hissin karşılıklı olduğundan nasıl emin olabilirim?", "Son zamanlarda 'aşık' hissettiğim biri veya bir şey neydi?", "Duygusal olarak istikrarlı hissetmek için neye ihtiyacım var?"]
+    },
+    {
+      "name": "Üç Kupa",
+      "number": "3",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c03.jpg",
+      "fortune_telling": [
+        "Sana her zaman önemsiz gelen biriyle sıra dışı bir romantizm geliyor: bir aşk ilişkisi"
+      ],
+      "keywords": [
+        "kutlama",
+        "ifade",
+        "topluluk",
+        "dostluk"
+      ],
+      "meanings": {
+        "light": [
+          "Duygularını veya başkalarıyla bağlantını kutlamak",
+          "Şarkı, dans veya fiziksel sevgiyle neşe ifade etmek",
+          "Duygularını paylaşanlarla birlikte çalışmak",
+          "Sevgi ifadesi olarak hizmet eylemleri yapmak",
+          "Geleneksel olmayan romantik düzenlemeleri kucaklamak"
+        ],
+        "shadow": [
+          "Gerçek sevgiyle çılgınlığı karıştırmak",
+          "Maniyak duygulara teslim olmak",
+          "Herkesin her zaman senin gibi hissetmesini beklemek",
+          "Arkadaşlardan veya aileden makul olmayan destek talep etmek",
+          "Tehlikeli veya sağlıksız bir şekilde parti yapmak"
+        ]
+      },
+      "Numerology": "3 (Sonuç: ifade, üretkenlik, çıktı)",
+      "Astrology": "Merkür Yengeçte",
+      "Affirmation": "\"Eylemlerimin gerçek duygularımı yansıtmasına izin veriyorum.\"",
+      "Questions to Ask": ["Hayatımda kutlamaya değer ne var?", "Duygularımı uygun yollarla nasıl gösterebilirim?", "Partnerime duygularımı gerçekten nasıl gösterebilirim?"]
+    },
+    {
+      "name": "Dört Kupa",
+      "number": "4",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c04.jpg",
+      "fortune_telling": [
+        "Bir sevgili huzursuzlanıyor",
+        "Onun neye ihtiyacı olduğunu öğren, yoksa yeni fırsatlar partnerini senden uzaklaştırabilir"
+      ],
+      "keywords": [
+        "sıkıntı",
+        "hareketsizlik",
+        "letarji",
+        "istikrar",
+        "nankörlük"
+      ],
+      "meanings": {
+        "light": [
+          "Duygusal istikrarını korumak",
+          "Aşırı duygulara teslim olmamak",
+          "Sahip olduklarını takdir etmek ve bunları sıradan görmekten kaçınmak",
+          "Uzun vadeli taahhütlerin değerini görmek"
+        ],
+        "shadow": [
+          "Sıkılmak",
+          "Çalışmana zarar verecek şekilde hayal kurmak",
+          "Fırsatlara dahil olmayı reddetmek",
+          "İnsanları ve ilişkileri sıradan görmek",
+          "Romantik veya manevi fırsatları yok saymak",
+          "İlhamı reddetmek",
+          "Her şeyin 'tam olarak böyle kalması gerektiğini' düşünmek"
+        ]
+      },
+      "Numerology": "4 (Durum Quo: istikrar, eşitlik, ısrar)",
+      "Astrology": "Ay Yengeçte",
+      "Affirmation": "\"Sahip olduklarımı takdir ediyorum.\"",
+      "Questions to Ask": ["Bu 'boş zamanı' en iyi nasıl kullanabilirim?", "Partnerime onu sıradan görmediğimi nasıl gösterebilirim?", "Ruh halim beni yeni fırsatları görme konusunda nasıl kör ediyor?"]
+    },
+    {
+      "name": "Beş Kupa",
+      "number": "5",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c05.jpg",
+      "fortune_telling": [
+        "Bir ayrılık yaklaşıyor",
+        "Dökülen süt için ağlama",
+        "Darbeni al ve yeniden ata bin"
+      ],
+      "keywords": [
+        "kayıp",
+        "çaresizlik",
+        "yeniden değerlendirme",
+        "pişmanlık",
+        "belirsizlik",
+        "tövbe"
+      ],
+      "meanings": {
+        "light": [
+          "Kayıbı kabul edip ilerlemek",
+          "Bardağın 'yarı dolu' olduğunu düşünmeye odaklanmak",
+          "Karanlık bir bulutun gümüş astarını bulmak",
+          "Kayıbın hayatın doğal bir parçası olduğunu tanımak",
+          "Sağlıklı yas tutmayı kucaklamak",
+          "Sert sonuçlardan ders almak"
+        ],
+        "shadow": [
+          "Sağlıksız yas veya özlemde boğulmak",
+          "İlerlemeyi ve bırakmayı reddetmek",
+          "Geçmişe tutunmak",
+          "Geçmiş hayatlara ve aşklara takıntı yapmak",
+          "Şimdiki zamanda yaşamayı başaramamak",
+          "Geçmiş hatalar için kendini suçlamak",
+          "Başarısızlık korkusunun çabalarını sınırlamasına izin vermek"
+        ]
+      },
+      "Numerology": "5 (Katalizör: istikrarsızlık, direnç, karşılaşma)",
+      "Astrology": "Mars Akrepte",
+      "Affirmation": "\"Kayıplarımdan ders alıyorum ve ilerliyorum.\"",
+      "Questions to Ask": ["Kayıpla nasıl başa çıkıyorum?", "Şimdi öğrenebileceğim hayat dersi nedir?", "Dikkatimi geçmişten geleceğe nasıl kaydırabilirim?"]
+    },
+    {
+      "name": "Altı Kupa",
+      "number": "6",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c06.jpg",
+      "fortune_telling": [
+        "Cimri bir ruh, hayatının keyfini boğuyor",
+        "Rahatla ve bir kez başkalarını düşün, neden olmasın?"
+      ],
+      "keywords": [
+        "yardımseverlik",
+        "paylaşım",
+        "fedakarlık",
+        "işbirliği",
+        "adillik"
+      ],
+      "meanings": {
+        "light": [
+          "Zamanını ve yeteneklerini başkalarına bağışlamak",
+          "Çabalarının başkalarına nasıl yardım edeceğini bilerek tatmin olmak",
+          "Kazanan bir senaryo yaratmak",
+          "Karşılık beklemeden kaynaklarını başkalarına vermek",
+          "İyi bir iş yapma motivasyonu"
+        ],
+        "shadow": [
+          "Kendini başkalarının değerlendirmelerine bağlamak",
+          "Gerçekten ihtiyaç duyduğundan daha fazla muhtaç görünmeye çalışmak",
+          "Hakkı olmayan veya hak edilmeyen yardım almak",
+          "Bağış çabalarınla övünmek",
+          "Zor zamanlarda kâr etmek",
+          "Yükü paylaşmayı reddetmek"
+        ]
+      },
+      "Numerology": "6 (Ayar: işbirliği, ortak çalışma, etkileşim)",
+      "Astrology": "Güneş Akrepte",
+      "Affirmation": "\"Karşılık beklemeden kendimi başkalarına veriyorum.\"",
+      "Questions to Ask": ["Hangi hediyelere sahibim? Bunları ne kadar özgürce veriyorum?", "Koşulsuz verme nasıl uygulanabilir?", "Daha yardımsever bir insan olsam ne değişirdi?"]
+    },
+    {
+      "name": "Yedi Kupa",
+      "number": "7",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c07.jpg",
+      "fortune_telling": [
+        "Biri sana yalan söylüyor",
+        "Fancy kelimeler ve vaatlerle kamaşmak yerine gerçek bir şey talep et"
+      ],
+      "keywords": [
+        "hayal gücü",
+        "hayaller",
+        "yanılgılar",
+        "hedefler"
+      ],
+      "meanings": {
+        "light": [
+          "Gelecekteki başarı imgeleriyle kendini motive etmek",
+          "İlerlemeyi teşvik etmek için görselleştirme kullanmak",
+          "Sorun çözmede yaratıcı veya hayalperest bir yaklaşım benimsemek",
+          "Hayalleri gerçeğe dönüştürmek",
+          "Kişisel vizyonlardan içgörü toplamak"
+        ],
+        "shadow": [
+          "Hayali korkulara veya belirsiz sonuçlara takıntı yapmak",
+          "Duygusal veya politik terörizme yenilmek",
+          "Çalışmaktan çok hayal kurmak",
+          "Seçimlerinin olası sonuçlarını öngörememek",
+          "Korkunun seni kontrol etmesine izin vermek"
+        ]
+      },
+      "Numerology": "7 (Motiv: hayal gücü, iç çalışma, psikoloji)",
+      "Astrology": "Venüs Akrepte",
+      "Affirmation": "\"İçsel vizyonumu büyüme aracı olarak kullanıyorum.\"",
+      "Questions to Ask": ["En çok neyi istiyorum? En çok neyi korkuyorum? Bunlar nasıl ilişkili?", "Hayal gücüm bana nasıl yardım ediyor? Bana karşı mı?", "Daha net bir kişisel vizyon seçimi kolaylaştırabilir mi?"]
+    },
+    {
+      "name": "Sekiz Kupa",
+      "number": "8",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c08.jpg",
+      "fortune_telling": [
+        "Biri 'dışarı çıkıyor' sana karşı, şimdi veya yakın gelecekte",
+        "Sorunu konuşmayı bırakıp sadece ilerlemenin zamanı geldi"
+      ],
+      "keywords": [
+        "özlem",
+        "tatminsizlik",
+        "arzu",
+        "ayrılış",
+        "çekilme"
+      ],
+      "meanings": {
+        "light": [
+          "Daha iyisini istemek",
+          "Kendi yolunu açmak",
+          "Hayatta daha fazlası olması gerektiğini fark etmek",
+          "Sağlıksız bir durumu geride bırakmak",
+          "Kendi işini başlatmak",
+          "Bir inzivaya çekilmek",
+          "Sessiz, küçük sesi aramak"
+        ],
+        "shadow": [
+          "Esneksiz olmak",
+          "Hata bulmak",
+          "Ayrıntılara takılmak",
+          "Yerleşmeyi reddetmek",
+          "Sorunlardan veya yüzleşmelerden kaçmak",
+          "Söylemek, 'Ya benim yolum ya da yol yok!'",
+          "Geçmiş hatalar ve hayal kırıklıkları üzerinde durmak",
+          "Elde etmenin bir stratejisi olarak bırakmayı tehdit etmek"
+        ]
+      },
+      "Numerology": "8 (Eylem: hareket, dış çalışma, hız)",
+      "Astrology": "Satürn Balıkta",
+      "Affirmation": "\"Büyüme fırsatlarına her zaman açığım.\"",
+      "Questions to Ask": ["Bir kez ve tamamen geride bırakmam gereken ne?", "Daha fazlasını aramak için ayrılırsam tam olarak ne arardım?", "Bir inziva perspektifimi nasıl geliştirebilir?"]
+    },
+    {
+      "name": "Dokuz Kupa",
+      "number": "9",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c09.jpg",
+      "fortune_telling": [
+        "Ne istersen, onu alacaksın"
+      ],
+      "keywords": [
+        "tatmin",
+        "duyusallık",
+        "lüks",
+        "zevk"
+      ],
+      "meanings": {
+        "light": [
+          "Kendi başarılarından dolayı sevinmek",
+          "Kendi yeteneklerini ve becerilerini tanımak",
+          "Hayatın sunduğu güzel şeylerin tadını çıkarmak",
+          "Kendini şımartmak",
+          "Rahatlamak ve gevşemek",
+          "Kendini tam hissetmek için her şeye sahip olmak"
+        ],
+        "shadow": [
+          "Kibirli olmak",
+          "Kendini başkalarının masraflarıyla tatmin etmek",
+          "Bencil olmak",
+          "Aşırıya kaçmak",
+          "Yapılması gereken işleri yok saymak",
+          "Sahip olmadığın başarıları veya becerileri iddia etmek",
+          "Ne kadar sahip olursan ol asla tatmin olmamak"
+        ]
+      },
+      "Numerology": "9 (Tamamlanma: doluluk, hazırlık, olgunluk)",
+      "Astrology": "Jüpiter Balıkta",
+      "Affirmation": "\"Mutlu olmak için her şeye sahibim.\"",
+      "Questions to Ask": ["Gerçek mutluluk nedir?", "Herhangi bir şey isteyebilseydim ne isterdim?", "Lükse karşı tavrım nedir? Bunu hak ediyor muyum?"]
+    },
+    {
+      "name": "On Kupa",
+      "number": "10",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c10.jpg",
+      "fortune_telling": [
+        "Evlenme ve aile kartlarda",
+        "Bir dostluğun romantizme dönüşmesini bekle"
+      ],
+      "keywords": [
+        "sevinç",
+        "tamamlanma",
+        "baskın duygu",
+        "neşe"
+      ],
+      "meanings": {
+        "light": [
+          "Hayal ettiğinden fazlasına sahip olmak",
+          "Verilmiş her şey için derin bir şükran duymak",
+          "Evrenin sana sunduğu hediyelerde Tanrı'nın elini tanımak",
+          "Transandant bir sevinç yaşamak",
+          "Aile mutluluğuna ulaşmak"
+        ],
+        "shadow": [
+          "Başarılarını veya ilişkilerini gerçekçi olmayan fantezi standartlarıyla karşılaştırmak",
+          "Öyle yoğun duygular yaşamak ki gerçeklik ile başa çıkma yeteneğini köreltir",
+          "Aşırı duygusal hissetmek",
+          "Başkalarının başarılarını ve mutluluğunu kıskanmak"
+        ]
+      },
+      "Numerology": "10 (Son: kesinlik, tamamlanma, tükenme)",
+      "Astrology": "Mars Balıkta",
+      "Affirmation": "\"Bana verilmiş olanları takdir etmek için zaman ayırıyorum.\"",
+      "Questions to Ask": ["Sevinç neyi oluşturur, bunu kim tanımlar?", "Aşırı duygusal hissettiğinde hangi eylem planı mevcut?", "Daha fazla sevinç elde etmek için yeminler veya vaatler nasıl bir rol oynayabilir?"]
+    },
+    {
+      "name": "Kupa Sayfası",
+      "number": "11",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c11.jpg",
+      "fortune_telling": [
+        "Bu kart, su gibi rüya dolu bir tavır sergileyen genç bir erkek veya kadını temsil eder, büyük olasılıkla Terazi, Akrep veya Yay burcunda doğmuş ve seninle yeni bir ilişki başlatmak isteyen"
+      ],
+      "keywords": [
+        "heves",
+        "ilk izlenimler",
+        "romantizm",
+        "yüzeysel"
+      ],
+      "meanings": {
+        "light": [
+          "Duygularını özgürce göstermek",
+          "Kendini romantizme atmak",
+          "Gizli bir aşka kapılmak",
+          "Romantik fantezilere dalmak",
+          "Yeni bir ilişki başlatmak",
+          "İlk aşkını hatırlamak",
+          "İlk kez aşkı yaşamak",
+          "Yeni bir dine geçmek"
+        ],
+        "shadow": [
+          "Gerçek aşkı bir aşkla karıştırmak",
+          "Masum bir eyleme romantik niyet okumak",
+          "Başkalarını etkilemek için çaresizce çabalamak",
+          "Aşırı duygu yüklü duygusallığa kapılmak",
+          "Sahip olmadığın romantik veya manevi deneyimi sahtelemek"
+        ]
+      },
+      "Elemental": "Toprak Su",
+      "Affirmation": "\"Aşk ve Ruha kucaklamaya hazırım.\"",
+      "Questions to Ask": ["Başkalarının seni aptal veya deneyimsiz görmesinden ne kadar endişeleniyorsun?", "Aşk ve inançtaki deneyimsizliğini ne kadar dürüstçe kabul edebilirsin?", "Hevesini uzun vadede nasıl sürdürebilirsin?"]
+    },
+    {
+      "name": "Kupa Şövalyesi",
+      "number": "12",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c12.jpg",
+      "fortune_telling": [
+        "Bu kart, duygusal, hassas bir kişiliğe sahip bir erkeği temsil eder, büyük olasılıkla 12 Temmuz ile 11 Ağustos arasında doğmuş ve seni ayaklarından süpürmek istiyor"
+      ],
+      "keywords": [
+        "cesaret",
+        "kabadayılık",
+        "tutku",
+        "ikna",
+        "savunuculuk"
+      ],
+      "meanings": {
+        "light": [
+          "Hızla ilerlemek",
+          "Hızlı ilerleme kaydetmek",
+          "Sınırları reddetmek",
+          "Çevrendekileri zekan ve cazibenle büyülemek",
+          "Liderlik hakkını başkalarına kanıtlamak",
+          "Başkalarını takip etmeye ikna etmek",
+          "Değişim için bir katalizör olmak"
+        ],
+        "shadow": [
+          "Yeterli beceri veya bilgi olmadan ilerlemek",
+          "Başkalarının duygularını hiçe sayarak ilerlemek",
+          "Cinsel cazibeyi başkalarını manipüle etmek için kullanmak",
+          "Liderliğini veya ideolojini başkalarına zorla kabul ettirmek",
+          "Birçok projeye başlamak ama hiçbirini bitirmemek"
+        ]
+      },
+      "Elemental": "Hava Ateş",
+      "Affirmation": "\"Başarıya giden yolu liderlik edebilirim.\"",
+      "Questions to Ask": ["Son hedefini ne kadar tanımladın?", "İşin en hızlı nasıl yapılır? Bu mutlaka en iyi yol mu?", "Son zamanlarda başkalarının gerçekten seni izleyip izlemediğine baktın mı?"]
+    },
+    {
+      "name": "Kupa Kraliçesi",
+      "number": "13",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c13.jpg",
+      "fortune_telling": [
+        "Bu kart, sanatsal, entelektüel bir doğaya sahip bir kadını temsil eder, büyük olasılıkla 12 Eylül ile 12 Ekim arasında doğmuş ve zekice, olumlu iletişimiyle başkalarını kendi görüşüne ikna etmek istiyor"
+      ],
+      "keywords": [
+        "zarafet",
+        "yetenek",
+        "espri",
+        "büyü",
+        "yatkınlık"
+      ],
+      "meanings": {
+        "light": [
+          "Taktik kullanmak veya diplomasi yapmak",
+          "Gergin bir durumu yatıştırmak",
+          "Ne söyleyeceğini ve nasıl söyleyeceğini bilmek",
+          "Başkalarını rahat ve kendinden emin hissettirmek",
+          "Herkeste en iyisini ortaya çıkarmak",
+          "Kelimeyle bir yeteneğe sahip olmak",
+          "Şaka yapmak",
+          "Müzik, matematik, sanat veya bilimde bir yetenek sahibi olmak"
+        ],
+        "shadow": [
+          "Birini yok etmek için tam olarak ne söyleyeceğini bilmek",
+          "Kritik bilgiyi saklamak",
+          "Başkalarını rahatsız etmek için iğneleyici bir dil kullanmak",
+          "Alay etmek",
+          "Başkalarına kaba bir şekilde taklit yapmak",
+          "Daha az şanslı olanlarla dalga geçmek",
+          "Saygısızlık etmek",
+          "Verilen yeteneğini kullanmayı reddetmek"
+        ]
+      },
+      "Elemental": "Su Hava",
+      "Affirmation": "\"Gerçeği duymayı kolaylaştırıyorum.\"",
+      "Questions to Ask": ["Ne için yeteneğim var? Bu özel hediyem şu anda nasıl faydalı olabilir?", "Ne kadar açık söyleyebiliyorum?", "Ne söylemek istediğimi en iyi nasıl ifade edebilirim?"]
+    },
+    {
+      "name": "Kupa Kralı",
+      "number": "14",
+      "arcana": "Küçük Arkana",
+      "suit": "Kupalar",
+      "img": "c14.jpg",
+      "fortune_telling": [
+        "Bu kart, içgörülü, kasıtlı bir ruha sahip yaşlı bir erkeği temsil eder, büyük olasılıkla 11 Mayıs ile 10 Haziran arasında doğmuş ve dürüstlüğü ve keskin karar verme yeteneğiyle tanınır"
+      ],
+      "keywords": [
+        "deha",
+        "uzmanlık",
+        "karar",
+        "hüküm"
+      ],
+      "meanings": {
+        "light": [
+          "Kendini kararlılık ve otoriteyle ifade etmek",
+          "Son bir karar vermek",
+          "Bir uzmana danışmak",
+          "Danışmanları ve danışmanları çağırmak",
+          "Son bir sonuca varmak",
+          "Sağlam bilgilere dayalı faydalı bir anlaşma yapmak"
+        ],
+        "shadow": [
+          "Son sözü söylemekte ısrar etmek",
+          "Entellektüel yeteneğini sergilemek",
+          "Başkalarının kafasının üstünde konuşmak",
+          "Önemli bir kararda kararsız kalmak",
+          "Sürekli fikir değiştirmek",
+          "Kendi çıkarlarına uygun seçimler yapmayı reddetmek",
+          "Söylenenleri geri alma arzusuyla boşuna umutlanmak"
+        ]
+      },
+      "Elemental": "Ateş Hava",
+      "Affirmation": "\"Sözüm bağlayıcıdır.\"",
+      "Questions to Ask": ["Şimdi bağlayıcı bir hüküm versen kararın ne olurdu?", "Tam olarak neyi kastettiğini söylemekten ne kadar rahatsın? Başkalarını incitme korkusuyla ne kadar sıkı yumuşatıyorsun?", "Başkalarına 'Uzmanlık alanım nedir?' diye sorsan ne derlerdi?"]
+    },
+    {
+      "name": "Değnek Ağı",
+      "number": "1",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w01.jpg",
+      "fortune_telling": [
+        "Biri sana karşı 'sıcak' hissediyor",
+        "Yakında sana yeni bir iş teklifi geliyor",
+        "Yumuşak davran ve büyük bir sopa taşı"
+      ],
+      "keywords": [
+        "arzu",
+        "ilham",
+        "vizyon",
+        "yaratım",
+        "icat"
+      ],
+      "meanings": {
+        "light": [
+          "İlham almak",
+          "Önemli bir hedef belirlemek",
+          "İstediğin her şeyi yapma fırsatına sahip olmak",
+          "Yönlendirme vermek veya almak",
+          "Bir çözüm görmek",
+          "Yeni bir şey yaratmak",
+          "Cinsel veya yaratıcı olarak uyarı almak"
+        ],
+        "shadow": [
+          "Harika bir fırsatı değerlendirmemek",
+          "Etkisiz veya tembel olmak",
+          "Yetersiz çaba göstermek",
+          "Bir hedefe doğru çalışmak ama başarıya ulaşmak için kaynak veya girişim eksikliği",
+          "Uygun olmayan hedefler belirlemek",
+          "Duruş sergilemeyi reddetmek"
+        ]
+      },
+      "Numerology": "1 (Köken: başlangıç noktası, tohum, fırsat)",
+      "Astrology": "Koç, Aslan, Yay",
+      "Affirmation": "\"Kalbimin arzusu peşinde koşma fırsatına atlıyorum.\"",
+      "Questions to Ask": ["Gerçekten her şeyden çok ne istiyorum?", "Bu fırsatı kaçırırsam ne olur?", "Yönlerimi, değerlerimi ve hedeflerimi ne kadar net tanımladım?"]
+    },
+    {
+      "name": "Üç Değnek",
+      "number": "3",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w03.jpg",
+      "fortune_telling": [
+        "Yakında bir yolculuk planlayacaksın",
+        "Dikkatli ol: gemin geliyor"
+      ],
+      "keywords": [
+        "uygulama",
+        "eylem",
+        "keşif"
+      ],
+      "meanings": {
+        "light": [
+          "Bir planı harekete geçirmek",
+          "Kritik ilk adımı atmak",
+          "İyi şeyleri başarmak",
+          "Sınırlarının ötesine geçmek",
+          "Yeni yollar açmak",
+          "Hızlı bir başlangıç yapmak",
+          "Planlarının meyve vermesini görmek"
+        ],
+        "shadow": [
+          "Ertelemek",
+          "Ne yapacağını bilip yapmayı reddetmek",
+          "Bir projeyi kimin ne yapacağını netleştirmeden başlatmak",
+          "Yeni bir şeyi deneme fırsatını reddetmek",
+          "Başladığın şeyi bitirmemek"
+        ]
+      },
+      "Numerology": "3 (Sonuç: ifade, üretkenlik, çıktı)",
+      "Astrology": "Güneş Koçta",
+      "Affirmation": "\"Planlarımı harekete geçirmek için gerekli adımları atıyorum.\"",
+      "Questions to Ask": ["Alışkanlıklarını kırmayı nasıl alışkanlık haline getirebilirsin?", "Bu durumda kararlı bir lider nasıl olabilirim?", "Bir sonraki hafta, ay, yıl veya on yıl için eylem planın nedir?"]
+    },
+    {
+      "name": "Dört Değnek",
+      "number": "4",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w04.jpg",
+      "fortune_telling": [
+        "Biri senin işini izleyip değerlendiriyor",
+        "Yakında bir düğün daveti alabilirsin"
+      ],
+      "keywords": [
+        "kutlama",
+        "sevinç",
+        "topluluk",
+        "ekip çalışması",
+        "tamamlanma"
+      ],
+      "meanings": {
+        "light": [
+          "Büyük bir kutlamada paylaşmak",
+          "Toplulukta başarı ve başarı hissi paylaşmak",
+          "Bir parti için hazırlık yapmak",
+          "Ortak bir hedef için birlikte çalışmak",
+          "Ödül vermek veya kazanmak"
+        ],
+        "shadow": [
+          "Burnunu taşa değdirmek",
+          "İyi işi daha fazla iş isteyerek tanımak",
+          "Grup kutlamasına katılmamak",
+          "Güneş anını zehirlemek için ekşi üzüm kullanmak",
+          "Payına düşeni yapmamak"
+        ]
+      },
+      "Numerology": "4 (Durum Quo: istikrar, eşitlik, ısrar)",
+      "Astrology": "Venüs Koçta",
+      "Affirmation": "\"Katkılarım kutlamaya değer.\"",
+      "Questions to Ask": ["Payıma düşeni ne kadar yapıyorum?", "Hangi tanım en anlamlı olur?", "Şimdi bir kutlama topluluk moralini nasıl etkiler?"]
+    },
+    {
+      "name": "Beş Değnek",
+      "number": "5",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w05.jpg",
+      "fortune_telling": [
+        "En iyi arkadaşınla bir kavga için hazırlan",
+        "Hatırlat: Bir kez sözleri serbest bırakırsan geri alamazsın"
+      ],
+      "keywords": [
+        "karşılaşma",
+        "bozulma",
+        "ayrım",
+        "itiraz",
+        "çatışma"
+      ],
+      "meanings": {
+        "light": [
+          "Sakin bir şekilde farklı bir görüş ifade etmek",
+          "Birinin bir işi kendi yöntemleriyle yapmasına izin vermek",
+          "Tartışma veya debate için zemini açmak",
+          "Şimdiye kadar yapılan ilerlemeyi daha önce belirlenen standartlarla karşılaştırmak"
+        ],
+        "shadow": [
+          "Ridiculous görüşleri nedeniyle başkalarını azarlamak",
+          "Kavgalar çıkarmak",
+          "Yıkıcı eleştiriler sunmak",
+          "İnsanları iğneleyici yorumlarla tahrik etmek",
+          "Sonsuz bir akışla ilerlemeyi bozmak"
+        ]
+      },
+      "Numerology": "5 (Katalizör: istikrarsızlık, direnç, karşılaşma)",
+      "Astrology": "Satürn Aslanda",
+      "Affirmation": "\"Farklı görüşlerimi yapıcı yollarla ifade edebilirim.\"",
+      "Questions to Ask": ["Mevcut mesele için ne kadar kavga etmeye değer?", "Açıkça çatışmadan başka alternatifler neler?", "Adil bir kavga nasıl olur? Bunu nasıl adil tutabilirsin?"]
+    },
+    {
+      "name": "Altı Değnek",
+      "number": "6",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w06.jpg",
+      "fortune_telling": [
+        "Biri senin için bir parti planlıyor, ama herkes son başarından dolayı iyi hissetmiyor",
+        "Kıskanç arkadaşlara dikkat et"
+      ],
+      "keywords": [
+        "zafer",
+        "başarı",
+        "triumph",
+        "başarı"
+      ],
+      "meanings": {
+        "light": [
+          "Akranlarından daha iyi performans göstermek",
+          "Bir yarışmayı kazanmak",
+          "Yetkin bir kişi olarak tanınmak",
+          "Spot ışığındaki anını yaşamak",
+          "Kalabalık tarafından alkışlanmak",
+          "Bir ödül almak",
+          "Başkalarının hayranlığını kazanmak",
+          "Birine 'İyi iş!' demek"
+        ],
+        "shadow": [
+          "Kötü bir kazanan olmak",
+          "Başarılarının egonu şişirmesine izin vermek",
+          "Daha az yetkin görünenlere bakmak",
+          "Merkezde olma arzusu taşımak",
+          "Samimiyetsiz övgü vermek veya almak",
+          "Başkalarının başarılarını kıskanmak"
+        ]
+      },
+      "Numerology": "6 (Ayar: işbirliği, ortak çalışma, etkileşim)",
+      "Astrology": "Jüpiter Aslanda",
+      "Affirmation": "\"Samimi övgüyü değer veriyorum.\"",
+      "Questions to Ask": ["Hangi tanınma türü arzuluyorum? Neden?", "Başkalarının başarılarını ne kadar özgürce övüyorum?", "Parade bittiğinde ne olur?"]
+    },
+    {
+      "name": "Yedi Değnek",
+      "number": "7",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w07.jpg",
+      "fortune_telling": [
+        "Kişisel bir saldırıya şaşırma",
+        "Kendini veya sevdiğin birini savunmaya hazırlan"
+      ],
+      "keywords": [
+        "cesaret",
+        "kararlılık",
+        "belirleme"
+      ],
+      "meanings": {
+        "light": [
+          "Korku veya baskı yoluyla susturulmayı reddetmek",
+          "Tüm zorluklara rağmen bir kavga sürdürmek",
+          "Cesur olmak",
+          "Fiziksel ve duygusal saldırılara karşı kendini savunmak",
+          "Kötü muameleye tahammül etmeyi reddetmek",
+          "Değerlerine tüm baskıya rağmen tutunmak"
+        ],
+        "shadow": [
+          "Omzunda bir yük taşımak",
+          "Korkusuzluğunu kanıtlamak için gereksiz riskler almak",
+          "Hakaret alma fırsatı aramak",
+          "Yıkıcı eleştiriye savunmacı bir şekilde tepki vermek",
+          "Kendin için veya inançların için durmayı reddetmek"
+        ]
+      },
+      "Numerology": "7 (Motiv: hayal gücü, iç çalışma, psikoloji)",
+      "Astrology": "Mars Aslanda",
+      "Affirmation": "\"İnandığım şeyler için durmaya hazırım.\"",
+      "Questions to Ask": ["En çok ne zaman tehdit hissediyorsun? Ne zaman savunmacı oluyorsun?", "Kendini savunmada ne kadar yetkinsin?", "Savunmaya değer hangi inançlar var?"]
+    },
+    {
+      "name": "Sekiz Değnek",
+      "number": "8",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w08.jpg",
+      "fortune_telling": [
+        "Postada şaşırtıcı bir mektup bekle",
+        "Tüm dünyan yakında altüst olacak"
+      ],
+      "keywords": [
+        "hız",
+        "çabukluk",
+        "tepki",
+        "değişim"
+      ],
+      "meanings": {
+        "light": [
+          "Hızlı eylemde bulunmak",
+          "Bir planı mümkün olduğunca hızlı ilerletmek",
+          "Kendini enerjilendirmek",
+          "Ani değişikliklere uyum sağlamak",
+          "Engelleri doğal bir şekilde aşmak",
+          "Hiçbir şeyin sonsuza dek aynı kalmayacağı fikrini kucaklamak",
+          "Öngörülmemiş sorunlara hızlı ve uygun şekilde tepki vermek"
+        ],
+        "shadow": [
+          "Paniklemeye boyun eğmek",
+          "Çemberlerde koşmak ve çığlık atmak",
+          "Her şeyin her zaman aynı kalması gerektiğini iddia etmek",
+          "Ne olacağını görmek için tencereyi karıştırmak",
+          "Başkalarını acele ettirmek",
+          "Bir programı veya takvimi yeniden değerlendirmeyi reddetmek, bu artık uygun olmasa bile"
+        ]
+      },
+      "Numerology": "8 (Eylem: hareket, dış çalışma, hız)",
+      "Astrology": "Merkür Yayda",
+      "Affirmation": "\"Değişime hızlı uyum sağlıyorum.\"",
+      "Questions to Ask": ["Değişime ne kadar hızlı uyum sağlıyorsun?", "Baskın, ani bir değişime karşı tepkin ne olur?", "Ufukta hangi değişiklikler var? Bunlara ne kadar iyi hazırlandın?"]
+    },
+    {
+      "name": "Dokuz Değnek",
+      "number": "9",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w09.jpg",
+      "fortune_telling": [
+        "Henüz rahatlamayın; daha fazlası gelecek",
+        "Şu anda karşılaştığın testin bir nedeni var: Gerçek arkadaşlarının kim olduğunu göstermek"
+      ],
+      "keywords": [
+        "sertlik",
+        "ısrar",
+        "dayanıklılık",
+        "sadakat",
+        "bırakma"
+      ],
+      "meanings": {
+        "light": [
+          "Sonuna kadar devam etmek",
+          "Vaadlerini ve yükümlülüklerini yerine getirmek",
+          "Aşırı baskı altında dayanmak",
+          "Kendi kendine kalkarak finiş çizgisini geçmek",
+          "Kendi çizmelerini kendi kendine çekmek",
+          "Pes etmeyi reddetmek",
+          "Gidebildiğin yere kadar gitmek ve performansından memnun olmak"
+        ],
+        "shadow": [
+          "Kendini bir şehit haline getirmek",
+          "Görevini terk etmek",
+          "İlk karşı koyma işaretinde pes etmek",
+          "Bir yükümlülüğü yerine getirmekten alıkonulmak",
+          "Güvenilir olmamak",
+          "Bırakılması gereken bir şeyi bırakmayı reddetmek",
+          "Ölü bir atı dövmek"
+        ]
+      },
+      "Numerology": "9 (Tamamlanma: doluluk, hazırlık, olgunluk)",
+      "Astrology": "Ay Yayda",
+      "Affirmation": "\"İşler zorlaştığında rotamı koruyorum.\"",
+      "Questions to Ask": ["İşler gerçekten zorlaştığında nasıl başa çıkıyorsun?", "Düşük hissettiğinde seni devam etmeye ne teşvik ediyor?", "Bu durumu ne zaman bırakabilmelisin?"]
+    },
+    {
+      "name": "On Değnek",
+      "number": "10",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w10.jpg",
+      "fortune_telling": [
+        "Tükenmişsin",
+        "Geri çekil, bir mola ver ve bir süre başkasına işleri bırak"
+      ],
+      "keywords": [
+        "tükenmişlik",
+        "direnç",
+        "yük",
+        "baskı"
+      ],
+      "meanings": {
+        "light": [
+          "Aşırı durumlarda kendi kendine yetmek",
+          "Başkalarının yüklerini taşımaya yardım etmek",
+          "Ezilenlere yardım etmek",
+          "Kendi sınırlarını bilmek ve dürüst olmak",
+          "Belirli bir görev için uygun olmadığını fark etmek"
+        ],
+        "shadow": [
+          "Kendi taşıyabileceğinden fazlasını almak",
+          "Hayır demeyi reddetmek",
+          "Fazla mesai yapmayı alışkanlık haline getirmek",
+          "Kendi kötü yargılarının sonuçlarından başkalarını korumak",
+          "Düzenli olarak kendini aşırı zorlamak"
+        ]
+      },
+      "Numerology": "10 (Son: kesinlik, tamamlanma, tükenme)",
+      "Astrology": "Satürn Yayda",
+      "Affirmation": "\"Kendi sınırlarımı saygıyla kabul ediyorum.\"",
+      "Questions to Ask": ["İpin ucunu ne zaman kaçırdığını nasıl bileceksin?", "Yeni projelere ve taleplere ne kadar kolay hayır diyorsun?", "Hangi projeleri devredebilirsin... veya eleyebilirsin?"]
+    },
+    {
+      "name": "Değnek Sayfası",
+      "number": "11",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w11.jpg",
+      "fortune_telling": [
+        "Bu kart, ateşli, hevesli bir tavır sergileyen genç bir erkek veya kadını temsil eder, büyük olasılıkla Yengeç, Aslan veya Başak burcunda doğmuş ve seninle yeni bir ilişki başlatmak isteyen"
+      ],
+      "keywords": [
+        "heves",
+        "istek",
+        "güven",
+        "doğrulama",
+        "onay"
+      ],
+      "meanings": {
+        "light": [
+          "Yeni bir fırsata atlamak",
+          "Nedenin için bir tezahüratçı veya ateşli bir savunucu olmak",
+          "Gerçek bir İnançlı olmak",
+          "Bağımsızlığın ilk adımlarını atmak",
+          "Kendi yeteneklerine güvenmek",
+          "Geri bildirim istemek"
+        ],
+        "shadow": [
+          "Tüm öz imajını başkalarının ne düşündüğüne dayandırmak",
+          "Sorular sormadan gelen her yeni fikre atlamak",
+          "Başkalarının girdilerini veya geri bildirimlerini alışkanlıkla yok saymak",
+          "Öyle hevesli 'kendi başıma yapayım' ki ilerlemeni engellemek"
+        ]
+      },
+      "Elemental": "Toprak Ateş",
+      "Affirmation": "\"Bunu yapabilirim.\"",
+      "Questions to Ask": ["Deneyimsizliğini ne kadar kolay kabul ediyorsun?", "Daha iyi bir öğrenci veya çalışan nasıl olabilirsin?", "Toplam bir aceminin keşif yolculuğunu kolaylaştıracak hangi özellikler var?"]
+    },
+    {
+      "name": "Değnek Şövalyesi",
+      "number": "12",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w12.jpg",
+      "fortune_telling": [
+        "Bu kart, cesur, tutkulu bir kişiliğe sahip bir erkeği temsil eder, büyük olasılıkla 12 Temmuz ile 11 Ağustos arasında doğmuş ve seni ayaklarından süpürmek istiyor"
+      ],
+      "keywords": [
+        "cesurluk",
+        "kabadayılık",
+        "tutku",
+        "ikna",
+        "savunuculuk"
+      ],
+      "meanings": {
+        "light": [
+          "Hızla ilerlemek",
+          "Hızlı ilerleme kaydetmek",
+          "Sınırları reddetmek",
+          "Çevrendekileri zekan ve cazibenle büyülemek",
+          "Liderlik hakkını başkalarına kanıtlamak",
+          "Başkalarını takip etmeye ikna etmek",
+          "Değişim için bir katalizör olmak"
+        ],
+        "shadow": [
+          "Yeterli beceri veya bilgi olmadan ilerlemek",
+          "Başkalarının duygularını hiçe sayarak ilerlemek",
+          "Cinsel cazibeyi başkalarını manipüle etmek için kullanmak",
+          "Liderliğini veya ideolojini başkalarına zorla kabul ettirmek",
+          "Birçok projeye başlamak ama hiçbirini bitirmemek"
+        ]
+      },
+      "Elemental": "Hava Ateş",
+      "Affirmation": "\"Başarıya giden yolu liderlik edebilirim.\"",
+      "Questions to Ask": ["Son hedefini ne kadar tanımladın?", "İşin en hızlı nasıl yapılır? Bu mutlaka en iyi yol mu?", "Son zamanlarda başkalarının gerçekten seni izleyip izlemediğine baktın mı?"]
+    },
+    {
+      "name": "Değnek Kraliçesi",
+      "number": "13",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w13.jpg",
+      "fortune_telling": [
+        "Bu kart, çekici, cazibeli bir kişiliğe sahip bir kadını temsil eder, büyük olasılıkla 11 Mart ile 20 Nisan arasında doğmuş ve seni kendi yolunda yapmaya ikna etmek istiyor"
+      ],
+      "keywords": [
+        "dikkat",
+        "çekim",
+        "birleşme",
+        "işbirliği"
+      ],
+      "meanings": {
+        "light": [
+          "Yakından dikkat etmek",
+          "Başkalarını mevcut konuya odaklamaya yardım etmek",
+          "Herkesi birlikte çalışmaya teşvik etmek",
+          "Ortak zemin belirlemek",
+          "Farklılıklarına rağmen insanları bir araya getirmek",
+          "Ters psikoloji kullanmak"
+        ],
+        "shadow": [
+          "Dikkatin dağılması, veya hedeflerden başkalarını caydırmak için çekiciliğini veya becerilerini kullanmak",
+          "Olumsuz veya sağlıksız davranışlarla dikkati kendine çekmek",
+          "Kendi egonu besleme aracı olarak grup etkinliklerini bozmak"
+        ]
+      },
+      "Elemental": "Su Ateş",
+      "Affirmation": "\"Etkimi birliği teşvik etmek için kullanıyorum.\"",
+      "Questions to Ask": ["Ne kadar dikkatliyim?", "İnsanların dikkatini ortak noktalarımıza nasıl çekebilirim?", "İnsanları istediğim şeyi yapmaya ne kadar ikna edebilirim?"]
+    },
+    {
+      "name": "Değnek Kralı",
+      "number": "14",
+      "arcana": "Küçük Arkana",
+      "suit": "Değnekler",
+      "img": "w14.jpg",
+      "fortune_telling": [
+        "Bu kart, karizmatik, emredici bir kişiliğe sahip yaşlı bir erkeği temsil eder, büyük olasılıkla 13 Kasım ile 12 Aralık arasında doğmuş ve talimatlar vermeyi ve bunların takip edilmesini tercih eder"
+      ],
+      "keywords": [
+        "yaratıcılık",
+        "buluşçuluk",
+        "başarı",
+        "yönlendirme"
+      ],
+      "meanings": {
+        "light": [
+          "Eski şeyleri yeni ve heyecan verici yollarla bir araya getirmek",
+          "Beklenmedik çözümler bulmak",
+          "Deneyimini bulmacaları ve sorunları çözmek için kullanmak",
+          "Planladığını yapmak",
+          "Başkalarının çabalarını yönlendirmek"
+        ],
+        "shadow": [
+          "Yaratıcılığını dürüst çalışmaktan kaçmak için kullanmak",
+          "Sorumluluktan kaçınmak için büyük enerji harcamak",
+          "Uzmanlığını pratik kullanım için kullanmadan övünmek",
+          "Başkalarına tepeden bakmak"
+        ]
+      },
+      "Elemental": "Ateş Ateş",
+      "Affirmation": "\"Otoritemi ve deneyimlerimi işleri daha hızlı yapmak için kullanıyorum.\"",
+      "Questions to Ask": ["Ne kadar kendinden emin bir liderim?", "Daha fazla güven nasıl yansıtabilirim?", "Uzmanlığımı başkalarını beni takip etmeye teşvik edecek şekilde nasıl sunabilirim?"]
+    },
+    {
+      "name": "Pentacle Ağı",
+      "number": "1",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p01.jpg",
+      "fortune_telling": [
+        "Sağlığın iyileşecek",
+        "Aradığın çek gerçekten postada"
+      ],
+      "keywords": [
+        "sağlık",
+        "zenginlik",
+        "pratiklik",
+        "alma"
+      ],
+      "meanings": {
+        "light": [
+          "Refah elde etmek için bir plan çizmek",
+          "Gelirini veya sağlığını iyileştirme fırsatlarının farkına varmak",
+          "Her şeye sahip olduğunu fark etmek",
+          "Evrenin sana verdiği her şeyi takdir etmek",
+          "Mükemmel hediyeyi mükemmel zamanda almak"
+        ],
+        "shadow": [
+          "Durmaksızın tüketimcilik yapmak",
+          "Ne kadar sahip olursan ol daha fazlasını istemek",
+          "Hesap bakiyene takıntılı olmak",
+          "Hipokondriye yakalanmak",
+          "Şükran göstermeden nimetleri tüketmek",
+          "Başkalarının ihtiyaçlarını umursamadan istediğini almak"
+        ]
+      },
+      "Numerology": "1 (Köken: başlangıç noktası, tohum, fırsat)",
+      "Astrology": "Oğlak, Boğa, Başak",
+      "Affirmation": "\"Nimetlerime açığım ve şükrediyorum.\"",
+      "Questions to Ask": ["Sadece pratik endişelere dayanarak karar versem kararım ne olur?", "Bana hangi kaynaklar mevcut?", "Kararlarımın fiziksel ve finansal etkisi ne olacak?"]
+    },
+    {
+      "name": "İki Pentacle",
+      "number": "2",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p02.jpg",
+      "fortune_telling": [
+        "Bütçeyi dengeleme zamanı",
+        "Kritik fonları önemsiz mallara harcamak temptation cazibesine kapılma"
+      ],
+      "keywords": [
+        "değerlendirme",
+        "karar",
+        "bütçeleme",
+        "teşhis"
+      ],
+      "meanings": {
+        "light": [
+          "Seçenekleri tartmak",
+          "Fiyatları karşılaştırmak",
+          "Bir seçeneğin diğerinden değerini belirlemek",
+          "Kaynakları uçları birleştirmek için dengelemek",
+          "Vücudun veya banka hesabın için en iyisi olacak şekilde zor seçimler yapmak",
+          "Alt satıra bakmak",
+          "Sağlık sorunları için ikinci bir görüş istemek"
+        ],
+        "shadow": [
+          "Sonsuz fiyat karşılaştırması yapmak",
+          "Daha sonra biraz daha iyi bir değer bulma korkusuyla satın alma kararını ertelemek",
+          "Değere bakmadan bir şey satın almak",
+          "Gereksiz harcamalarla bütçeyi bozmak",
+          "Vücudun veya banka hesabın nasıl etkileneceği umursamadan davranış sergilemek"
+        ]
+      },
+      "Numerology": "2 (Diğer: ikilik, bölünme, tartışma)",
+      "Astrology": "Jüpiter Oğlakta",
+      "Affirmation": "\"Harekete geçmeden önce maliyetleri düşünüyorum.\"",
+      "Questions to Ask": ["Kararlarımı hangi değerler yönlendiriyor?", "Şimdiki bir zevk için küçük bir fedakarlık yapmaya ne kadar hazırım?", "Mevcut durumumda hangi eylem planı gerçekten ihtiyaçlarımı daha fazla karşılar?"]
+    },
+    {
+      "name": "Üç Pentacle",
+      "number": "3",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p03.jpg",
+      "fortune_telling": [
+        "Geleceğin yüksek dolarlık bir sözleşme",
+        "Sert çalışırsan başarılı olursun"
+      ],
+      "keywords": [
+        "ifade",
+        "üretim",
+        "çalışma",
+        "katkı"
+      ],
+      "meanings": {
+        "light": [
+          "Bir projeyi bitirmek",
+          "Standartlar belirleyip bunları karşılamak",
+          "Spesifikasyonlara göre performans göstermek",
+          "Başkalarının değer verdiği bir şey yapmak",
+          "Yeni bir şey yaratmak",
+          "Bir grup projesinde payına düşeni yapmak",
+          "Başkalarının istediği tam olarak teslim etmek"
+        ],
+        "shadow": [
+          "Başkalarının zevklerine yaltaklanmak",
+          "Vaadettiklerini teslim etmemek",
+          "Yakından denetim olmadan en iyi işini teslim etmemek",
+          "Sana yatırım yapanlarla anlaşmalara uymamak",
+          "Payına düşeni yapmamak",
+          "Kendin veya başkalarıyla açıkça belirtilmiş bir anlaşmaya uymamak"
+        ]
+      },
+      "Numerology": "3 (Sonuç: ifade, üretkenlik, çıktı)",
+      "Astrology": "Mars Oğlakta",
+      "Affirmation": "\"Çalışmam sonuç üretiyor.\"",
+      "Questions to Ask": ["Daha fazla nasıl iş yapabilirim?", "Benden ne bekleniyor? Bu beklentileri kontrol etmede ne kadar büyük bir rol oynuyorum?", "Ne anlaşılmış? Bu anlaşma ne kadar iyi takip edilmiş?"]
+    },
+    {
+      "name": "Dört Pentacle",
+      "number": "4",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p04.jpg",
+      "fortune_telling": [
+        "Yağmurlu bir gün geliyor—tasarruf zamanı"
+      ],
+      "keywords": [
+        "koruma",
+        "korunum",
+        "muhafaza",
+        "güvenlik"
+      ],
+      "meanings": {
+        "light": [
+          "Yağmurlu bir gün için tasarruf yapmak",
+          "Manevi bir uygulama olarak oruç tutmak",
+          "Vücudunu iyileştirmek için diyet yapmak",
+          "Bir manevi gelenek veya kişisel sözü onurlandırmak için cinsellikten kaçınmak",
+          "Finansal olarak muhafazakar olmak",
+          "Bir güven fonu oluşturmak",
+          "Bir tasarruf hesabı açmak"
+        ],
+        "shadow": [
+          "Cimri olmak",
+          "Harcanması gereken parayı harcamayı reddetmek",
+          "Partnerinden cinselliği esirgemek",
+          "Sadece kendi ihtiyaçlarını düşünmek, başkalarının ihtiyaçlarını umursamamak",
+          "Bir dolar kazanmak için bir kuruş harcamak",
+          "Verilen nimetleri iyi yönetmemek"
+        ]
+      },
+      "Numerology": "4 (Durum Quo: istikrar, eşitlik, ısrar)",
+      "Astrology": "Güneş Oğlakta",
+      "Affirmation": "\"Kaynaklarımı akıllıca kullanıyorum.\"",
+      "Questions to Ask": ["Cömert mi yoksa muhafazakar mı olduğumu ne belirler?", "Hangi şeyler her şeye rağmen korunmalı?", "Cimrilik veya tutumluluk ne zaman iyi bir özellik olabilir? Cömertlik ne zaman aleyhinize olabilir?"]
+    },
+    {
+      "name": "Beş Pentacle",
+      "number": "5",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p05.jpg",
+      "fortune_telling": [
+        "Finansal durumlar sıkılaşıyor",
+        "Bir geri adım için hazırlan"
+      ],
+      "keywords": [
+        "yoksulluk",
+        "sefalet",
+        "ihtiyaç",
+        "kriz"
+      ],
+      "meanings": {
+        "light": [
+          "İhtiyaçlarını tanıyıp bunları karşılamak için harekete geçmek",
+          "Elinde az şeyle yapabileceğinin fazlasını yapmak",
+          "Yardıma ihtiyacın olduğunu kabul etmek",
+          "Yoluna gelen yardımı kucaklamak",
+          "Olmayana değil olana odaklanmak",
+          "Tünelin ucundaki ışığı aramak"
+        ],
+        "shadow": [
+          "Finansal veya fiziksel ihtiyaçlarını abartmak",
+          "Yoksulluk zihniyetini benimsemek",
+          "Kendini desteklemeyi reddetmek",
+          "Destek tekliflerini reddetmek",
+          "Meczup rolü oynamak",
+          "Sağlığını veya finansal durumunu iyileştirme fırsatlarını reddetmek",
+          "Sefalet içinde debelenmek"
+        ]
+      },
+      "Numerology": "5 (Katalizör: istikrarsızlık, direnç, karşılaşma)",
+      "Astrology": "Merkür Boğada",
+      "Affirmation": "\"İhtiyacım olanın ortaya çıkacağına inanıyorum.\"",
+      "Questions to Ask": ["Hangi kritik kaynaklarım eksik?", "Bana yardım etmek için hangi insanlar veya gruplar gelir?", "Yoksul bir ruhun fiziksel veya finansal durumumu nasıl etkilediğine dair ne düşünebilirim?"]
+    },
+    {
+      "name": "Altı Pentacle",
+      "number": "6",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p06.jpg",
+      "fortune_telling": [
+        "Yardıma ihtiyacın olduğunda iste",
+        "Ancak şunu unutma: Aldığın yardım, geçmişte başkalarına verdiğinle sınırlı olabilir"
+      ],
+      "keywords": [
+        "yardımseverlik",
+        "adillik",
+        "işbirliği",
+        "paylaşım"
+      ],
+      "meanings": {
+        "light": [
+          "Zamanını, paranı veya çabanı bir hayır kurumuna vermek",
+          "Bir grup çabasına katılmak",
+          "Karşılık beklemeden kaynaklarını başkalarına ödünç vermek",
+          "Herkesin eşit şekilde muamele görmesini sağlamak",
+          "Ortak bir hedef için birlikte çalışmak",
+          "Zenginlik, zaman veya dikkati yeniden dağıtmak",
+          "Onluk bağışı",
+          "Başarını paylaşmak"
+        ],
+        "shadow": [
+          "Bir krediyi birini kontrol etmek için kullanmak",
+          "Bağışlarla dikkati kendine çekmek",
+          "Çalışmayı veya kaynakları adaletsizce bölmek",
+          "Grup çabasına payına düşeni yapmamak",
+          "Yükümlülükleri ve taahhütleri yok saymak"
+        ]
+      },
+      "Numerology": "6 (Ayar: işbirliği, ortak çalışma, etkileşim)",
+      "Astrology": "Ay Boğada",
+      "Affirmation": "\"Daha fazla alacağımı bilerek kaynaklarımı özgürce paylaşıyorum.\"",
+      "Questions to Ask": ["Yardımseverliğe nasıl bakıyorum? Vermek mi, almak mı?", "Başkalarına adil davranıp davranmadığımı nasıl bilebilirim?", "Benden başka kimsenin veremeyeceği ne verebilirim?"]
+    },
+    {
+      "name": "Yedi Pentacle",
+      "number": "7",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p07.jpg",
+      "fortune_telling": [
+        "Şeyler beklendiği gibi gitmeyecek",
+        "Parçaları topla ve ilerlemeye hazırlan"
+      ],
+      "keywords": [
+        "değerlendirme",
+        "ölçme",
+        "yeniden değerlendirme",
+        "yansıma"
+      ],
+      "meanings": {
+        "light": [
+          "Hedefine doğru ilerlemeyi ölçmek",
+          "Performansı geliştirmek için sonuçlara bakmak",
+          "Kendime 'Ne kadar mutluyum?' diye sormak",
+          "Sağlığını veya refahını iyileştirme fikirleri bulmak",
+          "Değişim zamanı olduğuna karar vermek",
+          "Dürüst bir görüş ifade etmek"
+        ],
+        "shadow": [
+          "Melankoli düşüncelerle dikkatin dağılması",
+          "'İyi eski günler' için özlem duymak",
+          "Kayıp fırsatlar yüzünden kendini suçlamak",
+          "Kendi işini sert yargılamak",
+          "Başkalarına uygun olmayan standartlar uygulamak",
+          "Bir projeye katılmayı reddedip sonra sonuç kalitesini şikayet etmek"
+        ]
+      },
+      "Numerology": "7 (Motiv: hayal gücü, iç çalışma, psikoloji)",
+      "Astrology": "Satürn Boğada",
+      "Affirmation": "\"Hedefimde kalmak için ilerlememi ölçüyorum.\"",
+      "Questions to Ask": ["Kendi beklentilerimi ne kadar karşıladım?", "Başarının şartları neler?", "İlerlememden daha mutlu olmak için ne yapabilirim?"]
+    },
+    {
+      "name": "Sekiz Pentacle",
+      "number": "8",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p08.jpg",
+      "fortune_telling": [
+        "Aşırı analiz etme, araştırma ve taslak çıkarmayı bırak",
+        "Çabuk ol ve işi bitir"
+      ],
+      "keywords": [
+        "çaba",
+        "çalışma özeni",
+        "beceri"
+      ],
+      "meanings": {
+        "light": [
+          "Elinden geleni yapmak",
+          "İşine heves ve gayretle yaklaşmak",
+          "Kendin olabileceğin en iyisi olmak için çaba göstermek",
+          "Sana uygun işi bulmak",
+          "Küçük detaylara dikkat etmek",
+          "İnce bir zanaatkar olmak",
+          "Ellerinle bir şey inşa etmek",
+          "El yapımı bir hediye yapmak"
+        ],
+        "shadow": [
+          "Kendini ölüme kadar çalıştırmak",
+          "Yarım yamalak veya özensiz bir iş yapmak",
+          "Sevmediğin bir işte devam etmek",
+          "Düşüncesiz hediyeler almak",
+          "Zayıf işçilikle iş üretmek",
+          "İşi aceleye getirmek",
+          "Zanaatını öğrenme fırsatlarını reddetmek"
+        ]
+      },
+      "Numerology": "8 (Eylem: hareket, dış çalışma, hız)",
+      "Astrology": "Güneş Başakta",
+      "Affirmation": "\"Kendimi anın görevine tamamen veriyorum.\"",
+      "Questions to Ask": ["Son zamanlarda 'işine dalmış' ne zamandı?", "Dikkat ve odaklanmamı nasıl iyileştirebilirim?", "En iyi yaptığım iş nedir? Bu işin beni çeken yanı nedir?"]
+    },
+    {
+      "name": "Dokuz Pentacle",
+      "number": "9",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p09.jpg",
+      "fortune_telling": [
+        "Sahip olduklarını takdir edene kadar daha fazlasını elde etme şansın olmayacak"
+      ],
+      "keywords": [
+        "eğitim",
+        "disiplin",
+        "güven",
+        "yeter"
+      ],
+      "meanings": {
+        "light": [
+          "Zor bir görevi öğrenmek veya öğretmek için zaman harcamak",
+          "Fiziksel veya finansal aşırılıklardan kendini alıkoymak",
+          "Büyük hedeflere ulaşmak için fedakarlıklar yapmak",
+          "Karmaşık bir görevi basit adımlara bölmek",
+          "Sahip olduklarını istemek",
+          "İhtiyaçlar ile istekler arasındaki farkı bilmek"
+        ],
+        "shadow": [
+          "Görevlendirildiğin bir görevi yerine getirmek için eğitilmeden yapmak",
+          "Yeterli olmadığını bildiğin bir pozisyona talip olmak",
+          "Gereklilikleri yok saymak",
+          "Bir şey veya biri hakkında yeterli zaman ve dikkat ayırmayı reddetmek",
+          "Her zaman daha fazlasını istemek"
+        ]
+      },
+      "Numerology": "9 (Tamamlanma: doluluk, hazırlık, olgunluk)",
+      "Astrology": "Venüs Başakta",
+      "Affirmation": "\"Yeterince bilerek kararlarımda kendime güveniyorum.\"",
+      "Questions to Ask": ["İstediğimi elde edemezsem nasıl idare ederdim?", "Karmaşık bir görevi küçük adımlara bölerek kolaylaştırabilir miyim?", "Öğrenme sürecinde ne kadar sabırlıyım? Kendimle? Başkalarıyla?"]
+    },
+    {
+      "name": "On Pentacle",
+      "number": "10",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p10.jpg",
+      "fortune_telling": [
+        "Yakın gelecekte büyük para var",
+        "Beklenmedik bir bereket sana doğru geliyor"
+      ],
+      "keywords": [
+        "zenginlik",
+        "bolluk",
+        "edinme",
+        "açgözlülük"
+      ],
+      "meanings": {
+        "light": [
+          "Fiziksel ve finansal nimetlerini kutlamak",
+          "Ne kadar şanslı veya bereketli olduğunu fark etmek",
+          "Fiziksel ve finansal başarılarından memnun olmak",
+          "Bolluk dönemlerinden en iyi şekilde yararlanmak",
+          "Bir ziyafetin tadını çıkarmak",
+          "Arkadaşlarını veya aileni hediyelerle şımartmak"
+        ],
+        "shadow": [
+          "Tüm paranı lüks hediyeler ve sahip olma hırsına harcamak",
+          "Başkalarını etkilemek için zenginliğinle veya fiziksel görünümünle çok çaba harcamak",
+          "İltifat almak için uygunsuz derecede pahalı bir hediye vermek",
+          "Ağırlık, sağlık veya finans konularında takıntılı olmak",
+          "Her zaman 'Bu bana ne kazandıracak?' diye sormak"
+        ]
+      },
+      "Numerology": "10 (Son: kesinlik, tamamlanma, tükenme)",
+      "Astrology": "Merkür Başakta",
+      "Affirmation": "\"Fiziksel ve finansal konuları perspektifte tutuyorum.\"",
+      "Questions to Ask": ["Gerçekten ne kadar şeye ihtiyacım var?", "Zenginlik ve bolluk hakkında ne hissediyorum? Bu terimleri nasıl tanımlıyorum?", "Bazı sahip olduklarımdan vazgeçmek yeni bir büyüme için yer açabilir mi?"]
+    },
+    {
+      "name": "Pentacle Sayfası",
+      "number": "11",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p11.jpg",
+      "fortune_telling": [
+        "Bu kart, toprak gibi pratik bir tavır sergileyen genç bir erkek veya kadını temsil eder, büyük olasılıkla Koç, Boğa veya İkizler burcunda doğmuş ve seni finansal veya cinsel riskler almaya oyunbaz bir şekilde teşvik ediyor"
+      ],
+      "keywords": [
+        "pratiklik",
+        "refah",
+        "öğrenme",
+        "büyüme",
+        "ergenlik"
+      ],
+      "meanings": {
+        "light": [
+          "Bir doların değerini öğrenmek",
+          "Bir tasarruf planı başlatmak",
+          "Borçtan çıkmak için ilk adımları atmak",
+          "Yeni fiziksel görevler öğrenmek",
+          "Cinselliğini keşfetmek",
+          "Bir diyet, bir ağırlık kaldırma programı veya sağlıkla ilgili bir çaba başlatmak",
+          "Yaparak öğrenmek"
+        ],
+        "shadow": [
+          "Gerçekten olduğundan daha sağlıklı veya zengin görünmeye çalışmak",
+          "Parayı dikkatsizce harcamak",
+          "Sadece bugün için yaşamak, yarını düşünmemek",
+          "Cinsellik ve cinselliğe olgun olmayan tutum sergilemek",
+          "Zenginlik veya güzelliği öğrenme ve büyümek zorunda kalmama bahanesi olarak kullanmak"
+        ]
+      },
+      "Elemental": "Toprak Toprak",
+      "Affirmation": "\"Fiziksel ve finansal olarak sorumluyum.\"",
+      "Questions to Ask": ["Sağlığını veya geçimini riske atmadan daha fazla finansal veya cinsel deneyim nasıl edinebilirsin?", "Pratik öğrenme bu durumda nasıl bir rol oynayabilir?", "En pratik seçim ne olurdu?"
+      ]
+    },
+    {
+      "name": "Pentacle Şövalyesi",
+      "number": "12",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p12.jpg",
+      "fortune_telling": [
+        "Cimri bir kişi seni para harcamak için azarlayabilir",
+        "Ekonomik veya cinsel bir kararını savunmaya hazırlan"
+      ],
+      "keywords": [
+        "dikkat",
+        "odaklanma",
+        "gerçekçilik",
+        "icat"
+      ],
+      "meanings": {
+        "light": [
+          "Parayı akıllıca harcamak",
+          "Yağmurlu bir gün için tasarruf yapmak",
+          "Fiziksel veya finansal detaylara yakından dikkat etmek",
+          "Her doların nereye gittiğini bilmek",
+          "Güvenli cinsellik",
+          "Gerçeklere 'iyi hisler'den daha fazla güvenmek",
+          "Elindeki kaynaklarla yaratıcı yollar bulmak",
+          "Yeni bir icat tamamlamak"
+        ],
+        "shadow": [
+          "Dikkati dört bir yana atmak",
+          "Sonuçları umursamadan harcamak",
+          "Gereklilikler eksikken lüks harcamak",
+          "Stresi para harcayarak kaçmak",
+          "Küçük fiziksel veya finansal detaylara takıntılı olmak",
+          "Sürekli yeni bir süs eşyası peşinde koşmak",
+          "Başka birinin işini kopyalayıp bunu kendi olarak iddia etmek"
+        ]
+      },
+      "Elemental": "Hava Toprak",
+      "Affirmation": "\"Eylemlerimi temkinli iyimserlikle dengeliyorum.\"",
+      "Questions to Ask": ["Dikkat ile korku arasındaki fark nedir?", "Kendi fikirlerinin ve yöntemlerinin pratikliğini nasıl değerlendirebilirsin?", "Hedeflerin ne kadar gerçekçi?"
+      ]
+    },
+    {
+      "name": "Pentacle Kraliçesi",
+      "number": "13",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p13.jpg",
+      "fortune_telling": [
+        "Bu kart, geniş, duyusal bir doğaya sahip bir kadını temsil eder, büyük olasılıkla 13 Aralık ile 31 Aralık arasında doğmuş ve duyusal çekicilik ile ödül vaadiyle başkalarını kendi görüşüne ikna etmek istiyor"
+      ],
+      "keywords": [
+        "lüks",
+        "rahatlık",
+        "beceriklilik",
+        "cömertlik",
+        "refah"
+      ],
+      "meanings": {
+        "light": [
+          "İyi yemek, iyi şarap, güzel sanat, güzel bedenler veya hayatın sunduğu en güzel şeylerden herhangi birini takdir etmek",
+          "Sağlıklı cinselliğin tadını çıkarmak",
+          "Kendini ödüllendirmek",
+          "Ara sıra 'güzel olan' bir şeye para harcamak",
+          "Başkalarını beklentilerin ötesinde tazminatla ödüllendirmek",
+          "Her şeye sahip olmak"
+        ],
+        "shadow": [
+          "Aşırı yeme veya açgözlülüğe kapılmak",
+          "Doyumsuz olmak",
+          "Aşırı sıklıkla şımartmaların etkisini köreltmek",
+          "Duygusal ihtiyaçları karşılamadan fiziksel rahatlık sağlamak",
+          "Sahip oldukların için şükranı çarpıtan bir hak sahipliği duygusuna izin vermek"
+        ]
+      },
+      "Elemental": "Su Toprak",
+      "Affirmation": "\"Bu dünyanın sunduğu en iyilerin tadını çıkarıyorum.\"",
+      "Questions to Ask": ["Lüksü nasıl tanımlıyorum?", "Duyusal zevkin tadını ne kadar çıkarabilirim?", "Her şeye sahip olmak için neyi bırakmak zorundayım?"
+      ]
+    },
+    {
+      "name": "Pentacle Kralı",
+      "number": "14",
+      "arcana": "Küçük Arkana",
+      "suit": "Pentacles",
+      "img": "p14.jpg",
+      "fortune_telling": [
+        "Bu kart, finansal, sosyal ve politik olarak muhafazakar bir ruha sahip yaşlı bir erkeği temsil eder, büyük olasılıkla 12 Ağustos ile 11 Eylül arasında doğmuş ve parayı ağzıyla koymuş biri olarak bilinir"
+      ],
+      "keywords": [
+        "istikrar",
+        "güvenilirlik",
+        "güven",
+        "müdahale"
+      ],
+      "meanings": {
+        "light": [
+          "Borçsuz olmak",
+          "Geçinmek için fazlasıyla sahip olmak",
+          "Bir tasarruf planına katkı sağlamak",
+          "Kariyerini ilerletmek için yeni bir işe başlamak",
+          "Hayat veya sağlık sigortası satın almak",
+          "Yatak odasında kendine güvenmek",
+          "Çağrıldığında uygulayıcı rolünü üstlenmek"
+        ],
+        "shadow": [
+          "Prensip olarak tüm değişimi reddedecek kadar muhafazakar olmak",
+          "Gelenekleri korumak adına yenilikleri yok saymak",
+          "Kendinden emin veya kibirli olmak",
+          "Kâr veya zevke acımasızca adanmak",
+          "Cinsel olarak bencil olmak",
+          "Buna yetkin olmamana rağmen başkalarına hükmetmek"
+        ]
+      },
+      "Elemental": "Ateş Toprak",
+      "Affirmation": "\"Güven ve adaleti somutlaştırıyorum.\"",
+      "Questions to Ask": ["Masrafları daha fazla güven ve olgunlukla nasıl yönetebilirsin?", "Ne kadar güvenilirsin? Başkaları seni ne kadar güvenilir bulur?", "Muhafazakar bir bakış açısı ne kadar değerli? Ne zaman bir yük olmaya başlar?"]
+        }
+      ]
+    }

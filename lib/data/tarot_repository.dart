@@ -12,22 +12,34 @@ import 'package:tarot_fal/models/tarot_card.dart';
 
 class TarotRepository {
   static final TarotRepository _instance = TarotRepository._internal();
-  factory TarotRepository() => _instance;
+  factory TarotRepository({String locale = 'en'}) => _instance..setLocale(locale); // Varsayılan: İngilizce
   TarotRepository._internal();
 
   List<TarotCard> _cards = [];
+  String _currentLocale = 'en'; // Varsayılan locale
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   // Kartları dosyadan yükleme
-  Future<void> loadCardsFromAsset() async {
+  void setLocale(String locale) {
+    if (locale == 'tr' || locale == 'en') {
+      _currentLocale = locale;
+      loadCards(); // Locale değiştiğinde kartları yeniden yükle
+    } else {
+      throw TarotException('Desteklenmeyen dil: $locale');
+    }
+  }
+
+  // Kartları dosyadan yükleme (locale'e göre)
+  Future<void> loadCards() async {
     try {
-      final String jsonString = await rootBundle.loadString('assets/tarot_cards.json');
+      final String jsonFile = 'assets/tarot_cards_$_currentLocale.json';
+      final String jsonString = await rootBundle.loadString(jsonFile);
       final Map<String, dynamic> data = json.decode(jsonString);
       _cards = (data['cards'] as List).map((cardJson) => TarotCard.fromJson(cardJson)).toList();
     } catch (e) {
-      throw TarotException(e.toString());
+      throw TarotException('Kartlar yüklenemedi: $e');
     }
   }
 

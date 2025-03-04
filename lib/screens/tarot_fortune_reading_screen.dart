@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,9 +22,8 @@ class TarotReadingScreen extends StatefulWidget {
   State<TarotReadingScreen> createState() => _TarotReadingScreenState();
 }
 
-class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTickerProviderStateMixin {
+class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProviderStateMixin {
   late AnimationController _titleController;
-  final TextEditingController _couponController = TextEditingController();
 
   @override
   void initState() {
@@ -34,12 +34,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
     )..forward();
   }
 
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _couponController.dispose();
-    super.dispose();
-  }
+
 
   void _showPaymentDialog(BuildContext context, double requiredTokens) {
     PaymentManager.showPaymentDialog(
@@ -47,23 +42,51 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
       requiredTokens: requiredTokens,
       onSuccess: () {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context)!.couponRedeemed("Tokens added successfully"))),
+          SnackBar(content: Text(S.of(context)!.couponRedeemed("Mystical Tokens added successfully"))),
         );
       },
     );
   }
 
   void _showCouponSheet(BuildContext context) {
-    showModalBottomSheet(
+    final paymentManager = PaymentManager();
+    paymentManager.initialize();
+
+    showGeneralDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => BlocProvider.value(
-        value: BlocProvider.of<TarotBloc>(context),
-        child: const CouponSheet(),
-      ),
-    );
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      pageBuilder: (context, animation1, animation2) {
+        return Material(
+          type: MaterialType.transparency,
+          child: Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              child: BlocProvider.value(
+                value: BlocProvider.of<TarotBloc>(context),
+                child: CouponSheet(manager: paymentManager),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1), // Aşağıdan yukarı doğru animasyon
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutQuad,
+          )),
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
+    ).whenComplete(() => paymentManager.dispose());
   }
+
+
 
   void _navigateToProfilePage(BuildContext context) {
     Navigator.push(
@@ -76,6 +99,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
   Widget build(BuildContext context) {
     final loc = S.of(context);
     return Scaffold(
+      resizeToAvoidBottomInset: false, // Prevent screen from resizing with keyboard
       backgroundColor: Colors.grey[900],
       body: Stack(
         children: [
@@ -127,12 +151,27 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.person, color: Colors.white),
+                        icon: const Icon(
+                          Icons.visibility_outlined,
+                          color: Color(0xB9D8BFD8),
+                          size: 24,
+                        ),
+                        tooltip: loc!.profile,
                         onPressed: () => _navigateToProfilePage(context),
+                        splashRadius: 24,
+                        splashColor: Colors.grey.withOpacity(0.3),
                       ),
+                      const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.settings, color: Colors.white),
+                        icon: const Icon(
+                          Icons.settings_outlined,
+                          color: Color(0xB9D8BFD8),
+                          size: 24,
+                        ),
+                        tooltip: loc.settings,
                         onPressed: widget.onSettingsTap,
+                        splashRadius: 24,
+                        splashColor: Colors.grey.withOpacity(0.9),
                       ),
                     ],
                   ),
@@ -177,6 +216,8 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
     );
   }
 
+
+
   Widget _buildBackground() {
     return Stack(
       fit: StackFit.expand,
@@ -220,22 +261,32 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
   }
 
   Widget _buildTitle() {
-    final loc = S.of(context);
-    return FadeTransition(
-      opacity: _titleController,
-      child: ScaleTransition(
-        scale: _titleController,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
-          child: Column(
-            children: [
-              Text(
-                '⋆ ${loc!.tarotFortune.toUpperCase()} ⋆',
+    return Column(
+      children: [
+        AnimatedBuilder(
+          animation: _titleController,
+          builder: (context, child) {
+            final shimmerValue = sin(_titleController.value * pi * 2) * 0.5 + 0.5;
+
+            return ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [
+                  Colors.white,
+                  Color(0xFFE6E6FA), // Lavanta rengi
+                  Colors.purpleAccent.shade100,
+                  Colors.white,
+                ],
+                stops: [0.0, shimmerValue * 0.5, shimmerValue, 1.0],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds),
+              child: Text(
+                ' ASTRAL TAROT ', // Yıldız sembolünü değiştirdim
                 textAlign: TextAlign.center,
                 style: GoogleFonts.cinzel(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 12,
+                  letterSpacing: 4, // Tek satıra sığması için azaltılmış letter spacing
                   color: Colors.white,
                   shadows: [
                     Shadow(
@@ -243,32 +294,39 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
                       offset: const Offset(0, 4),
                       blurRadius: 15,
                     ),
+                    Shadow(
+                      color: Colors.purpleAccent.withOpacity(0.3 + shimmerValue * 0.2),
+                      offset: const Offset(0, 2),
+                      blurRadius: 8,
+                    ),
                   ],
                 ),
               ),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.purple[200]!.withOpacity(0.4)),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '✧ ${loc.mysticJourney} ✧',
-                  style: GoogleFonts.cinzel(
-                    color: Colors.purple[100]!.withOpacity(0.9),
-                    fontSize: 14,
-                    letterSpacing: 4,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
+            );
+          },
+        ),
+        SizedBox(height: MediaQuery.of(context).size.height * 0.001),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.purple[200]!.withOpacity(0.4)),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            '✧ UNVEIL THE STARS ✧',
+            style: GoogleFonts.cinzel(
+              color: Colors.purple[100]!.withOpacity(0.9),
+              fontSize: 14,
+              letterSpacing: 4,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
+
+
 
   Widget _buildMainCard(BuildContext context, TarotState state) {
     return Center(
@@ -297,12 +355,17 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
           gradient: LinearGradient(
             colors: canStart
                 ? [
-              Colors.deepPurple[700]!.withOpacity(0.8),
-              Colors.purple[900]!.withOpacity(0.6),
+              Color(0xFF2D0A4E), // Koyu mor
+              Color(0xFF4B0082), // İndigo
             ]
                 : [
-              Colors.grey[700]!.withOpacity(0.8),
-              Colors.grey[900]!.withOpacity(0.6),
+              Colors.grey[900]!.withOpacity(0.3),
+              Color(0xFF2D0A40), // Koyu mor
+              Color(0xFF2D0A40), // Koyu mor
+              Color(0xFF4B0082), // İndigo
+              Colors.grey[900]!.withOpacity(0.3),
+
+
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -310,26 +373,56 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: canStart ? Colors.purple[400]!.withOpacity(0.5) : Colors.grey[400]!.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: canStart ? Color(0xFFDA70D6).withOpacity(0.6) : Colors.grey[400]!.withOpacity(0.3),
+              blurRadius: 15,
+              spreadRadius: 1,
+              offset: const Offset(0, 5),
             ),
           ],
-          border: Border.all(color: Colors.white.withOpacity(canStart ? 0.2 : 0.1)),
-        ),
-        child: Text(
-          loc!.startJourney,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.cinzel(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 2,
-            color: Colors.white.withOpacity(canStart ? 1.0 : 0.5),
+          border: Border.all(
+            color: canStart ? Colors.purpleAccent.withOpacity(0.3) : Colors.white.withOpacity(0.1),
+            width: 1.6,
           ),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (canStart) ...[
+              Positioned(
+                left: 10,
+                child: Icon(Icons.auto_awesome, color: Colors.white.withOpacity(0.2), size: 16),
+              ),
+              Positioned(
+                right: 10,
+                child: Icon(Icons.star, color: Colors.white.withOpacity(0.2), size: 16),
+              ),
+            ],
+            // Ana metin
+            Text(
+              loc!.startJourney,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cinzel(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 2,
+                color: Colors.white.withOpacity(canStart ? 1.0 : 0.7),
+                shadows: canStart
+                    ? [
+                  Shadow(
+                    color: Colors.purpleAccent.withOpacity(0.8),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+                    : null,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
 
   Widget _buildBottomInfo() {
     final loc = S.of(context);
@@ -352,7 +445,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
               loc!.differentInterpretation,
               style: GoogleFonts.cinzel(
                 color: Colors.white70,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -383,7 +476,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
               ),
               const SizedBox(width: 4),
               Text(
-                state.isPremium ? "Premium" : "${state.userTokens.toStringAsFixed(1)} Tokens",
+                state.isPremium ? "Premium" : "${state.userTokens.toStringAsFixed(1)} ${S.of(context)!.mysticalTokens}",
                 style: GoogleFonts.cinzel(
                   color: Colors.white,
                   fontSize: 10,
@@ -444,17 +537,15 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with SingleTick
         value: BlocProvider.of<TarotBloc>(context),
         child: const CategorySelectionSheet(),
       ),
-      transitionAnimationController: AnimationController(
-        vsync: Navigator.of(context),
-        duration: const Duration(milliseconds: 400),
-      ),
-    ).then((_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context)!.categorySelection)),
-        );
-      }
-    });
+    );
+  }
+
+
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
   }
 }
 
@@ -477,55 +568,64 @@ class CategorySelectionSheet extends StatelessWidget {
           ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        child: Column(
+        child: Stack(
           children: [
-            _buildSheetHeader(context, loc!.categorySelection, loc.chooseTopic),
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildCategoryTile(
-                    context: context,
-                    title: loc.loveRelationships,
-                    description: loc.loveDescription,
-                    icon: Icons.favorite,
-                    categoryKey: 'love',
+            Column(
+              children: [
+                _buildSheetHeader(context, loc!.categorySelection, loc.chooseTopic),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _buildCategoryTile(
+                        context: context,
+                        title: loc.loveRelationships,
+                        description: loc.loveDescription,
+                        icon: Icons.favorite,
+                        categoryKey: 'love',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildCategoryTile(
+                        context: context,
+                        title: loc.career,
+                        description: loc.careerDescription,
+                        icon: Icons.work,
+                        categoryKey: 'career',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildCategoryTile(
+                        context: context,
+                        title: loc.money,
+                        description: loc.moneyDescription,
+                        icon: Icons.attach_money,
+                        categoryKey: 'money',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildCategoryTile(
+                        context: context,
+                        title: loc.general,
+                        description: loc.generalDescription,
+                        icon: Icons.psychology,
+                        categoryKey: 'general',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildCategoryTile(
+                        context: context,
+                        title: loc.spiritualMystical,
+                        description: loc.spiritualMysticalDescription,
+                        icon: Icons.star_border,
+                        categoryKey: 'spiritual',
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  _buildCategoryTile(
-                    context: context,
-                    title: loc.career,
-                    description: loc.careerDescription,
-                    icon: Icons.work,
-                    categoryKey: 'career',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildCategoryTile(
-                    context: context,
-                    title: loc.money,
-                    description: loc.moneyDescription,
-                    icon: Icons.attach_money,
-                    categoryKey: 'money',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildCategoryTile(
-                    context: context,
-                    title: loc.general,
-                    description: loc.generalDescription,
-                    icon: Icons.psychology,
-                    categoryKey: 'general',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildCategoryTile(
-                    context: context,
-                    title: loc.spiritualMystical, // .arb dosyasına eklenecek
-                    description: loc.spiritualMysticalDescription, // .arb dosyasına eklenecek
-                    icon: Icons.star_border,
-                    categoryKey: 'spiritual',
-                  ),
-                ],
-              ),
+                ),
+              ],
+            ),
+            Positioned(
+              top: 16,
+              right: 16,
+              child: _buildCloseButton(context),
             ),
           ],
         ),
@@ -645,9 +745,28 @@ class CategorySelectionSheet extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildCloseButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withOpacity(0.6),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.purple[300]!.withOpacity(0.5),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.close, color: Colors.white, size: 24),
+      ),
+    );
+  }
 }
-
-
 
 
 
@@ -662,14 +781,6 @@ class SpreadSelectionSheet extends StatefulWidget {
 }
 
 class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
-  final TextEditingController _promptController = TextEditingController();
-
-  @override
-  void dispose() {
-    _promptController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
@@ -682,34 +793,41 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
         ),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _buildSheetHeader(loc!.spreadSelection, loc.chooseSpread),
+      child: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: _buildSheetHeader(loc!.spreadSelection, loc.chooseSpread),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    final spreads = _getSpreadsForCategory(widget.categoryKey);
+                    if (index >= spreads.length) return null;
+                    final spread = spreads[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                      child: _buildSpreadTile(
+                        context: context,
+                        title: spread['title'],
+                        description: spread['description'],
+                        cardCount: spread['cardCount'],
+                        event: spread['event'],
+                        cost: spread['cost'],
+                      ),
+                    );
+                  },
+                  childCount: _getSpreadsForCategory(widget.categoryKey).length,
+                ),
+              ),
+            ],
           ),
-          SliverToBoxAdapter(
-            child: _buildCustomPromptSection(context),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                final spreads = _getSpreadsForCategory(widget.categoryKey);
-                if (index >= spreads.length) return null;
-                final spread = spreads[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildSpreadTile(
-                    context: context,
-                    title: spread['title'],
-                    description: spread['description'],
-                    cardCount: spread['cardCount'],
-                    event: spread['event'],
-                    cost: spread['cost'],
-                  ),
-                );
-              },
-              childCount: _getSpreadsForCategory(widget.categoryKey).length,
-            ),
+          Positioned(
+            top: 20,
+            right: 12,
+            bottom: 730,
+            child: _buildCloseButton(context),
           ),
         ],
       ),
@@ -718,7 +836,7 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
 
   Widget _buildSheetHeader(String title, String subtitle) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 60, left: 16, right: 16, bottom: 16), // Başlığı aşağı kaydırmak için üst padding artırıldı
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
@@ -762,52 +880,6 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
     );
   }
 
-  Widget _buildCustomPromptSection(BuildContext context) {
-    final loc = S.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            loc!.customPromptTitle,
-            style: GoogleFonts.cinzel(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.purple[700]!.withOpacity(0.6),
-                  Colors.deepPurple[900]!.withOpacity(0.5),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.purple[300]!.withOpacity(0.5)),
-            ),
-            child: TextField(
-              controller: _promptController,
-              maxLines: 3,
-              style: GoogleFonts.cinzel(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: loc.customPromptHint,
-                hintStyle: GoogleFonts.cinzel(color: Colors.grey[400]),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   List<Map<String, dynamic>> _getSpreadsForCategory(String categoryKey) {
     final loc = S.of(context);
     switch (categoryKey) {
@@ -817,42 +889,42 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             'title': loc!.singleCard,
             'description': loc.singleCardDescription,
             'cardCount': 1,
-            'event': () => DrawSingleCard(customPrompt: null),
+            'event': () => DrawSingleCard(),
             'cost': SpreadType.singleCard.costInCredits,
           },
           {
             'title': loc.relationshipSpread,
             'description': loc.relationshipSpreadDescription,
             'cardCount': 7,
-            'event': () => DrawRelationshipSpread(customPrompt: null),
+            'event': () => DrawRelationshipSpread(),
             'cost': SpreadType.relationshipSpread.costInCredits,
           },
           {
             'title': loc.brokenHeart,
             'description': loc.brokenHeartDescription,
             'cardCount': 5,
-            'event': () => DrawBrokenHeart(customPrompt: null),
+            'event': () => DrawBrokenHeart(),
             'cost': SpreadType.brokenHeart.costInCredits,
           },
           {
             'title': loc.pastPresentFuture,
             'description': loc.pastPresentFutureDescriptionLove,
             'cardCount': 3,
-            'event': () => DrawPastPresentFuture(customPrompt: null),
+            'event': () => DrawPastPresentFuture(),
             'cost': SpreadType.pastPresentFuture.costInCredits,
           },
           {
             'title': loc.mindBodySpirit,
             'description': loc.mindBodySpiritDescriptionLove,
             'cardCount': 3,
-            'event': () => DrawMindBodySpirit(customPrompt: null),
+            'event': () => DrawMindBodySpirit(),
             'cost': SpreadType.mindBodySpirit.costInCredits,
           },
           {
             'title': loc.fullMoonSpread,
             'description': loc.fullMoonSpreadDescriptionLove,
             'cardCount': 5,
-            'event': () => DrawFullMoonSpread(customPrompt: null),
+            'event': () => DrawFullMoonSpread(),
             'cost': SpreadType.fullMoonSpread.costInCredits,
           },
         ];
@@ -862,42 +934,42 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             'title': loc!.singleCard,
             'description': loc.singleCardDescription,
             'cardCount': 1,
-            'event': () => DrawSingleCard(customPrompt: null),
+            'event': () => DrawSingleCard(),
             'cost': SpreadType.singleCard.costInCredits,
           },
           {
             'title': loc.pastPresentFuture,
             'description': loc.pastPresentFutureDescription,
             'cardCount': 3,
-            'event': () => DrawPastPresentFuture(customPrompt: null),
+            'event': () => DrawPastPresentFuture(),
             'cost': SpreadType.pastPresentFuture.costInCredits,
           },
           {
             'title': loc.fiveCardPath,
             'description': loc.fiveCardPathDescription,
             'cardCount': 5,
-            'event': () => DrawFiveCardPath(customPrompt: null),
+            'event': () => DrawFiveCardPath(),
             'cost': SpreadType.fiveCardPath.costInCredits,
           },
           {
             'title': loc.careerPathSpread,
             'description': loc.careerPathSpreadDescription,
             'cardCount': 5,
-            'event': () => DrawCareerPathSpread(customPrompt: null),
+            'event': () => DrawCareerPathSpread(),
             'cost': SpreadType.careerPathSpread.costInCredits,
           },
           {
             'title': loc.problemSolution,
             'description': loc.problemSolutionDescriptionCareer,
             'cardCount': 3,
-            'event': () => DrawProblemSolution(customPrompt: null),
+            'event': () => DrawProblemSolution(),
             'cost': SpreadType.problemSolution.costInCredits,
           },
           {
             'title': loc.horseshoeSpread,
             'description': loc.horseshoeSpreadDescriptionCareer,
             'cardCount': 7,
-            'event': () => DrawHorseshoeSpread(customPrompt: null),
+            'event': () => DrawHorseshoeSpread(),
             'cost': SpreadType.horseshoeSpread.costInCredits,
           },
         ];
@@ -907,35 +979,35 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             'title': loc!.singleCard,
             'description': loc.singleCardDescription,
             'cardCount': 1,
-            'event': () => DrawSingleCard(customPrompt: null),
+            'event': () => DrawSingleCard(),
             'cost': SpreadType.singleCard.costInCredits,
           },
           {
             'title': loc.problemSolution,
             'description': loc.problemSolutionDescriptionMoney,
             'cardCount': 3,
-            'event': () => DrawProblemSolution(customPrompt: null),
+            'event': () => DrawProblemSolution(),
             'cost': SpreadType.problemSolution.costInCredits,
           },
           {
             'title': loc.horseshoeSpread,
             'description': loc.horseshoeSpreadDescriptionMoney,
             'cardCount': 7,
-            'event': () => DrawHorseshoeSpread(customPrompt: null),
+            'event': () => DrawHorseshoeSpread(),
             'cost': SpreadType.horseshoeSpread.costInCredits,
           },
           {
             'title': loc.pastPresentFuture,
             'description': loc.pastPresentFutureDescriptionMoney,
             'cardCount': 3,
-            'event': () => DrawPastPresentFuture(customPrompt: null),
+            'event': () => DrawPastPresentFuture(),
             'cost': SpreadType.pastPresentFuture.costInCredits,
           },
           {
             'title': loc.careerPathSpread,
             'description': loc.careerPathSpreadDescriptionMoney,
             'cardCount': 5,
-            'event': () => DrawCareerPathSpread(customPrompt: null),
+            'event': () => DrawCareerPathSpread(),
             'cost': SpreadType.careerPathSpread.costInCredits,
           },
         ];
@@ -945,42 +1017,42 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             'title': loc!.singleCard,
             'description': loc.singleCardDescription,
             'cardCount': 1,
-            'event': () => DrawSingleCard(customPrompt: null),
+            'event': () => DrawSingleCard(),
             'cost': SpreadType.singleCard.costInCredits,
           },
           {
             'title': loc.celticCrossReading,
             'description': loc.celticCrossDescription,
             'cardCount': 10,
-            'event': () => DrawCelticCross(customPrompt: null),
+            'event': () => DrawCelticCross(),
             'cost': SpreadType.celticCross.costInCredits,
           },
           {
             'title': loc.yearlySpreadReading,
             'description': loc.yearlySpreadDescription,
             'cardCount': 12,
-            'event': () => DrawYearlySpread(customPrompt: null),
+            'event': () => DrawYearlySpread(),
             'cost': SpreadType.yearlySpread.costInCredits,
           },
           {
             'title': loc.astroLogicalCross,
             'description': loc.astroLogicalCrossDescriptionGeneral,
             'cardCount': 5,
-            'event': () => DrawAstroLogicalCross(customPrompt: null),
+            'event': () => DrawAstroLogicalCross(),
             'cost': SpreadType.astroLogicalCross.costInCredits,
           },
           {
             'title': loc.horseshoeSpread,
             'description': loc.horseshoeSpreadDescriptionGeneral,
             'cardCount': 7,
-            'event': () => DrawHorseshoeSpread(customPrompt: null),
+            'event': () => DrawHorseshoeSpread(),
             'cost': SpreadType.horseshoeSpread.costInCredits,
           },
           {
             'title': loc.pastPresentFuture,
             'description': loc.pastPresentFutureDescriptionGeneral,
             'cardCount': 3,
-            'event': () => DrawPastPresentFuture(customPrompt: null),
+            'event': () => DrawPastPresentFuture(),
             'cost': SpreadType.pastPresentFuture.costInCredits,
           },
         ];
@@ -990,42 +1062,42 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             'title': loc!.singleCard,
             'description': loc.singleCardDescription,
             'cardCount': 1,
-            'event': () => DrawSingleCard(customPrompt: null),
+            'event': () => DrawSingleCard(),
             'cost': SpreadType.singleCard.costInCredits,
           },
           {
             'title': loc.mindBodySpirit,
             'description': loc.mindBodySpiritDescriptionSpiritual,
             'cardCount': 3,
-            'event': () => DrawMindBodySpirit(customPrompt: null),
+            'event': () => DrawMindBodySpirit(),
             'cost': SpreadType.mindBodySpirit.costInCredits,
           },
           {
             'title': loc.dreamInterpretation,
             'description': loc.dreamInterpretationDescriptionSpiritual,
             'cardCount': 3,
-            'event': () => DrawDreamInterpretation(customPrompt: null),
+            'event': () => DrawDreamInterpretation(),
             'cost': SpreadType.dreamInterpretation.costInCredits,
           },
           {
             'title': loc.fullMoonSpread,
             'description': loc.fullMoonSpreadDescriptionSpiritual,
             'cardCount': 5,
-            'event': () => DrawFullMoonSpread(customPrompt: null),
+            'event': () => DrawFullMoonSpread(),
             'cost': SpreadType.fullMoonSpread.costInCredits,
           },
           {
             'title': loc.astroLogicalCross,
             'description': loc.astroLogicalCrossDescriptionSpiritual,
             'cardCount': 5,
-            'event': () => DrawAstroLogicalCross(customPrompt: null),
+            'event': () => DrawAstroLogicalCross(),
             'cost': SpreadType.astroLogicalCross.costInCredits,
           },
           {
             'title': loc.celticCrossReading,
             'description': loc.celticCrossDescriptionSpiritual,
             'cardCount': 10,
-            'event': () => DrawCelticCross(customPrompt: null),
+            'event': () => DrawCelticCross(),
             'cost': SpreadType.celticCross.costInCredits,
           },
         ];
@@ -1058,20 +1130,27 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
       child: Container(
         padding: const EdgeInsets.all(16),
         constraints: BoxConstraints(
-          minHeight: 120, // Minimum yükseklik
-          maxWidth: MediaQuery.of(context).size.width * 0.9, // Ekranın %90'ına kadar genişler
+          minHeight: 130, // Hafif artırıldı
+          maxWidth: MediaQuery.of(context).size.width * 0.85, // Ekranın %85'i ile dengeli
         ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.purple[700]!.withOpacity(0.6),
-              Colors.deepPurple[900]!.withOpacity(0.5),
+              Colors.purple[700]!.withOpacity(0.7),
+              Colors.deepPurple[900]!.withOpacity(0.6),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.purple[300]!.withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.purple[300]!.withOpacity(0.6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1094,14 +1173,18 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.purple[700],
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.purple[600],
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     loc!.cardCount(cardCount),
-                    style: GoogleFonts.cinzel(color: Colors.white, fontSize: 12),
+                    style: GoogleFonts.cinzel(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -1112,7 +1195,7 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
                 description,
                 style: GoogleFonts.cinzel(
                   fontSize: 14,
-                  color: Colors.grey[300],
+                  color: Colors.white70,
                 ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
@@ -1122,17 +1205,24 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             Align(
               alignment: Alignment.bottomRight,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.purple[800]!.withOpacity(0.9), // Daha farklı bir mor tonu
+                  borderRadius: BorderRadius.circular(20), // Oval bir badge
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Text(
-                  "${cost.toStringAsFixed(1)} Tokens",
+                  '${cost.toStringAsFixed(1)} ${loc.mysticalTokens}',
                   style: GoogleFonts.cinzel(
-                    color: Colors.yellowAccent,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    color: Colors.white70, // Daha yumuşak bir renk
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -1142,4 +1232,28 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
       ),
     );
   }
+
+
+}
+
+
+Widget _buildCloseButton(BuildContext context) {
+  return GestureDetector(
+    onTap: () => Navigator.pop(context),
+    child: Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black.withOpacity(0.6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple[300]!.withOpacity(0.5),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Icon(Icons.close, color: Colors.white, size: 24),
+    ),
+  );
 }

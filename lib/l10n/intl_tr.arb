@@ -1,6 +1,6 @@
 {
   "@@locale": "tr",
-  "tarotFortune": "Tarot",
+  "tarotFortune": "Astral Tarot",
   "errorMessage": "Hata: {message}",
   "tryAgain": "Tekrar Dene",
   "pastPresentFuture": "Geçmiş-Şimdi-Gelecek Açılımı Yap",
@@ -284,6 +284,37 @@
   "fullMoonPresent": "Dolunay Şimdiki",
   "fullMoonChallenge": "Dolunay Zorluk",
   "fullMoonHope": "Dolunay Umut",
-  "fullMoonOutcome": "Dolunay Sonuç"
+  "fullMoonOutcome": "Dolunay Sonuç",
 
+  "mysticalTokens": "Mistik Jetonlar",
+  "@mysticalTokens": {
+    "description": "Tarot okumalarınızda kullanacağınız jetonlar"
+  },
+
+
+  "errorLoadingReadings": "Okumaları yüklerken hata oluştu",
+  "unknownSpread": "Bilinmeyen dağılım",
+  "noInterpretation": "Yorum mevcut değil",
+
+  "premium": "Premium",
+  "unlimited": "Sınırsız",
+  "english": "English",
+  "languageChangedToEnglish": "Dil İngilizce olarak değiştirildi",
+  "turkish": "Türkçe",
+  "languageChangedToTurkish": "Dil Türkçe olarak değiştirildi",
+  "tenTokens": "10 Token",
+  "fiftyTokens": "50 Token",
+  "hundredTokens": "100 Token",
+  "premiumSubscription": "Premium Abonelik",
+
+  "drawCards": "Kartları Çek",
+  "instructionsDrawCards": "Kartları manuel olarak çekmek için bu düğmeyi kullanın.",
+
+
+  "selectToDraw": "Kaderinizi görmek için kaydırın",
+
+
+  "premiumDescription": "Sınırsız fal ve özel içeriklere erişim",
+  "bundleDescription": "50 kredi + Premium abonelik",
+  "creditDescription": "{credits} kredi ile daha fazla fal aç"
 }

@@ -11,7 +11,6 @@ import 'package:tarot_fal/gemini_service.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/data/user_data_manager.dart';
 import 'package:tarot_fal/data/tarot_event_state.dart';
-import 'dart:developer' as developer;
 
 class TarotBloc extends Bloc<TarotEvent, TarotState> {
   final TarotRepository repository;
@@ -21,7 +20,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserDataManager _userDataManager = UserDataManager();
   SpreadType? _currentSpreadType;
-
 
   UserDataManager get userDataManager => _userDataManager;
   SpreadType? get currentSpreadType => _currentSpreadType;
@@ -35,6 +33,9 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _initializeUser();
     on<LoadTarotCards>(_onLoadTarotCards);
     on<ShuffleDeck>(_onShuffleDeck);
+    on<RedeemCoupon>(_onRedeemCoupon);
+    on<UpdateLastCategory>(_onUpdateLastCategory);
+    on<UpdateUserInfo>(_onUpdateUserInfo);
     on<DrawSingleCard>(_onDrawSingleCard);
     on<DrawPastPresentFuture>(_onDrawPastPresentFuture);
     on<DrawProblemSolution>(_onDrawProblemSolution);
@@ -50,7 +51,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     on<DrawCareerPathSpread>(_onDrawCareerPathSpread);
     on<DrawFullMoonSpread>(_onDrawFullMoonSpread);
     on<DrawCategoryReading>(_onDrawCategoryReading);
-    on<RedeemCoupon>(_onRedeemCoupon);
   }
 
   Future<void> _initializeUser() async {
@@ -89,13 +89,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     final isPremium = await _userDataManager.isPremiumUser();
     final userTokens = await _userDataManager.getTokens();
     final dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+    final userName = await _userDataManager.getUserName();
+    final userAge = await _userDataManager.getUserAge();
+    final userGender = await _userDataManager.getUserGender();
+    final userInfoCollected = await _userDataManager.getUserInfoCollected();
     emit(TarotInitial(
       isPremium: isPremium,
       userTokens: userTokens,
       dailyFreeFalCount: dailyFreeFalCount,
+      userName: userName,
+      userAge: userAge,
+      userGender: userGender,
+      userInfoCollected: userInfoCollected,
     ));
   }
-
 
   Future<bool> _checkCreditsAndTokenLimit(Emitter<TarotState> emit, SpreadType spreadType) async {
     final isPremium = await _userDataManager.isPremiumUser();
@@ -108,18 +115,28 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     if (!isPremium && dailyFreeReads >= 3 && tokens < cost) {
       emit(InsufficientResources(
         cost,
-        isPremium: isPremium,
-        userTokens: tokens,
-        dailyFreeFalCount: dailyFreeReads,
+        isPremium: state.isPremium,
+        userTokens: state.userTokens,
+        dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
       return false;
     }
     if (!isPremium && tokens < cost) {
       emit(InsufficientResources(
         cost,
-        isPremium: isPremium,
-        userTokens: tokens,
-        dailyFreeFalCount: dailyFreeReads,
+        isPremium: state.isPremium,
+        userTokens: state.userTokens,
+        dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
       return false;
     }
@@ -128,9 +145,14 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     if (estimatedTokens > tokenLimit) {
       emit(TarotError(
         "Token limit exceeded for ${spreadType.name}: $estimatedTokens/$tokenLimit",
-        isPremium: isPremium,
-        userTokens: tokens,
-        dailyFreeFalCount: dailyFreeReads,
+        isPremium: state.isPremium,
+        userTokens: state.userTokens,
+        dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
       return false;
     }
@@ -187,6 +209,9 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         'timestamp': FieldValue.serverTimestamp(),
         'pinned': false,
         'locale': locale,
+        'userName': state.userName,
+        'userAge': state.userAge,
+        'userGender': state.userGender,
       });
     } catch (e) {
       emit(TarotError(
@@ -194,6 +219,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -230,9 +260,14 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
-      await repository.loadCardsFromAsset();
+      await repository.loadCards();
       final cards = repository.getAllCards();
       if (cards.isEmpty) throw Exception("No tarot cards loaded");
       emit(TarotCardsLoaded(
@@ -240,6 +275,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -247,6 +287,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -260,6 +305,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -267,8 +317,30 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
+  }
+
+  void _onUpdateLastCategory(UpdateLastCategory event, Emitter<TarotState> emit) {
+    emit(state.copyWith(lastSelectedCategory: event.category));
+  }
+
+  Future<void> _onUpdateUserInfo(UpdateUserInfo event, Emitter<TarotState> emit) async {
+    await _userDataManager.saveUserName(event.name);
+    await _userDataManager.saveUserAge(event.age);
+    await _userDataManager.saveUserGender(event.gender);
+    await _userDataManager.saveUserInfoCollected(true);
+    emit(state.copyWith(
+      userName: event.name,
+      userAge: event.age,
+      userGender: event.gender,
+      userInfoCollected: true,
+    ));
   }
 
   Future<void> _onDrawSingleCard(DrawSingleCard event, Emitter<TarotState> emit) async {
@@ -278,11 +350,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final card = repository.singleCardReading();
       final spread = {'Card': card};
-      final prompt = _generatePromptForSingleCard(category: 'general', card: card, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForSingleCard(
+        category: 'general',
+        card: card,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -305,6 +386,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -312,6 +398,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -323,11 +414,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.pastPresentFutureReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForPastPresentFuture(category: 'general', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForPastPresentFuture(
+        category: 'general',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -350,6 +450,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -357,6 +462,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -368,11 +478,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.problemSolutionReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForProblemSolution(category: 'general', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForProblemSolution(
+        category: 'general',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -395,6 +514,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -402,6 +526,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -413,11 +542,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.fiveCardPathReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForFiveCardPath(category: 'career', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForFiveCardPath(
+        category: 'career',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -440,6 +578,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -447,6 +590,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -458,11 +606,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.relationshipReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForRelationshipSpread(category: 'loveRelationships', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForRelationshipSpread(
+        category: 'loveRelationships',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -485,6 +642,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -492,6 +654,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -503,11 +670,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.celticCrossReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForCelticCross(category: 'general', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForCelticCross(
+        category: 'general',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -530,6 +706,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -537,6 +718,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -548,11 +734,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.yearlyReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForYearlySpread(category: 'general', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForYearlySpread(
+        category: 'general',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -575,6 +770,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -582,6 +782,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -593,11 +798,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.mindBodySpiritReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForMindBodySpirit(category: 'holistic', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForMindBodySpirit(
+        category: 'holistic',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -620,6 +834,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -627,6 +846,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -638,11 +862,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.astroLogicalCrossReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForAstroLogicalCross(category: 'general', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForAstroLogicalCross(
+        category: 'general',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -665,6 +898,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -672,6 +910,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -683,11 +926,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.brokenHeartReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForBrokenHeart(category: 'heart', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForBrokenHeart(
+        category: 'heart',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -710,6 +962,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -717,6 +974,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -728,11 +990,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.dreamInterpretationReading();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForDreamInterpretation(category: 'dream', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForDreamInterpretation(
+        category: 'dream',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -755,6 +1026,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -762,6 +1038,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -773,11 +1054,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.horseshoeSpread();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForHorseshoeSpread(category: 'general', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForHorseshoeSpread(
+        category: 'general',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -800,6 +1090,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -807,6 +1102,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -818,11 +1118,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.careerPathSpread();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForCareerPathSpread(category: 'career', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForCareerPathSpread(
+        category: 'career',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -845,6 +1154,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -852,6 +1166,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -863,11 +1182,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.fullMoonSpread();
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForFullMoonSpread(category: 'lunar', spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForFullMoonSpread(
+        category: 'lunar',
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -890,6 +1218,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -897,6 +1230,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -908,11 +1246,20 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final spread = repository.categoryReading(event.category, event.cardCount);
       if (spread.isEmpty) throw Exception("No spread generated");
-      final prompt = _generatePromptForCategoryReading(category: event.category, spread: spread, customPrompt: event.customPrompt);
+      final prompt = _generatePromptForCategoryReading(
+        category: event.category,
+        spread: spread,
+        customPrompt: event.customPrompt,
+      );
       final yorum = await geminiService.generateContent(prompt);
       if (yorum.isEmpty) throw Exception("Failed to generate reading");
 
@@ -935,6 +1282,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     } catch (e) {
       emit(TarotError(
@@ -942,6 +1294,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -951,6 +1308,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
     try {
       final couponCode = event.couponCode.trim().toUpperCase();
@@ -966,6 +1328,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
           isPremium: state.isPremium,
           userTokens: state.userTokens,
           dailyFreeFalCount: state.dailyFreeFalCount,
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName,
+          userAge: state.userAge,
+          userGender: state.userGender,
+          userInfoCollected: state.userInfoCollected,
         ));
         return;
       }
@@ -978,6 +1345,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
           isPremium: await _userDataManager.isPremiumUser(),
           userTokens: state.userTokens,
           dailyFreeFalCount: state.dailyFreeFalCount,
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName,
+          userAge: state.userAge,
+          userGender: state.userGender,
+          userInfoCollected: state.userInfoCollected,
         ));
       } else if (coupon['type'] == 'credits') {
         final creditsToAdd = (coupon['value'] as num).toDouble();
@@ -989,6 +1361,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
           isPremium: state.isPremium,
           userTokens: await _userDataManager.getTokens(),
           dailyFreeFalCount: state.dailyFreeFalCount,
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName,
+          userAge: state.userAge,
+          userGender: state.userGender,
+          userInfoCollected: state.userInfoCollected,
         ));
       } else {
         emit(CouponInvalid(
@@ -996,6 +1373,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
           isPremium: state.isPremium,
           userTokens: state.userTokens,
           dailyFreeFalCount: state.dailyFreeFalCount,
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName,
+          userAge: state.userAge,
+          userGender: state.userGender,
+          userInfoCollected: state.userInfoCollected,
         ));
       }
     } catch (e) {
@@ -1004,11 +1386,30 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
 
-  String _generatePromptForSingleCard({required String category, required TarotCard card, String? customPrompt}) {
+  // Kullanıcı bilgilerine göre güncellenmiş prompt fonksiyonları
+  String _generatePromptForSingleCard({
+    required String category,
+    required TarotCard card,
+    String? customPrompt,
+  }) {
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIncorporate this request into your interpretation.'
         : 'No custom request provided by the user; provide a general interpretation.';
@@ -1018,6 +1419,7 @@ IMPORTANT: Strictly adhere to the format below. Do NOT include any technical pla
 ✨ Tarot Reading - Guide to Mystical Paths ✨  
 This reading provides a personal insight into $category using a single card spread. Prepare to uncover the unique message of the card!
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1028,33 +1430,37 @@ Position: Single Card
 - Card: ${card.name}  
 - Meaning: ${card.meanings.light.join(', ')}  
 - Mystical Interpretation: ${card.meanings.shadow.join(', ')}  
-- Category-Specific Insight: Provide a brief insight specific to $category.
+- Category-Specific Insight: Provide a brief insight specific to $category, tailored to the user's information if available.
 
 ---
 
 ### In-Depth General Commentary
 
-Offer a concise, creative commentary on the card’s energy and its significance for the user’s $category context.
+Offer a concise, creative commentary on the card’s energy and its significance for the user’s $category context, personalized based on their info if provided.
 
 ---
 
 ### Guiding Whispers & Suggestions
 
-- Timeline & Suggestions: Offer a simple suggestion for the user’s near future in the $category context.  
-- Points to Watch Out For: Highlight a potential challenge or pitfall to avoid in the $category context.  
-- Category-Specific Tips: Provide tailored advice specific to the user’s $category.
+- Timeline & Suggestions: Offer a simple suggestion for the user’s near future in the $category context, considering their personal details if available.  
+- Points to Watch Out For: Highlight a potential challenge or pitfall to avoid in the $category context, tailored to the user if possible.  
+- Category-Specific Tips: Provide tailored advice specific to the user’s $category, reflecting their info if known.
 
 ---
 
 Instructions:  
 1. All descriptions must be original, detailed, and creative.  
-2. Each section must include elements specific to $category and, if provided, the custom request.  
+2. Each section must include elements specific to $category and, if provided, the custom request and user information.  
 3. The response should only fill the given fields with original text, without including any placeholders or extra information.  
 4. The symbolic values and energies of the card must be interpreted in depth, limited to 500 tokens for free users or 2000 tokens for premium users.
 ''';
   }
 
-  String _generatePromptForPastPresentFuture({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForPastPresentFuture({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1065,6 +1471,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIncorporate this request into your interpretation.'
         : 'No custom request provided by the user; provide a general interpretation.';
@@ -1074,6 +1489,7 @@ IMPORTANT: Strictly adhere to the format below. Do NOT include any technical pla
 ✨ Tarot Reading - Guide to Mystical Paths ✨  
 This reading provides personal insights into $category using the Past-Present-Future spread. Prepare to uncover the unique messages across time!
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1087,35 +1503,39 @@ $cardInfo
 ### Reflections of Unified Destiny
 
 The combination of these cards marks a journey through time in your $category context.  
-- General Analysis: Provide a detailed analysis of the card energies and their significance across Past, Present, and Future for the user’s $category.  
-- Combined Evaluation of the Cards: Describe how the cards interact and what their combined energy suggests for the user’s $category journey over time.  
-- Special Note: Offer a specific insight or advice related to the user’s $category and, if provided, their custom request.
+- General Analysis: Provide a detailed analysis of the card energies and their significance across Past, Present, and Future for the user’s $category, personalized with user info if available.  
+- Combined Evaluation of the Cards: Describe how the cards interact and what their combined energy suggests for the user’s $category journey over time, tailored to their details if known.  
+- Special Note: Offer a specific insight or advice related to the user’s $category and, if provided, their custom request, reflecting their personal info.
 
 ---
 
 ### In-Depth General Commentary
 
-Provide a comprehensive commentary on the overall reading, focusing on the user’s $category journey through time.
+Provide a comprehensive commentary on the overall reading, focusing on the user’s $category journey through time, personalized where possible.
 
 ---
 
 ### Guiding Whispers & Suggestions
 
-- Timeline & Suggestions: Offer practical suggestions for the user’s near future in the $category context, based on the Past and Present.  
-- Points to Watch Out For: Highlight potential challenges or pitfalls to avoid in the $category context.  
-- Category-Specific Tips: Provide tailored advice specific to the user’s $category and time-based insights.
+- Timeline & Suggestions: Offer practical suggestions for the user’s near future in the $category context, based on the Past and Present, tailored to their info if available.  
+- Points to Watch Out For: Highlight potential challenges or pitfalls to avoid in the $category context, personalized if user info is provided.  
+- Category-Specific Tips: Provide tailored advice specific to the user’s $category and time-based insights, reflecting their details if known.
 
 ---
 
 Instructions:  
 1. All descriptions must be original, detailed, and creative.  
-2. Each section must include elements specific to $category and, if provided, the custom request.  
+2. Each section must include elements specific to $category and, if provided, the custom request and user information.  
 3. The response should only fill the given fields with original text, without including any placeholders or extra information.  
 4. The symbolic values, energies, and interactions between the cards must be interpreted in depth, limited to 1000 tokens for free users or 3000 tokens for premium users.
 ''';
   }
 
-  String _generatePromptForProblemSolution({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForProblemSolution({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1126,6 +1546,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIncorporate this request into your interpretation.'
         : 'No custom request provided by the user; provide a general interpretation.';
@@ -1135,6 +1564,7 @@ IMPORTANT: Strictly adhere to the format below. Do NOT include any technical pla
 ✨ Tarot Reading - Problem Solution Insight ✨  
 This reading aims to identify and explore the problem as well as outline potential solutions within the context of $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1147,19 +1577,19 @@ $cardInfo
 
 ### Analysis & Diagnosis
 
-Analyze the problem depicted by the cards, discussing how their combined symbolism reflects the challenge in the $category context.
+Analyze the problem depicted by the cards, discussing how their combined symbolism reflects the challenge in the $category context, personalized with user info if available.
 
 ---
 
 ### Strategic Recommendations
 
-Offer strategic advice and suggestions, detailing specific steps or insights to address the issue.
+Offer strategic advice and suggestions, detailing specific steps or insights to address the issue, tailored to the user’s details if provided.
 
 ---
 
 ### Concluding Thoughts
 
-Summarize the key insights and suggested actions to resolve the problem.
+Summarize the key insights and suggested actions to resolve the problem, reflecting user info where relevant.
 
 Instructions:  
 1. Descriptions must be original, detailed, and creative.  
@@ -1167,7 +1597,11 @@ Instructions:
 ''';
   }
 
-  String _generatePromptForFiveCardPath({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForFiveCardPath({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1178,6 +1612,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIncorporate this request into your interpretation.'
         : 'No custom request provided by the user; provide a general interpretation.';
@@ -1187,6 +1630,7 @@ IMPORTANT: Strictly adhere to the format below. Do NOT include any technical pla
 ✨ Tarot Reading - Guide to Mystical Paths ✨  
 This reading provides personal insights into $category using the Five Card Path spread. Prepare to uncover the unique messages for your journey!
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1200,35 +1644,39 @@ $cardInfo
 ### Reflections of Unified Destiny
 
 The combination of these cards marks a path in your $category context.  
-- General Analysis: Provide a detailed analysis of the card energies and their significance for Current Situation, Obstacles, Best Outcome, Foundation, and Potential in the user’s $category.  
-- Combined Evaluation of the Cards: Describe how the cards interact and what their combined energy suggests for the user’s $category journey.  
-- Special Note: Offer a specific insight or advice related to the user’s $category and, if provided, their custom request.
+- General Analysis: Provide a detailed analysis of the card energies and their significance for Current Situation, Obstacles, Best Outcome, Foundation, and Potential in the user’s $category, personalized with user info if available.  
+- Combined Evaluation of the Cards: Describe how the cards interact and what their combined energy suggests for the user’s $category journey, tailored to their details if known.  
+- Special Note: Offer a specific insight or advice related to the user’s $category and, if provided, their custom request, reflecting their personal info.
 
 ---
 
 ### In-Depth General Commentary
 
-Provide a comprehensive commentary on the overall reading, focusing on the user’s $category path.
+Provide a comprehensive commentary on the overall reading, focusing on the user’s $category path, personalized where possible.
 
 ---
 
 ### Guiding Whispers & Suggestions
 
-- Timeline & Suggestions: Offer practical suggestions for the user’s near future in the $category context.  
-- Points to Watch Out For: Highlight potential challenges or pitfalls to avoid in the $category context.  
-- Category-Specific Tips: Provide tailored advice specific to the user’s $category.
+- Timeline & Suggestions: Offer practical suggestions for the user’s near future in the $category context, tailored to their info if available.  
+- Points to Watch Out For: Highlight potential challenges or pitfalls to avoid in the $category context, personalized if user info is provided.  
+- Category-Specific Tips: Provide tailored advice specific to the user’s $category, reflecting their details if known.
 
 ---
 
 Instructions:  
 1. All descriptions must be original, detailed, and creative.  
-2. Each section must include elements specific to $category and, if provided, the custom request.  
+2. Each section must include elements specific to $category and, if provided, the custom request and user information.  
 3. The response should only fill the given fields with original text, without including any placeholders or extra information.  
 4. The symbolic values, energies, and interactions between the cards must be interpreted in depth, limited to 1500 tokens for free users or 4000 tokens for premium users.
 ''';
   }
 
-  String _generatePromptForRelationshipSpread({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForRelationshipSpread({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1239,6 +1687,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIntegrate this into your relationship reading interpretation.'
         : 'No custom request provided by the user; offer a general relationship interpretation.';
@@ -1248,6 +1705,7 @@ IMPORTANT: Strictly adhere to the format below. Do NOT include any technical pla
 ✨ Tarot Reading - Relationship Insight ✨  
 This reading provides insights into relationship dynamics within the context of $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1260,19 +1718,19 @@ $cardInfo
 
 ### Analysis of Interaction
 
-Discuss the interplay of energies and roles within the relationship. Analyze how the cards reflect shared energies, individual influences, and mutual interactions in the $category context.
+Discuss the interplay of energies and roles within the relationship. Analyze how the cards reflect shared energies, individual influences, and mutual interactions in the $category context, personalized with user info if available.
 
 ---
 
 ### Guidance & Recommendations
 
-Offer tailored advice and suggestions for improving or understanding the relationship better, drawing from the symbolism of the cards.
+Offer tailored advice and suggestions for improving or understanding the relationship better, drawing from the symbolism of the cards and the user’s details if provided.
 
 ---
 
 ### Summary Reflection
 
-Conclude with key insights and practical recommendations based on the overall reading.
+Conclude with key insights and practical recommendations based on the overall reading, reflecting user info where relevant.
 
 Instructions:  
 1. Descriptions must be original and thoughtful.  
@@ -1280,7 +1738,11 @@ Instructions:
 ''';
   }
 
-  String _generatePromptForCelticCross({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForCelticCross({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1291,6 +1753,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIncorporate this into the reading.'
         : 'No custom request provided by the user; provide a general interpretation.';
@@ -1300,6 +1771,7 @@ IMPORTANT: Adhere strictly to the format below. Do NOT include any technical pla
 ✨ Tarot Reading - Celtic Cross Spread ✨  
 This reading uses the Celtic Cross spread to deliver comprehensive insights into $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1312,19 +1784,19 @@ $cardInfo
 
 ### Deep Analysis
 
-Provide an in-depth analysis of the spread, discussing the individual and combined meanings of the cards, along with their relevance to the $category context.
+Provide an in-depth analysis of the spread, discussing the individual and combined meanings of the cards, along with their relevance to the $category context, personalized with user info if available.
 
 ---
 
 ### Recommendations and Advice
 
-Offer practical advice and suggestions based on the analysis of the cards, focusing on potential challenges and opportunities.
+Offer practical advice and suggestions based on the analysis of the cards, focusing on potential challenges and opportunities, tailored to the user’s details if provided.
 
 ---
 
 ### Final Summary
 
-Conclude with a summary of key insights and actionable guidance for the user.
+Conclude with a summary of key insights and actionable guidance for the user, reflecting their info where relevant.
 
 Instructions:  
 1. All descriptions must be original, creative, and extensive.  
@@ -1332,7 +1804,11 @@ Instructions:
 ''';
   }
 
-  String _generatePromptForYearlySpread({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForYearlySpread({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1343,6 +1819,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nInclude this in the year-ahead reading.'
         : 'No custom request provided by the user; provide a general interpretation for the upcoming year.';
@@ -1352,6 +1837,7 @@ IMPORTANT: Follow the format exactly as specified. Do NOT include any technical 
 ✨ Tarot Reading - Yearly Spread ✨  
 This reading explores the themes and energies for the upcoming year within the context of $category. Each card represents significant insights for different aspects or periods of the year.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1364,19 +1850,19 @@ $cardInfo
 
 ### Long-Term Analysis
 
-Provide a comprehensive analysis of the cards, discussing the long-term influences, challenges, and opportunities in the $category context throughout the coming year.
+Provide a comprehensive analysis of the cards, discussing the long-term influences, challenges, and opportunities in the $category context throughout the coming year, personalized with user info if available.
 
 ---
 
 ### Year-Ahead Guidance
 
-Offer practical advice and recommendations for navigating the upcoming year, highlighting key insights from the reading.
+Offer practical advice and recommendations for navigating the upcoming year, highlighting key insights from the reading, tailored to the user’s details if provided.
 
 ---
 
 ### Conclusion
 
-Summarize the overall themes and actionable insights derived from the reading.
+Summarize the overall themes and actionable insights derived from the reading, reflecting user info where relevant.
 
 Instructions:  
 1. Ensure all descriptions are original, detailed, and reflective.  
@@ -1384,7 +1870,11 @@ Instructions:
 ''';
   }
 
-  String _generatePromptForMindBodySpirit({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForMindBodySpirit({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1395,6 +1885,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIncorporate this request into your holistic mind, body, and spirit reading.'
         : 'No custom request provided by the user; provide a general mind, body, and spirit interpretation.';
@@ -1404,6 +1903,7 @@ IMPORTANT: Follow the format strictly. Provide detailed, original interpretation
 ✨ Tarot Reading - Mind Body Spirit Spread ✨  
 This reading explores the connections between the mind, body, and spirit within the context of $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1416,20 +1916,24 @@ $cardInfo
 
 ### Holistic Analysis
 
-Discuss how the cards reflect aspects of mental clarity, physical well-being, and spiritual insight in the $category context.
+Discuss how the cards reflect aspects of mental clarity, physical well-being, and spiritual insight in the $category context, personalized with user info if available.
 
 ---
 
 ### Recommendations
 
-Offer actionable advice to harmonize these aspects.
+Offer actionable advice to harmonize these aspects, tailored to the user’s details if provided.
 
 Instructions:  
 1. Use $locale as the language.
 ''';
   }
 
-  String _generatePromptForAstroLogicalCross({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForAstroLogicalCross({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1440,6 +1944,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nWeave this request into the astrological reading.'
         : 'No custom request provided by the user; provide a general astrological cross interpretation.';
@@ -1449,6 +1962,7 @@ IMPORTANT: Strictly follow the format. Fill each field with your insights in $lo
 ✨ Tarot Reading - AstroLogical Cross Spread ✨  
 This reading interprets the interplay between astrological symbols and tarot energy in the context of $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1461,20 +1975,24 @@ $cardInfo
 
 ### Astrological Insights
 
-Discuss how the cards’ positions align with astrological themes in $category.
+Discuss how the cards’ positions align with astrological themes in $category, personalized with user info if available.
 
 ---
 
 ### Practical Guidance
 
-Offer advice based on the astrological cross spread.
+Offer advice based on the astrological cross spread, tailored to the user’s details if provided.
 
 Instructions:  
 1. Use $locale as the language.
 ''';
   }
 
-  String _generatePromptForBrokenHeart({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForBrokenHeart({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1485,6 +2003,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nReflect this emotional nuance in your interpretation.'
         : 'No custom request provided by the user; provide a compassionate reading for heartbreak.';
@@ -1494,6 +2021,7 @@ IMPORTANT: Adhere to the template strictly. Provide detailed text in $locale wit
 ✨ Tarot Reading - Broken Heart Spread ✨  
 This reading aims to heal and provide understanding within the context of emotional pain in $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1506,20 +2034,24 @@ $cardInfo
 
 ### Emotional Analysis
 
-Discuss how the cards guide emotional recovery in $category.
+Discuss how the cards guide emotional recovery in $category, personalized with user info if available.
 
 ---
 
 ### Healing Suggestions
 
-Offer supportive recommendations to overcome heartbreak.
+Offer supportive recommendations to overcome heartbreak, tailored to the user’s details if provided.
 
 Instructions:  
 1. Use $locale as the language.
 ''';
   }
 
-  String _generatePromptForDreamInterpretation({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForDreamInterpretation({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1530,6 +2062,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nInterpret how this request influences the dream symbols.'
         : 'No custom request provided by the user; provide a general dream interpretation.';
@@ -1539,6 +2080,7 @@ IMPORTANT: Use the format strictly. Provide detailed interpretation in $locale w
 ✨ Tarot Reading - Dream Interpretation Spread ✨  
 This reading deciphers the symbolism of your dreams within the context of $category using tarot as a guide.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1551,20 +2093,24 @@ $cardInfo
 
 ### Symbolic Analysis
 
-Discuss the meaning of each card in relation to dream symbols and personal experiences in $category.
+Discuss the meaning of each card in relation to dream symbols and personal experiences in $category, personalized with user info if available.
 
 ---
 
 ### Insights & Guidance
 
-Offer advice on how the dream symbols relate to the dreamer’s life in $category.
+Offer advice on how the dream symbols relate to the dreamer’s life in $category, tailored to the user’s details if provided.
 
 Instructions:  
 1. Use $locale as the language.
 ''';
   }
 
-  String _generatePromptForHorseshoeSpread({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForHorseshoeSpread({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1575,6 +2121,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nInclude this request in your comprehensive reading.'
         : 'No custom request provided by the user; offer a general interpretation.';
@@ -1584,6 +2139,7 @@ IMPORTANT: Follow the format strictly. Provide content in $locale without extra 
 ✨ Tarot Reading - Horseshoe Spread ✨  
 This reading employs the Horseshoe Spread to deliver insights into various aspects of $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1596,20 +2152,24 @@ $cardInfo
 
 ### Detailed Analysis
 
-Discuss how the horseshoe layout informs challenges, opportunities, and guidance in $category.
+Discuss how the horseshoe layout informs challenges, opportunities, and guidance in $category, personalized with user info if available.
 
 ---
 
 ### Final Recommendations
 
-Offer actionable advice based on the horseshoe spread analysis.
+Offer actionable advice based on the horseshoe spread analysis, tailored to the user’s details if provided.
 
 Instructions:  
 1. Use $locale as the language.
 ''';
   }
 
-  String _generatePromptForCareerPathSpread({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForCareerPathSpread({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1620,6 +2180,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nWeave this request into the career insights.'
         : 'No custom request provided by the user; provide a general career guidance interpretation.';
@@ -1629,6 +2198,7 @@ IMPORTANT: Adhere strictly to the format below. Provide original, comprehensive 
 ✨ Tarot Reading - Career Path Spread ✨  
 This reading is crafted to explore your career trajectory and professional challenges within the context of $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1641,20 +2211,24 @@ $cardInfo
 
 ### Analysis and Evaluation
 
-Discuss how each card reflects aspects of career progression and challenges in $category.
+Discuss how each card reflects aspects of career progression and challenges in $category, personalized with user info if available.
 
 ---
 
 ### Strategic Career Advice
 
-Offer concrete suggestions to navigate professional challenges.
+Offer concrete suggestions to navigate professional challenges, tailored to the user’s details if provided.
 
 Instructions:  
 1. Use $locale as the language.
 ''';
   }
 
-  String _generatePromptForFullMoonSpread({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForFullMoonSpread({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1665,6 +2239,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIncorporate this into your lunar analysis.'
         : 'No custom request provided by the user; offer a general full moon reading interpretation.';
@@ -1674,6 +2257,7 @@ IMPORTANT: Follow the provided format accurately. Provide all details in $locale
 ✨ Tarot Reading - Full Moon Spread ✨  
 This reading harnesses the energy of the full moon to illuminate hidden insights and energies in the context of $category.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1686,20 +2270,24 @@ $cardInfo
 
 ### Lunar Analysis
 
-Discuss the symbolism of the full moon in relation to the cards and its effect on the reading in $category.
+Discuss the symbolism of the full moon in relation to the cards and its effect on the reading in $category, personalized with user info if available.
 
 ---
 
 ### Harmonizing Lunar Energies
 
-Offer guidance to help balance and harness lunar influences.
+Offer guidance to help balance and harness lunar influences, tailored to the user’s details if provided.
 
 Instructions:  
 1. Use $locale as the language.
 ''';
   }
 
-  String _generatePromptForCategoryReading({required String category, required Map<String, TarotCard> spread, String? customPrompt}) {
+  String _generatePromptForCategoryReading({
+    required String category,
+    required Map<String, TarotCard> spread,
+    String? customPrompt,
+  }) {
     final cardInfo = StringBuffer();
     spread.forEach((position, card) {
       cardInfo.write('''
@@ -1710,6 +2298,15 @@ Position: ${position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onM
 ''');
     });
 
+    final userInfoSection = state.userInfoCollected
+        ? '''
+User Information:
+- Name: ${state.userName ?? "Unknown"}
+- Age: ${state.userAge ?? "Unknown"}
+- Gender: ${state.userGender ?? "Unknown"}
+Personalize the reading based on this information where relevant to the $category context.
+'''
+        : 'No user information provided; provide a general interpretation.';
     final customPromptSection = customPrompt?.trim().isNotEmpty == true
         ? 'User\'s custom request: "$customPrompt"\nIncorporate this into your category-specific reading.'
         : 'No custom request provided by the user; provide a general interpretation for the category of $category.';
@@ -1719,6 +2316,7 @@ IMPORTANT: Strictly comply with the format below. Provide detailed, original int
 ✨ Tarot Reading - Category Reading ✨  
 This reading is crafted specifically for the context of $category, merging the symbolism of the cards with unique aspects of this domain.
 
+$userInfoSection
 $customPromptSection
 
 ---
@@ -1731,22 +2329,17 @@ $cardInfo
 
 ### Analysis and Commentary
 
-Discuss how each card contributes to understanding the $category context and offer a comprehensive interpretation.
+Discuss how each card contributes to understanding the $category context and offer a comprehensive interpretation, personalized with user info if available.
 
 ---
 
 ### Strategic Guidance
 
-Provide practical advice and insights tailored to $category.
+Provide practical advice and insights tailored to $category, reflecting the user’s details if provided.
 
 Instructions:  
 1. Use $locale as the language.
 ''';
   }
 
-  @override
-  // ignore: unnecessary_overrides
-  Future<void> close() {
-    return super.close();
-  }
 }

@@ -51,7 +51,7 @@ class ProfilePage extends StatelessWidget {
             }
             return Center(
               child: Text(
-                "Error loading readings: ${snapshot.error}",
+                loc.errorLoadingReadings, // "Error loading readings: ..." localize
                 style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 16),
               ),
             );
@@ -78,9 +78,9 @@ class ProfilePage extends StatelessWidget {
             final data = doc.data() as Map<String, dynamic>;
             final timestamp = (data['timestamp'] as Timestamp?)?.toDate();
             final timestampStr = timestamp != null ? timestamp.toIso8601String().split('.')[0] : ''; // Milisaniyeleri kaldır
-            final spreadType = data['spreadType'] as String? ?? "Unknown Spread";
+            final spreadType = data['spreadType'] as String? ?? loc.unknownSpread; // "Unknown Spread" localize
             final docId = doc.id;
-            final yorum = data['yorum'] as String? ?? "";
+            final yorum = data['yorum'] as String? ?? loc.noInterpretation; // "No interpretation available" localize
             final uniqueKey = "$timestampStr-$spreadType-${yorum.substring(0, 100)}-$docId"; // İlk 100 karakter ile kontrol
             if (kDebugMode) {
               print("Processing document: $uniqueKey - Yorum: ${data['yorum']}");
@@ -112,8 +112,8 @@ class ProfilePage extends StatelessWidget {
             itemBuilder: (context, index) {
               final reading = readings[index];
               final timestamp = (reading['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-              final spreadType = reading['spreadType'] as String? ?? "Unknown Spread";
-              final yorum = reading['yorum'] as String? ?? "No interpretation available";
+              final spreadType = reading['spreadType'] as String? ?? loc.unknownSpread; // "Unknown Spread" localize
+              final yorum = reading['yorum'] as String? ?? loc.noInterpretation; // "No interpretation available" localize
               final spread = reading['spread'] as Map<String, dynamic>? ?? {};
               final cardCount = spread.length;
               final pinned = reading['pinned'] as bool? ?? false;
@@ -173,7 +173,7 @@ class ProfilePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "$cardCount Cards",
+                        loc.cardCount(cardCount), // "$cardCount Cards" localize
                         style: GoogleFonts.cinzel(
                           color: Colors.amber[200],
                           fontSize: 12,

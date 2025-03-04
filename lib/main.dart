@@ -80,7 +80,6 @@ class MyAppState extends State<MyApp> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', newLocale.languageCode);
 
-    // Mevcut bloc'u kapat ve yeni bir bloc oluştur
     await _tarotBloc.close();
     _tarotBloc = TarotBloc(
       repository: TarotRepository(),
