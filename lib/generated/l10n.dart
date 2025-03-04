@@ -98,7 +98,7 @@ abstract class S {
   /// No description provided for @tarotFortune.
   ///
   /// In en, this message translates to:
-  /// **'Tarot'**
+  /// **'Astral Tarot'**
   String get tarotFortune;
 
   /// No description provided for @errorMessage.
@@ -1438,6 +1438,126 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Full Moon Outcome'**
   String get fullMoonOutcome;
+
+  /// Currency used in the app for readings
+  ///
+  /// In en, this message translates to:
+  /// **'Mystical Tokens'**
+  String get mysticalTokens;
+
+  /// No description provided for @errorLoadingReadings.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading readings'**
+  String get errorLoadingReadings;
+
+  /// No description provided for @unknownSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown spread'**
+  String get unknownSpread;
+
+  /// No description provided for @noInterpretation.
+  ///
+  /// In en, this message translates to:
+  /// **'No interpretation available'**
+  String get noInterpretation;
+
+  /// No description provided for @premium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get premium;
+
+  /// No description provided for @unlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get unlimited;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @languageChangedToEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'Language changed to English'**
+  String get languageChangedToEnglish;
+
+  /// No description provided for @turkish.
+  ///
+  /// In en, this message translates to:
+  /// **'Turkish'**
+  String get turkish;
+
+  /// No description provided for @languageChangedToTurkish.
+  ///
+  /// In en, this message translates to:
+  /// **'Language changed to Turkish'**
+  String get languageChangedToTurkish;
+
+  /// No description provided for @tenTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'10 Tokens'**
+  String get tenTokens;
+
+  /// No description provided for @fiftyTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'50 Tokens'**
+  String get fiftyTokens;
+
+  /// No description provided for @hundredTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'100 Tokens'**
+  String get hundredTokens;
+
+  /// No description provided for @premiumSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Subscription'**
+  String get premiumSubscription;
+
+  /// No description provided for @drawCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw Cards'**
+  String get drawCards;
+
+  /// No description provided for @instructionsDrawCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this button to manually draw the cards.'**
+  String get instructionsDrawCards;
+
+  /// No description provided for @selectToDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe to reveal your destiny'**
+  String get selectToDraw;
+
+  /// No description provided for @premiumDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited readings and exclusive content'**
+  String get premiumDescription;
+
+  /// No description provided for @bundleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'50 credits + Premium subscription'**
+  String get bundleDescription;
+
+  /// No description provided for @creditDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{credits} credits for more readings'**
+  String creditDescription(Object credits);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

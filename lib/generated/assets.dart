@@ -4,7 +4,10 @@ class Assets {
 
   static const String animationsTarotLoading = 'assets/animations/tarot_loading.json';
   static const String animationsTarotShuffle = 'assets/animations/tarot_shuffle.json';
-  static const String assetsTarotCards = 'assets/tarot_cards.json';
+  static const String assetsTarotCardImagesCardBack = 'assets/tarot_card_images/card_back.png';
+  static const String assetsTarotCardSilhouette = 'assets/tarot_card_silhouette.jpg';
+  static const String assetsTarotCardsEn = 'assets/tarot_cards_en.json';
+  static const String assetsTarotCardsTr = 'assets/tarot_cards_tr.json';
   static const String tarotCardImagesC01 = 'assets/tarot_card_images/c01.jpg';
   static const String tarotCardImagesC02 = 'assets/tarot_card_images/c02.jpg';
   static const String tarotCardImagesC03 = 'assets/tarot_card_images/c03.jpg';
@@ -85,6 +88,7 @@ class Assets {
   static const String tarotCardImagesW13 = 'assets/tarot_card_images/w13.jpg';
   static const String tarotCardImagesW14 = 'assets/tarot_card_images/w14.jpg';
   static const String tarotFal = '.env';
-  static const String tarotFalAssetsTarotCards = 'assets/tarot_cards.json';
+  static const String tarotFalAssetsTarotCardsEn = 'assets/tarot_cards_en.json';
+  static const String tarotFalAssetsTarotCardsTr = 'assets/tarot_cards_tr.json';
 
 }

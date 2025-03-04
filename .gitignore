@@ -53,4 +53,5 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 !/lib/firebase_options.dart
-!/lib/firebase_options.dart
+!/your-keystore.jks
+!/mykeystore.jks

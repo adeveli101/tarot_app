@@ -7,7 +7,7 @@ class SEn extends S {
   SEn([String locale = 'en']) : super(locale);
 
   @override
-  String get tarotFortune => 'Tarot';
+  String get tarotFortune => 'Astral Tarot';
 
   @override
   String errorMessage(Object message) {
@@ -731,4 +731,66 @@ class SEn extends S {
 
   @override
   String get fullMoonOutcome => 'Full Moon Outcome';
+
+  @override
+  String get mysticalTokens => 'Mystical Tokens';
+
+  @override
+  String get errorLoadingReadings => 'Error loading readings';
+
+  @override
+  String get unknownSpread => 'Unknown spread';
+
+  @override
+  String get noInterpretation => 'No interpretation available';
+
+  @override
+  String get premium => 'Premium';
+
+  @override
+  String get unlimited => 'Unlimited';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get languageChangedToEnglish => 'Language changed to English';
+
+  @override
+  String get turkish => 'Turkish';
+
+  @override
+  String get languageChangedToTurkish => 'Language changed to Turkish';
+
+  @override
+  String get tenTokens => '10 Tokens';
+
+  @override
+  String get fiftyTokens => '50 Tokens';
+
+  @override
+  String get hundredTokens => '100 Tokens';
+
+  @override
+  String get premiumSubscription => 'Premium Subscription';
+
+  @override
+  String get drawCards => 'Draw Cards';
+
+  @override
+  String get instructionsDrawCards => 'Use this button to manually draw the cards.';
+
+  @override
+  String get selectToDraw => 'Swipe to reveal your destiny';
+
+  @override
+  String get premiumDescription => 'Unlimited readings and exclusive content';
+
+  @override
+  String get bundleDescription => '50 credits + Premium subscription';
+
+  @override
+  String creditDescription(Object credits) {
+    return '$credits credits for more readings';
+  }
 }

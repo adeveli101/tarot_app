@@ -23,6 +23,15 @@ android {
         buildConfig true
     }
 
+    signingConfigs {
+        release {
+            keyAlias project.properties['keyAlias']
+            keyPassword project.properties['keyPassword']
+            storeFile file(project.properties['storeFile'])
+            storePassword project.properties['storePassword']
+        }
+    }
+
 
     defaultConfig {
         applicationId = "com.example.tarot_fal"
@@ -33,6 +42,15 @@ android {
         versionCode = flutter.versionCode.toInteger()
         versionName = flutter.versionName
         manifestPlaceholders = [applicationName: "android.app.Application"]
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
     }
 
 
@@ -46,7 +64,7 @@ flutter {
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation platform('com.google.firebase:firebase-bom:33.9.0')
+    implementation platform('com.google.firebase:firebase-bom:33.10.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-firestore'

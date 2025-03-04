@@ -7,7 +7,7 @@ class STr extends S {
   STr([String locale = 'tr']) : super(locale);
 
   @override
-  String get tarotFortune => 'Tarot';
+  String get tarotFortune => 'Astral Tarot';
 
   @override
   String errorMessage(Object message) {
@@ -731,4 +731,66 @@ class STr extends S {
 
   @override
   String get fullMoonOutcome => 'Dolunay Sonuç';
+
+  @override
+  String get mysticalTokens => 'Mistik Jetonlar';
+
+  @override
+  String get errorLoadingReadings => 'Okumaları yüklerken hata oluştu';
+
+  @override
+  String get unknownSpread => 'Bilinmeyen dağılım';
+
+  @override
+  String get noInterpretation => 'Yorum mevcut değil';
+
+  @override
+  String get premium => 'Premium';
+
+  @override
+  String get unlimited => 'Sınırsız';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get languageChangedToEnglish => 'Dil İngilizce olarak değiştirildi';
+
+  @override
+  String get turkish => 'Türkçe';
+
+  @override
+  String get languageChangedToTurkish => 'Dil Türkçe olarak değiştirildi';
+
+  @override
+  String get tenTokens => '10 Token';
+
+  @override
+  String get fiftyTokens => '50 Token';
+
+  @override
+  String get hundredTokens => '100 Token';
+
+  @override
+  String get premiumSubscription => 'Premium Abonelik';
+
+  @override
+  String get drawCards => 'Kartları Çek';
+
+  @override
+  String get instructionsDrawCards => 'Kartları manuel olarak çekmek için bu düğmeyi kullanın.';
+
+  @override
+  String get selectToDraw => 'Kaderinizi görmek için kaydırın';
+
+  @override
+  String get premiumDescription => 'Sınırsız fal ve özel içeriklere erişim';
+
+  @override
+  String get bundleDescription => '50 kredi + Premium abonelik';
+
+  @override
+  String creditDescription(Object credits) {
+    return '$credits kredi ile daha fazla fal aç';
+  }
 }

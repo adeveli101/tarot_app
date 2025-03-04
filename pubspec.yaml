@@ -45,7 +45,7 @@ dependencies:
   in_app_purchase: ^3.2.1
 
 
-  audioplayers: ^6.2.0
+  audioplayers: ^6.0.0
 
   # Localization
   flutter_localizations:
@@ -73,7 +73,9 @@ flutter:
     - assets/animations/
     - assets/tarot_card_images/
     - assets/tarot_card_images/card_back.png
-    - assets/tarot_cards.json
+    - assets/tarot_card_silhouette.jpg
+    - assets/tarot_cards_en.json
+    - assets/tarot_cards_tr.json
 
   # Jenerik L10n
   generate: true

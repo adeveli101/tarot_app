@@ -6,8 +6,10 @@
 class AssetsRes {
   AssetsRes._();
 
-  static const String PLUGIN_NAME = 'tarot_fal';
-  static const String PLUGIN_VERSION = '1.0.0+1';
+  static const String PROJECT_NAME = 'tarot_fal';
+  static const String PROJECT_VERSION = '1.0.0+1';
   static const String CARD_BACK = 'assets/tarot_card_images/card_back.png';
-  static const String TAROT_CARDS = 'assets/tarot_cards.json';
+  static const String TAROT_CARD_SILHOUETTE = 'assets/tarot_card_silhouette.jpg';
+  static const String TAROT_CARDS_EN = 'assets/tarot_cards_en.json';
+  static const String TAROT_CARDS_TR = 'assets/tarot_cards_tr.json';
 }
