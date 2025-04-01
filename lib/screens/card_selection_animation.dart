@@ -13,7 +13,7 @@ import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/screens/reading_result.dart';
-import '../data/payment_maganer.dart';
+import '../data/payment_manager.dart';
 import '../models/animations/tap_animations_scale.dart';
 import 'package:intl/intl.dart';
 

@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/generated/l10n.dart';
-import '../data/payment_maganer.dart';
+import '../data/payment_manager.dart';
 import '../data/tarot_event_state.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -28,6 +28,11 @@ class SettingsScreenState extends State<SettingsScreen> {
     return Stack(
       fit: StackFit.expand,
       children: [
+        Image.asset(
+          'assets/image_fx_a.jpg',
+          fit: BoxFit.cover,
+        ),
+
         Lottie.asset(
           'assets/animations/tarot_shuffle.json',
           fit: BoxFit.cover,
@@ -49,6 +54,28 @@ class SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
+
+  Widget _buildCloseButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withOpacity(0.6),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.purple[300]!.withOpacity(0.5),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Icon(Icons.close, color: Colors.white, size: 16),
+      ),
+    );
+  }
+
 
   Widget _buildHeader(S loc) {
     return Row(
@@ -300,31 +327,52 @@ class SettingsScreenState extends State<SettingsScreen> {
         children: [
           _buildBackground(),
           SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width * 0.05,
-                  vertical: MediaQuery.of(context).size.height * 0.02,
+            child: Column(
+              children: [
+                // Top row with close button aligned to the right
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: MediaQuery.of(context).size.width * 0.05,
+                    vertical: MediaQuery.of(context).size.height * 0.02,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildHeader(loc!),
+                      _buildCloseButton(context),
+
+                    ],
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(loc!),
-                    const SizedBox(height: 20),
-                    _buildUserInfoCard(context, loc),
-                    const SizedBox(height: 20),
-                    _buildLanguageSettings(context, loc),
-                    const SizedBox(height: 20),
-                    _buildPurchaseOptions(context, loc),
-                  ],
+                // Rest of the content in ScrollView
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: MediaQuery.of(context).size.width * 0.05,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+                          _buildUserInfoCard(context, loc),
+                          const SizedBox(height: 20),
+                          _buildLanguageSettings(context, loc),
+                          const SizedBox(height: 20),
+                          _buildPurchaseOptions(context, loc),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildPurchaseCard({
     required BuildContext context,

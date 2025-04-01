@@ -15,15 +15,25 @@ class PaymentManager {
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   final VoidCallback? onPurchaseSuccess;
+
   final Map<String, double> _creditValues = {
-    '10_credits': 10.0,
-    '50_credits': 50.0,
-    '100_credits': 100.0,
+    '25_tokens': 25.0,    // $0.49
+    '50_tokens': 50.0,    // $0.99
+    '150_tokens': 150.0,  // $2.99 + 10 bonus
+    '300_tokens': 300.0,  // $5.99 + 25 bonus
+    '500_tokens': 500.0,  // $9.99 + 50 bonus
+    '1000_tokens': 1000.0, // $19.99 + 150 bonus
+    '2500_tokens': 2500.0, // $49.99 + 500 bonus
   };
 
   PaymentManager({this.onPurchaseSuccess});
 
   Future<void> initialize() async {
+    final streamAvailable = await _inAppPurchase.isAvailable();
+    if (!streamAvailable) {
+      debugPrint('In-app purchase stream not available');
+      return;
+    }
     _subscription = _inAppPurchase.purchaseStream.listen(
       _handlePurchaseUpdates,
       onError: (error) => debugPrint('Payment stream error: $error'),
@@ -32,7 +42,16 @@ class PaymentManager {
   }
 
   Future<List<ProductDetails>> loadProducts() async {
-    const productIds = ['10_credits', '50_credits', '100_credits', 'premium_subscription'];
+    const productIds = [
+      '25_tokens',
+      '50_tokens',
+      '150_tokens',
+      '300_tokens',
+      '500_tokens',
+      '1000_tokens',
+      '2500_tokens',
+      'premium_subscription'
+    ];
     try {
       final available = await _inAppPurchase.isAvailable();
       if (!available) {
@@ -54,38 +73,89 @@ class PaymentManager {
     }
   }
 
-  Future<bool> buyProduct(ProductDetails product) async {
+  Future<bool> buyProduct(ProductDetails product, BuildContext context) async {
     try {
+      final loc = S.of(context);
+      final confirmed = await _showConfirmationDialog(context, product);
+      if (!confirmed) return false;
+
       final purchaseParam = PurchaseParam(productDetails: product);
-      if (product.id.contains('premium')) {
-        return await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
-      } else {
-        return await _inAppPurchase.buyConsumable(purchaseParam: purchaseParam);
-      }
+      return product.id.contains('premium')
+          ? await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam)
+          : await _inAppPurchase.buyConsumable(purchaseParam: purchaseParam);
     } catch (e) {
       debugPrint('Purchase failed: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.of(context)!.errorMessage('Purchase failed: $e'))),
+      );
       return false;
     }
   }
 
-  Future<bool> redeemCoupon(String code) async {
+  Future<bool> _showConfirmationDialog(BuildContext context, ProductDetails product) async {
+    final loc = S.of(context);
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.deepPurple[900],
+        title: Text(
+          loc!.confirmPurchase,
+          style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          '${loc.areYouSure} ${product.title} ${loc.forText} ${product.price}?',
+          style: GoogleFonts.cinzel(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(loc.cancel, style: GoogleFonts.cinzel(color: Colors.white70)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(loc.confirm, style: GoogleFonts.cinzel(color: Colors.white)),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
+  Future<bool> redeemCoupon(String code, BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     final redeemedCoupons = prefs.getStringList('redeemed_coupons') ?? [];
-    if (redeemedCoupons.contains(code)) return false;
+    if (redeemedCoupons.contains(code)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(S.of(context)!.couponAlreadyUsed)),
+      );
+      return false;
+    }
 
-    const validCoupons = ['WELCOME10', 'TAROT50'];
-    if (!validCoupons.contains(code)) return false;
-
-    final tarotBloc = _findTarotBloc();
+    final tarotBloc = _findTarotBloc(context);
     if (tarotBloc == null) return false;
 
-    double credits = code == 'WELCOME10' ? 10.0 : 50.0;
+    final validCoupons = {
+      'WELCOME10': 10.0,
+      'TAROT50': 50.0,
+      'FIRSTFREE': 25.0,
+      'LOYALTY100': 100.0,
+    };
+
+    final credits = validCoupons[code.toUpperCase()];
+    if (credits == null) {
+      tarotBloc.add(RedeemCoupon(code));
+      return false;
+    }
+
     final currentTokens = await tarotBloc.userDataManager.getTokens();
     await tarotBloc.userDataManager.saveTokens(currentTokens + credits);
     tarotBloc.emit(TarotInitial(
       isPremium: tarotBloc.state.isPremium,
       userTokens: currentTokens + credits,
       dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
+      userName: tarotBloc.state.userName,
+      userAge: tarotBloc.state.userAge,
+      userGender: tarotBloc.state.userGender,
+      userInfoCollected: tarotBloc.state.userInfoCollected,
     ));
 
     redeemedCoupons.add(code);
@@ -94,26 +164,36 @@ class PaymentManager {
   }
 
   void _handlePurchaseUpdates(List<PurchaseDetails> purchases) async {
-    final tarotBloc = _findTarotBloc();
+    final tarotBloc = _findTarotBloc(navigatorKey.currentContext!);
+    if (tarotBloc == null) return;
+
     for (var purchase in purchases) {
       switch (purchase.status) {
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          double credits = _creditValues[purchase.productID] ?? 0.0;
-          if (credits > 0 && tarotBloc != null) {
+          if (_creditValues.containsKey(purchase.productID)) {
+            final credits = _creditValues[purchase.productID] ?? 0.0;
             final currentTokens = await tarotBloc.userDataManager.getTokens();
             await tarotBloc.userDataManager.saveTokens(currentTokens + credits);
             tarotBloc.emit(TarotInitial(
               isPremium: tarotBloc.state.isPremium,
               userTokens: currentTokens + credits,
               dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
+              userName: tarotBloc.state.userName,
+              userAge: tarotBloc.state.userAge,
+              userGender: tarotBloc.state.userGender,
+              userInfoCollected: tarotBloc.state.userInfoCollected,
             ));
-          } else if (purchase.productID == 'premium_subscription' && tarotBloc != null) {
+          } else if (purchase.productID == 'premium_subscription') {
             await tarotBloc.userDataManager.savePremiumStatus(true);
             tarotBloc.emit(TarotInitial(
               isPremium: true,
               userTokens: tarotBloc.state.userTokens,
               dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
+              userName: tarotBloc.state.userName,
+              userAge: tarotBloc.state.userAge,
+              userGender: tarotBloc.state.userGender,
+              userInfoCollected: tarotBloc.state.userInfoCollected,
             ));
           }
           await _inAppPurchase.completePurchase(purchase);
@@ -122,20 +202,29 @@ class PaymentManager {
           break;
         case PurchaseStatus.error:
           debugPrint('Purchase error: ${purchase.error?.message}');
+          if (navigatorKey.currentContext != null) {
+            ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+              SnackBar(content: Text('Purchase failed: ${purchase.error?.message}')),
+            );
+          }
           break;
         case PurchaseStatus.pending:
           debugPrint('Purchase pending: ${purchase.productID}');
+          if (navigatorKey.currentContext != null) {
+            ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
+              SnackBar(content: Text('Purchase pending...')),
+            );
+          }
           break;
         default:
           debugPrint('Unhandled purchase status: ${purchase.status}');
-          break;
       }
     }
   }
 
-  TarotBloc? _findTarotBloc() {
+  TarotBloc? _findTarotBloc(BuildContext? context) {
     try {
-      return BlocProvider.of<TarotBloc>(navigatorKey.currentContext!);
+      return context != null ? BlocProvider.of<TarotBloc>(context) : null;
     } catch (e) {
       debugPrint('TarotBloc not found in context: $e');
       return null;
@@ -148,7 +237,11 @@ class PaymentManager {
     debugPrint('PaymentManager disposed');
   }
 
-  static Future<void> showPaymentDialog(BuildContext context, {double requiredTokens = 0.0, VoidCallback? onSuccess}) {
+  static Future<void> showPaymentDialog(
+      BuildContext context, {
+        double requiredTokens = 0.0,
+        VoidCallback? onSuccess,
+      }) {
     final paymentManager = PaymentManager(onPurchaseSuccess: onSuccess);
     paymentManager.initialize();
     return showDialog<void>(
@@ -200,10 +293,8 @@ class PaymentDialogState extends State<PaymentDialog> {
       backgroundColor: Colors.transparent,
       contentPadding: EdgeInsets.zero,
       content: Container(
-        width: screenSize.width * 0.85,
-        constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.7,
-        ),
+        width: screenSize.width * 0.9,
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.deepPurple[900]!, Colors.black87],
@@ -211,17 +302,28 @@ class PaymentDialogState extends State<PaymentDialog> {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
                   loc!.purchaseCredits,
-                  style: GoogleFonts.cinzel(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: GoogleFonts.cinzel(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -232,58 +334,60 @@ class PaymentDialogState extends State<PaymentDialog> {
                 ),
                 const SizedBox(height: 24),
                 if (_isLoading)
-                  const Center(child: CircularProgressIndicator(color: Colors.purple))
+                  const Center(child: CircularProgressIndicator(color: Colors.purpleAccent))
                 else if (_errorMessage != null)
                   Text(
                     _errorMessage!,
-                    style: GoogleFonts.cinzel(color: Colors.red, fontSize: 16),
+                    style: GoogleFonts.cinzel(color: Colors.redAccent, fontSize: 16),
                     textAlign: TextAlign.center,
                   )
                 else
                   Column(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       ..._products.map((product) => _buildPurchaseOption(product)),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       TapAnimatedScale(
                         onTap: () => _showCouponSheet(context),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                Colors.purple[700]!.withOpacity(0.8),
-                                Colors.deepPurple[900]!.withOpacity(0.6),
+                                Colors.purple[700]!,
+                                Colors.deepPurple[900]!,
                               ],
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             loc.redeem,
-                            style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white70),
+                            style: GoogleFonts.cinzel(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ),
                       ),
                     ],
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 TapAnimatedScale(
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.purple[700]!.withOpacity(0.8),
-                          Colors.deepPurple[900]!.withOpacity(0.6),
-                        ],
-                      ),
+                      color: Colors.grey[800],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       loc.cancel,
-                      style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white70),
+                      style: GoogleFonts.cinzel(
+                        fontSize: 16,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -310,34 +414,59 @@ class PaymentDialogState extends State<PaymentDialog> {
 
   Widget _buildPurchaseOption(ProductDetails product) {
     final loc = S.of(context);
+    final credits = widget.manager._creditValues[product.id] ?? 0.0;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TapAnimatedScale(
         onTap: () async {
           setState(() => _isLoading = true);
-          final success = await widget.manager.buyProduct(product);
+          final success = await widget.manager.buyProduct(product, context);
           if (success && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(loc!.couponRedeemed('Processing...'))));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(loc.couponRedeemed('Processing purchase...'))),
+            );
             await Future.delayed(const Duration(seconds: 2));
             if (mounted) Navigator.pop(context);
-          } else if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(loc!.errorMessage('Purchase failed'))));
-            setState(() => _isLoading = false);
           }
+          if (mounted) setState(() => _isLoading = false);
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.purple[700]!.withOpacity(0.8), Colors.deepPurple[900]!.withOpacity(0.6)],
+              colors: [
+                Colors.purple[700]!.withOpacity(0.9),
+                Colors.deepPurple[900]!.withOpacity(0.7),
+              ],
             ),
             borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(product.title.split(' (')[0], style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
-              Text(product.price, style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white)),
+              Text(
+                '$credits ${loc!.mysticalTokens}',
+                style: GoogleFonts.cinzel(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                product.price,
+                style: GoogleFonts.cinzel(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -390,7 +519,6 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
             _couponSuccess = true;
             _resultMessage = loc.couponRedeemed(state.message);
           });
-          // Başarılı durumda 2 saniye sonra kapat
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) Navigator.pop(context);
           });
@@ -434,12 +562,11 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Üst Süsleme: Yıldızlar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.star, size: 12, color: Colors.purpleAccent),
-                    const SizedBox(width: 20),
+                    Icon(Icons.star_border, size: 16, color: Colors.purpleAccent),
+                    const SizedBox(width: 12),
                     Text(
                       loc!.redeem,
                       style: GoogleFonts.cinzel(
@@ -455,20 +582,19 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
                         ],
                       ),
                     ),
-                    const SizedBox(width: 20),
-                    Icon(Icons.star, size: 12, color: Colors.purpleAccent),
+                    const SizedBox(width: 12),
+                    Icon(Icons.star_border, size: 16, color: Colors.purpleAccent),
                   ],
                 ),
                 const SizedBox(height: 20),
-                // Kupon Giriş Alanı
                 Container(
                   height: 50,
                   decoration: BoxDecoration(
-                    color: Colors.deepPurple[900]!.withOpacity(0.7),
+                    color: Colors.deepPurple[800]!.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(15),
                     border: Border.all(
-                      color: Colors.black87.withOpacity(0.8),
-                      width: 1.3,
+                      color: Colors.purpleAccent.withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
                   child: TextField(
@@ -489,19 +615,16 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Redeem Butonu
                 TapAnimatedScale(
                   onTap: () => _redeemCoupon(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
                           Colors.purple[700]!.withOpacity(_isProcessing ? 0.5 : 0.9),
                           Colors.deepPurple[900]!.withOpacity(_isProcessing ? 0.4 : 0.7),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
@@ -526,8 +649,6 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
                     ),
                   ),
                 ),
-
-                // Sonuç mesajı
                 if (_resultMessage != null) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -566,7 +687,6 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
                 ],
               ],
             ),
-            // Close button positioned at the top right
             Positioned(
               top: 0,
               right: 0,
@@ -595,8 +715,20 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
       _resultMessage = null;
     });
 
-    // BlocProvider üzerinden event gönder
-    context.read<TarotBloc>().add(RedeemCoupon(code));
+    widget.manager.redeemCoupon(code, context).then((success) {
+      if (success && mounted) {
+        setState(() {
+          _isProcessing = false;
+          _couponSuccess = true;
+          _resultMessage = S.of(context)!.couponRedeemed('Coupon redeemed successfully!');
+        });
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) Navigator.pop(context);
+        });
+      } else if (mounted) {
+        context.read<TarotBloc>().add(RedeemCoupon(code));
+      }
+    });
   }
 
   Widget _buildCloseButton(BuildContext context) {

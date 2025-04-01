@@ -92,6 +92,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "areYouSure": MessageLookupByLibrary.simpleMessage(
+      "Are you sure you want to purchase",
+    ),
     "astroChallenge": MessageLookupByLibrary.simpleMessage("Astro Challenge"),
     "astroFuture": MessageLookupByLibrary.simpleMessage("Astro Future"),
     "astroLogicalCross": MessageLookupByLibrary.simpleMessage(
@@ -217,6 +220,11 @@ class MessageLookup extends MessageLookupByLibrary {
       "Choose the topic you want to explore",
     ),
     "close": MessageLookupByLibrary.simpleMessage("Close"),
+    "confirm": MessageLookupByLibrary.simpleMessage("Confirm"),
+    "confirmPurchase": MessageLookupByLibrary.simpleMessage("Confirm Purchase"),
+    "couponAlreadyUsed": MessageLookupByLibrary.simpleMessage(
+      "This coupon has already been used.",
+    ),
     "couponHint": MessageLookupByLibrary.simpleMessage("Enter coupon code"),
     "couponInvalid": m9,
     "couponRedeemed": m10,
@@ -280,6 +288,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "fiveCardPathPresent": MessageLookupByLibrary.simpleMessage("Present"),
     "fiveCardPathReadingError": m14,
     "flipAllCards": MessageLookupByLibrary.simpleMessage("Flip All Cards"),
+    "forText": MessageLookupByLibrary.simpleMessage("for"),
     "fortuneInsight": m15,
     "fortuneTelling": MessageLookupByLibrary.simpleMessage("Fortune Telling:"),
     "fullMoonChallenge": MessageLookupByLibrary.simpleMessage(
@@ -438,6 +447,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "premiumDescription": MessageLookupByLibrary.simpleMessage(
       "Unlimited readings and exclusive content",
     ),
+    "premiumReadings": MessageLookupByLibrary.simpleMessage("Premium Readings"),
     "premiumSubscription": MessageLookupByLibrary.simpleMessage(
       "Premium Subscription",
     ),
@@ -549,6 +559,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unknownSpread": MessageLookupByLibrary.simpleMessage("Unknown spread"),
     "unlimited": MessageLookupByLibrary.simpleMessage("Unlimited"),
+    "unveilTheStars": MessageLookupByLibrary.simpleMessage("Unveil the Stars"),
     "unveilingMysticalPath": MessageLookupByLibrary.simpleMessage(
       "Unveiling the Mystical Path...",
     ),

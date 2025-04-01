@@ -580,6 +580,9 @@ class SEn extends S {
   String get fullMoonSpreadDescription => 'Harness lunar energy for clarity.';
 
   @override
+  String get unveilTheStars => 'Unveil the Stars';
+
+  @override
   String get unveilingMysticalPath => 'Unveiling the Mystical Path...';
 
   @override
@@ -793,4 +796,22 @@ class SEn extends S {
   String creditDescription(Object credits) {
     return '$credits credits for more readings';
   }
+
+  @override
+  String get premiumReadings => 'Premium Readings';
+
+  @override
+  String get confirmPurchase => 'Confirm Purchase';
+
+  @override
+  String get areYouSure => 'Are you sure you want to purchase';
+
+  @override
+  String get forText => 'for';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get couponAlreadyUsed => 'This coupon has already been used.';
 }

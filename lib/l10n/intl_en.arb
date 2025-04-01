@@ -234,7 +234,7 @@
   "fullMoonSpread": "Full Moon Spread",
   "fullMoonSpreadDescription": "Harness lunar energy for clarity.",
 
-
+  "unveilTheStars": "Unveil the Stars",
   "unveilingMysticalPath": "Unveiling the Mystical Path...",
   "instructionsFlipAll": "Flip all cards with a single tap.",
   "instructionsReshuffle": "Reshuffle the cards for a new draw.",
@@ -321,5 +321,13 @@
 
   "premiumDescription": "Unlimited readings and exclusive content",
   "bundleDescription": "50 credits + Premium subscription",
-  "creditDescription": "{credits} credits for more readings"
+  "creditDescription": "{credits} credits for more readings",
+
+
+  "premiumReadings": "Premium Readings",
+  "confirmPurchase": "Confirm Purchase",
+  "areYouSure": "Are you sure you want to purchase",
+  "forText": "for",
+  "confirm": "Confirm",
+  "couponAlreadyUsed": "This coupon has already been used."
 }

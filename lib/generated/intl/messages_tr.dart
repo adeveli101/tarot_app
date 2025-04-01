@@ -91,6 +91,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "areYouSure": MessageLookupByLibrary.simpleMessage(
+      "Satın almak istediğinizden emin misiniz:",
+    ),
     "astroChallenge": MessageLookupByLibrary.simpleMessage("Astro Zorluk"),
     "astroFuture": MessageLookupByLibrary.simpleMessage("Astro Gelecek"),
     "astroLogicalCross": MessageLookupByLibrary.simpleMessage("Astrolojik Haç"),
@@ -210,6 +213,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Fal baktırmak istediğiniz konuyu seçin",
     ),
     "close": MessageLookupByLibrary.simpleMessage("Kapat"),
+    "confirm": MessageLookupByLibrary.simpleMessage("Onayla"),
+    "confirmPurchase": MessageLookupByLibrary.simpleMessage(
+      "Satın Alımı Onayla",
+    ),
+    "couponAlreadyUsed": MessageLookupByLibrary.simpleMessage(
+      "Bu kupon zaten kullanılmış.",
+    ),
     "couponHint": MessageLookupByLibrary.simpleMessage("Kupon kodunu girin"),
     "couponInvalid": m9,
     "couponRedeemed": m10,
@@ -273,6 +283,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "flipAllCards": MessageLookupByLibrary.simpleMessage(
       "Bütün Kartları Çevir",
     ),
+    "forText": MessageLookupByLibrary.simpleMessage("için"),
     "fortuneInsight": m15,
     "fortuneTelling": MessageLookupByLibrary.simpleMessage("Fal Yorumu:"),
     "fullMoonChallenge": MessageLookupByLibrary.simpleMessage("Dolunay Zorluk"),
@@ -427,6 +438,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "premiumDescription": MessageLookupByLibrary.simpleMessage(
       "Sınırsız fal ve özel içeriklere erişim",
     ),
+    "premiumReadings": MessageLookupByLibrary.simpleMessage("Premium Okuma"),
     "premiumSubscription": MessageLookupByLibrary.simpleMessage(
       "Premium Abonelik",
     ),
@@ -535,6 +547,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unknownSpread": MessageLookupByLibrary.simpleMessage("Bilinmeyen dağılım"),
     "unlimited": MessageLookupByLibrary.simpleMessage("Sınırsız"),
+    "unveilTheStars": MessageLookupByLibrary.simpleMessage("Yıldızları Keşfet"),
     "unveilingMysticalPath": MessageLookupByLibrary.simpleMessage(
       "Mistik Yolu Açığa Çıkarıyoruz...",
     ),

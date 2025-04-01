@@ -81,8 +81,8 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     final now = DateTime.now().millisecondsSinceEpoch ~/ 86400000;
     final lastReset = await _userDataManager.getLastReset();
     if (lastReset < now || lastReset == 0) {
-      await _userDataManager.saveDailyFreeReads(0);
-      await _userDataManager.saveTokens(3.0);
+      await _userDataManager.saveDailyFreeReads(0); // Günlük ücretsiz okuma sıfırlanır
+      await _userDataManager.saveTokens(3.0); // Başlangıç tokenları
       await _userDataManager.savePremiumStatus(false);
       await _userDataManager.saveLastReset(now);
     }
@@ -110,8 +110,9 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     final tokens = await _userDataManager.getTokens();
 
     final tokenLimit = isPremium ? spreadType.premiumTokenLimit : spreadType.freeTokenLimit;
-    final cost = isPremium ? 0.0 : spreadType.costInCredits;
+    final cost = spreadType.costInCredits; // Her zaman maliyet uygulanır (premium olsa bile sıfır olabilir)
 
+    // Premium kullanıcılar için günlük ücretsiz okuma limiti yok, sadece token kontrolü
     if (!isPremium && dailyFreeReads >= 3 && tokens < cost) {
       emit(InsufficientResources(
         cost,
@@ -126,7 +127,8 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       ));
       return false;
     }
-    if (!isPremium && tokens < cost) {
+
+    if (tokens < cost) {
       emit(InsufficientResources(
         cost,
         isPremium: state.isPremium,
@@ -171,7 +173,7 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     await _userDataManager.saveDailyFreeReads(dailyFreeReads + 1);
   }
 
-  Future<void> _saveReadingToFirestore(String yorum, SpreadType spreadType, Map<String, TarotCard> spread) async {
+  Future<void> _saveReadingToFirestore(String yorum, SpreadType spreadType, Map<String, TarotCard> spread, {String? name}) async {
     final user = _auth.currentUser;
     if (user == null || yorum.isEmpty) return;
     try {
@@ -203,6 +205,7 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         await prefs.setString('anonymous_uid', user.uid);
       }
       await _firestore.collection('readings').doc(user.uid).collection('history').add({
+        'name': name ?? 'Unnamed Reading',
         'yorum': yorum,
         'spreadType': spreadType.toString().split('.').last,
         'spread': sanitizedSpread,
@@ -370,12 +373,17 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
+      // Premium kullanıcılar için token düşüşü yok, sadece günlük okuma artar
       if (!isPremium) {
         await _deductTokens(SpreadType.singleCard.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads(); // Premium için sadece takip
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.singleCard, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.singleCard);
@@ -434,12 +442,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.pastPresentFuture.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.pastPresentFuture, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.pastPresentFuture);
@@ -498,12 +510,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.problemSolution.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.problemSolution, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.problemSolution);
@@ -562,12 +578,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.fiveCardPath.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.fiveCardPath, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.fiveCardPath);
@@ -626,12 +646,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.relationshipSpread.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.relationshipSpread, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.relationshipSpread);
@@ -690,12 +714,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.celticCross.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.celticCross, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.celticCross);
@@ -754,12 +782,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.yearlySpread.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.yearlySpread, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.yearlySpread);
@@ -818,12 +850,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.mindBodySpirit.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.mindBodySpirit, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.mindBodySpirit);
@@ -882,12 +918,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.astroLogicalCross.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.astroLogicalCross, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.astroLogicalCross);
@@ -946,12 +986,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.brokenHeart.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.brokenHeart, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.brokenHeart);
@@ -1010,12 +1054,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.dreamInterpretation.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.dreamInterpretation, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.dreamInterpretation);
@@ -1074,12 +1122,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.horseshoeSpread.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.horseshoeSpread, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.horseshoeSpread);
@@ -1138,12 +1190,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.careerPathSpread.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.careerPathSpread, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.careerPathSpread);
@@ -1202,12 +1258,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.fullMoonSpread.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.fullMoonSpread, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.fullMoonSpread);
@@ -1266,12 +1326,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final isPremium = await _userDataManager.isPremiumUser();
       var dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
       var userTokens = await _userDataManager.getTokens();
+
       if (!isPremium) {
         await _deductTokens(SpreadType.categoryReading.costInCredits);
         await _incrementDailyFreeReads();
-        dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
-        userTokens = await _userDataManager.getTokens();
+      } else {
+        await _incrementDailyFreeReads();
       }
+
+      dailyFreeFalCount = await _userDataManager.getDailyFreeReads();
+      userTokens = await _userDataManager.getTokens();
 
       await _saveReadingToFirestore(yorum, SpreadType.categoryReading, spread);
       final tokenCount = _estimateTokensForSpread(SpreadType.categoryReading);
@@ -1395,7 +1459,7 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     }
   }
 
-  // Kullanıcı bilgilerine göre güncellenmiş prompt fonksiyonları
+  // Prompt fonksiyonları (değişmeden kalabilir, ancak PaymentManager ile uyumlu hale getirilebilir)
   String _generatePromptForSingleCard({
     required String category,
     required TarotCard card,
@@ -1416,7 +1480,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Strictly adhere to the format below. Do NOT include any technical placeholders like [POSITION] in your response. Replace these with user-friendly text in $locale. Do not add any additional information.
 
-✨ Tarot Reading - Guide to Mystical Paths ✨  
+ Tarot Reading - Guide to Mystical Paths   
 This reading provides a personal insight into $category using a single card spread. Prepare to uncover the unique message of the card!
 
 $userInfoSection
@@ -1486,7 +1550,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Strictly adhere to the format below. Do NOT include any technical placeholders like [POSITION] in your response. Replace these with user-friendly text in $locale. Do not add any additional information.
 
-✨ Tarot Reading - Guide to Mystical Paths ✨  
+ Tarot Reading - Guide to Mystical Paths   
 This reading provides personal insights into $category using the Past-Present-Future spread. Prepare to uncover the unique messages across time!
 
 $userInfoSection
@@ -1561,7 +1625,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Strictly adhere to the format below. Do NOT include any technical placeholders like [POSITION] in your response. Replace these with user-friendly text in $locale.
 
-✨ Tarot Reading - Problem Solution Insight ✨  
+ Tarot Reading - Problem Solution Insight   
 This reading aims to identify and explore the problem as well as outline potential solutions within the context of $category.
 
 $userInfoSection
@@ -1627,7 +1691,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Strictly adhere to the format below. Do NOT include any technical placeholders like [POSITION] in your response. Replace these with user-friendly text in $locale.
 
-✨ Tarot Reading - Guide to Mystical Paths ✨  
+ Tarot Reading - Guide to Mystical Paths   
 This reading provides personal insights into $category using the Five Card Path spread. Prepare to uncover the unique messages for your journey!
 
 $userInfoSection
@@ -1702,7 +1766,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Strictly adhere to the format below. Do NOT include any technical placeholders like [POSITION] in your response. Replace these with user-friendly text in $locale.
 
-✨ Tarot Reading - Relationship Insight ✨  
+ Tarot Reading - Relationship Insight   
 This reading provides insights into relationship dynamics within the context of $category.
 
 $userInfoSection
@@ -1738,6 +1802,13 @@ Instructions:
 ''';
   }
 
+
+
+
+
+
+
+
   String _generatePromptForCelticCross({
     required String category,
     required Map<String, TarotCard> spread,
@@ -1768,7 +1839,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Adhere strictly to the format below. Do NOT include any technical placeholders like [POSITION] in your response. Replace these with user-friendly text in $locale.
 
-✨ Tarot Reading - Celtic Cross Spread ✨  
+ Tarot Reading - Celtic Cross Spread   
 This reading uses the Celtic Cross spread to deliver comprehensive insights into $category.
 
 $userInfoSection
@@ -1834,7 +1905,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Follow the format exactly as specified. Do NOT include any technical placeholders like [POSITION] in your response. Replace these with user-friendly text in $locale.
 
-✨ Tarot Reading - Yearly Spread ✨  
+ Tarot Reading - Yearly Spread   
 This reading explores the themes and energies for the upcoming year within the context of $category. Each card represents significant insights for different aspects or periods of the year.
 
 $userInfoSection
@@ -1900,7 +1971,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Follow the format strictly. Provide detailed, original interpretation in $locale without placeholders.
 
-✨ Tarot Reading - Mind Body Spirit Spread ✨  
+ Tarot Reading - Mind Body Spirit Spread   
 This reading explores the connections between the mind, body, and spirit within the context of $category.
 
 $userInfoSection
@@ -1959,7 +2030,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Strictly follow the format. Fill each field with your insights in $locale without extra placeholders.
 
-✨ Tarot Reading - AstroLogical Cross Spread ✨  
+ Tarot Reading - AstroLogical Cross Spread   
 This reading interprets the interplay between astrological symbols and tarot energy in the context of $category.
 
 $userInfoSection
@@ -2018,7 +2089,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Adhere to the template strictly. Provide detailed text in $locale without placeholders.
 
-✨ Tarot Reading - Broken Heart Spread ✨  
+ Tarot Reading - Broken Heart Spread   
 This reading aims to heal and provide understanding within the context of emotional pain in $category.
 
 $userInfoSection
@@ -2077,7 +2148,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Use the format strictly. Provide detailed interpretation in $locale without placeholders.
 
-✨ Tarot Reading - Dream Interpretation Spread ✨  
+ Tarot Reading - Dream Interpretation Spread   
 This reading deciphers the symbolism of your dreams within the context of $category using tarot as a guide.
 
 $userInfoSection
@@ -2136,7 +2207,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Follow the format strictly. Provide content in $locale without extra placeholders.
 
-✨ Tarot Reading - Horseshoe Spread ✨  
+ Tarot Reading - Horseshoe Spread   
 This reading employs the Horseshoe Spread to deliver insights into various aspects of $category.
 
 $userInfoSection
@@ -2195,7 +2266,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Adhere strictly to the format below. Provide original, comprehensive commentary in $locale.
 
-✨ Tarot Reading - Career Path Spread ✨  
+ Tarot Reading - Career Path Spread   
 This reading is crafted to explore your career trajectory and professional challenges within the context of $category.
 
 $userInfoSection
@@ -2254,7 +2325,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Follow the provided format accurately. Provide all details in $locale without placeholders.
 
-✨ Tarot Reading - Full Moon Spread ✨  
+ Tarot Reading - Full Moon Spread   
 This reading harnesses the energy of the full moon to illuminate hidden insights and energies in the context of $category.
 
 $userInfoSection
@@ -2313,7 +2384,7 @@ Personalize the reading based on this information where relevant to the $categor
     return '''
 IMPORTANT: Strictly comply with the format below. Provide detailed, original interpretation in $locale.
 
-✨ Tarot Reading - Category Reading ✨  
+ Tarot Reading - Category Reading   
 This reading is crafted specifically for the context of $category, merging the symbolism of the cards with unique aspects of this domain.
 
 $userInfoSection

@@ -601,29 +601,41 @@ class InsufficientResources extends TarotState {
   }
 }
 
-// Spread Types (unchanged)
 enum SpreadType {
-  singleCard(600, 2000, 1.0, 'single_card_purchase'),
-  pastPresentFuture(1200, 3000, 2.0, 'past_present_future_purchase'),
-  problemSolution(1200, 3000, 2.0, 'problem_solution_purchase'),
-  fiveCardPath(1800, 4000, 3.0, 'five_card_path_purchase'),
-  relationshipSpread(2500, 5000, 4.0, 'relationship_spread_purchase'),
-  celticCross(3000, 5000, 5.0, 'celtic_cross_purchase'),
-  yearlySpread(3000, 5000, 6.0, 'yearly_spread_purchase'),
-  mindBodySpirit(1200, 3000, 2.0, 'mind_body_spirit_purchase'),
-  astroLogicalCross(1800, 4000, 3.0, 'astrological_cross_purchase'),
-  brokenHeart(1800, 4000, 3.0, 'broken_heart_purchase'),
-  dreamInterpretation(1200, 3000, 2.0, 'dream_interpretation_purchase'),
-  horseshoeSpread(2500, 4000, 4.0, 'horseshoe_spread_purchase'),
-  careerPathSpread(1800, 4000, 3.0, 'career_path_purchase'),
-  fullMoonSpread(1800, 4000, 3.0, 'full_moon_purchase'),
-  categoryReading(1800, 4000, 3.0, 'category_reading_purchase');
+  singleCard(1, 600, 2000, 10, 'single_card_purchase', 300),
+  pastPresentFuture(3, 1200, 2000, 20, 'past_present_future_purchase', 600),
+  problemSolution(3, 1200, 2000, 20, 'problem_solution_purchase', 600),
+  fiveCardPath(5, 1800, 3000, 30.0, 'five_card_path_purchase', 900),
+  relationshipSpread(7, 2500, 4000, 40, 'relationship_spread_purchase', 1200),
+  celticCross(10, 3000, 4000, 50, 'celtic_cross_purchase', 1500),
+  yearlySpread(12, 3000, 4000, 60, 'yearly_spread_purchase', 1800),
+  mindBodySpirit(3, 1200, 3000, 20, 'mind_body_spirit_purchase', 600),
+  astroLogicalCross(5, 1800, 3000, 30, 'astrological_cross_purchase', 900),
+  brokenHeart(5, 1800, 3000, 30.0, 'broken_heart_purchase', 900),
+  dreamInterpretation(3, 1200, 2000, 20, 'dream_interpretation_purchase', 800),
+  horseshoeSpread(7, 2500, 3000, 40.0, 'horseshoe_spread_purchase', 1200),
+  careerPathSpread(5, 1800, 3000, 30, 'career_path_purchase', 900),
+  fullMoonSpread(5, 1800, 3000, 30, 'full_moon_purchase', 900),
+  categoryReading(5, 1800, 3000, 30, 'category_reading_purchase', 900);
 
+  final int cardCount;
   final int freeTokenLimit;
   final int premiumTokenLimit;
   final double costInCredits;
   final String productId;
+  final int maxPromptLength;
+
   static List<String> get allProductIds => SpreadType.values.map((type) => type.productId).toList();
 
-  const SpreadType(this.freeTokenLimit, this.premiumTokenLimit, this.costInCredits, this.productId);
+  const SpreadType(this.cardCount, this.freeTokenLimit, this.premiumTokenLimit,
+      this.costInCredits, this.productId, this.maxPromptLength);
+
+  // Kart sayısına göre token limit hesaplama (isteğe bağlı yardımcı metod)
+  static int calculateTokenLimit(int cardCount, bool isPremium) {
+    if (isPremium) {
+      return cardCount * 400;  // Premium kullanıcılar için kart başına 400 token
+    } else {
+      return cardCount * 300;  // Ücretsiz kullanıcılar için kart başına 300 token
+    }
+  }
 }

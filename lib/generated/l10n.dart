@@ -1133,6 +1133,12 @@ abstract class S {
   /// **'Harness lunar energy for clarity.'**
   String get fullMoonSpreadDescription;
 
+  /// No description provided for @unveilTheStars.
+  ///
+  /// In en, this message translates to:
+  /// **'Unveil the Stars'**
+  String get unveilTheStars;
+
   /// No description provided for @unveilingMysticalPath.
   ///
   /// In en, this message translates to:
@@ -1558,6 +1564,42 @@ abstract class S {
   /// In en, this message translates to:
   /// **'{credits} credits for more readings'**
   String creditDescription(Object credits);
+
+  /// No description provided for @premiumReadings.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Readings'**
+  String get premiumReadings;
+
+  /// No description provided for @confirmPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Purchase'**
+  String get confirmPurchase;
+
+  /// No description provided for @areYouSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to purchase'**
+  String get areYouSure;
+
+  /// No description provided for @forText.
+  ///
+  /// In en, this message translates to:
+  /// **'for'**
+  String get forText;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @couponAlreadyUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'This coupon has already been used.'**
+  String get couponAlreadyUsed;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

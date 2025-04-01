@@ -10,10 +10,12 @@ import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/screens/settings_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
-import 'data/payment_maganer.dart';
+import 'data/payment_manager.dart';
 import 'data/tarot_event_state.dart';
 import 'firebase_options.dart';
 import 'gemini_service.dart';
+import 'models/animations/language_selections_screen.dart';
+import 'models/animations/splash_screen.dart';
 import 'models/animations/tap_animations_scale.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -31,15 +33,14 @@ Future<void> main() async {
   final tarotBloc = TarotBloc(
     repository: TarotRepository(),
     geminiService: GeminiService(),
-    locale: savedLanguage ?? 'tr', // Varsayılan dil Türkçe
+    locale: savedLanguage ?? 'tr',
   );
 
-  // PaymentManager'ı başlatıyoruz
   final paymentManager = PaymentManager();
   paymentManager.initialize();
 
   runApp(MyApp(
-    initialLocale: savedLanguage != null ? Locale(savedLanguage) : null,
+    initialLocale: savedLanguage != null ? Locale(savedLanguage) : const Locale('tr'),
     tarotBloc: tarotBloc,
     paymentManager: paymentManager,
   ));
@@ -64,19 +65,16 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> {
   late Locale _locale;
   late TarotBloc _tarotBloc;
-  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _locale = widget.initialLocale ?? const Locale('tr'); // Varsayılan dil Türkçe
+    _locale = widget.initialLocale ?? const Locale('tr');
     _tarotBloc = widget.tarotBloc;
-    _tarotBloc.add(LoadTarotCards()); // Kartları yükle
+    _tarotBloc.add(LoadTarotCards());
   }
 
   Future<void> changeLocale(Locale newLocale, BuildContext context) async {
-    setState(() => _isLoading = true);
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', newLocale.languageCode);
 
@@ -92,9 +90,54 @@ class MyAppState extends State<MyApp> {
     if (mounted) {
       setState(() {
         _locale = newLocale;
-        _isLoading = false;
       });
+      _navigateToHome(context);
     }
+  }
+
+  Future<bool> _checkLanguageSelection() async {
+    final prefs = await SharedPreferences.getInstance();
+    await Future.delayed(const Duration(seconds: 3)); // Splash ekranı en az 3 saniye görünecek
+    return prefs.getString('language') != null;
+  }
+
+  void _navigateToSettings(BuildContext context) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => SettingsScreen(
+          onLocaleChange: changeLocale,
+          currentLocale: _locale,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutQuart;
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(position: animation.drive(tween), child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 700),
+      ),
+    );
+  }
+
+  void _navigateToHome(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => TarotReadingScreen(
+          onSettingsTap: () => _navigateToSettings(context),
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          var fadeTween = Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOutExpo));
+          return FadeTransition(
+            opacity: animation.drive(fadeTween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 1000), // Daha yavaş geçiş
+      ),
+    );
   }
 
   @override
@@ -109,8 +152,8 @@ class MyAppState extends State<MyApp> {
     return BlocProvider.value(
       value: _tarotBloc,
       child: MaterialApp(
-        navigatorKey: navigatorKey, // Global navigator key eklendi
-        title: 'Tarot Falı',
+        navigatorKey: navigatorKey,
+        title: 'Astral Tarot',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
@@ -131,137 +174,49 @@ class MyAppState extends State<MyApp> {
           Locale('tr'),
         ],
         locale: _locale,
-        home: Builder(
-          builder: (context) => Stack(
-            children: [
-              FutureBuilder<bool>(
-                future: _checkLanguageSelection(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
-                  }
-                  if (snapshot.data == true) {
-                    return TarotReadingScreen(
-                      onSettingsTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SettingsScreen(
-                              onLocaleChange: changeLocale,
-                              currentLocale: _locale,
+        home: FutureBuilder<bool>(
+          future: _checkLanguageSelection(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return SplashScreen(
+                onFinish: () {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (snapshot.connectionState == ConnectionState.done && mounted) {
+                      Future.delayed(const Duration(milliseconds: 500), () { // Gecikme 500 ms
+                        if (snapshot.hasData && snapshot.data!) {
+                          _navigateToHome(context); // Fade ile geçiş
+                        } else {
+                          Navigator.pushReplacement(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => LanguageSelectionScreen(
+                                onLocaleSelected: changeLocale,
+                              ),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                var fadeTween = Tween<double>(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOutExpo));
+                                return FadeTransition(
+                                  opacity: animation.drive(fadeTween),
+                                  child: child,
+                                );
+                              },
+                              transitionDuration: const Duration(milliseconds: 1000), // Daha yavaş geçiş
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  }
-                  return LanguageSelectionScreen(
-                    onLocaleSelected: changeLocale,
-                  );
+                          );
+                        }
+                      });
+                    }
+                  });
                 },
-              ),
-              if (_isLoading)
-                Container(
-                  color: Colors.black.withOpacity(0.8),
-                  child: const Center(
-                    child: CircularProgressIndicator(color: Colors.deepPurple),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<bool> _checkLanguageSelection() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('language') != null;
-  }
-}
-
-class LanguageSelectionScreen extends StatelessWidget {
-  final Future<void> Function(Locale, BuildContext) onLocaleSelected;
-
-  const LanguageSelectionScreen({super.key, required this.onLocaleSelected});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[900],
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Select your language / Dilinizi seçin',
-              style: GoogleFonts.cinzel(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 40),
-            TapAnimatedScale(
-              onTap: () => onLocaleSelected(const Locale('en'), context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.deepPurple[700]!, Colors.deepPurple[900]!],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  'English',
-                  style: GoogleFonts.cinzel(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TapAnimatedScale(
-              onTap: () => onLocaleSelected(const Locale('tr'), context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.deepPurple[700]!, Colors.deepPurple[900]!],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  'Türkçe',
-                  style: GoogleFonts.cinzel(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
+              );
+            }
+            return snapshot.data == true
+                ? TarotReadingScreen(
+              onSettingsTap: () => _navigateToSettings(context),
+            )
+                : LanguageSelectionScreen(
+              onLocaleSelected: changeLocale,
+            );
+          },
         ),
       ),
     );

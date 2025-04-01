@@ -580,6 +580,9 @@ class STr extends S {
   String get fullMoonSpreadDescription => 'Berraklık için ay enerjisini kullanın.';
 
   @override
+  String get unveilTheStars => 'Yıldızları Keşfet';
+
+  @override
   String get unveilingMysticalPath => 'Mistik Yolu Açığa Çıkarıyoruz...';
 
   @override
@@ -793,4 +796,22 @@ class STr extends S {
   String creditDescription(Object credits) {
     return '$credits kredi ile daha fazla fal aç';
   }
+
+  @override
+  String get premiumReadings => 'Premium Okuma';
+
+  @override
+  String get confirmPurchase => 'Satın Alımı Onayla';
+
+  @override
+  String get areYouSure => 'Satın almak istediğinizden emin misiniz:';
+
+  @override
+  String get forText => 'için';
+
+  @override
+  String get confirm => 'Onayla';
+
+  @override
+  String get couponAlreadyUsed => 'Bu kupon zaten kullanılmış.';
 }
