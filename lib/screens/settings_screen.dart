@@ -29,7 +29,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       fit: StackFit.expand,
       children: [
         Image.asset(
-          'assets/image_fx_a.jpg',
+          'assets/image_fx_c.jpg',
           fit: BoxFit.cover,
         ),
 

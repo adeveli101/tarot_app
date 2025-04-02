@@ -294,7 +294,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
 
 
         Image.asset(
-          'assets/image_fx_a.jpg',
+          'assets/image_fx_c.jpg',
           fit: BoxFit.cover,
         ),
 
@@ -395,8 +395,8 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           child: Text(
             loc!.unveilTheStars,
             style: GoogleFonts.cinzel(
-              color: Colors.purple[100]!.withOpacity(0.9),
-              fontSize: 14,
+              color: Colors.purple[100]!.withOpacity(0.7),
+              fontSize: 16,
               letterSpacing: 4,
               fontWeight: FontWeight.w500,
               decoration: TextDecoration.none, // Alt çizgi kaldırıldı
@@ -1332,7 +1332,7 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
                     color: Colors.white70,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+                    decoration: TextDecoration.none,
                   ),
                 ),
               ),

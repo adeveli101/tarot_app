@@ -8,6 +8,8 @@ class AssetsRes {
 
   static const String PROJECT_NAME = 'tarot_fal';
   static const String PROJECT_VERSION = '1.0.0+1';
+  static const String IMAGE_FX_A = 'assets/image_fx_a.jpg';
+  static const String IMAGE_FX_C = 'assets/image_fx_c.jpg';
   static const String CARD_BACK = 'assets/tarot_card_images/card_back.png';
   static const String TAROT_CARD_SILHOUETTE = 'assets/tarot_card_silhouette.jpg';
   static const String TAROT_CARDS_EN = 'assets/tarot_cards_en.json';

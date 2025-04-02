@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
@@ -14,28 +16,23 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late AnimationController _titleController;
   late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 3),
+    _titleController = AnimationController(
+      duration: const Duration(milliseconds: 600),
       vsync: this,
-    );
+    )..forward();
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      CurvedAnimation(parent: _titleController, curve: Curves.easeInOut),
     );
 
-    _slideAnimation = Tween<Offset>(begin: const Offset(0.0, 0.5), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _requestNotificationPermission(); // Bildirim izni iste
-    _controller.forward().then((_) {
+    _requestNotificationPermission(); // Hata 3 çözümü
+    _titleController.forward().then((_) {
       if (mounted) {
         widget.onFinish();
       }
@@ -48,116 +45,153 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     }
   }
 
+  Widget _buildBackground() {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/image_fx_c.jpg',
+          fit: BoxFit.cover,
+        ),
+        Lottie.asset(
+          'assets/animations/tarot_shuffle.json',
+          fit: BoxFit.contain,
+          frameRate: FrameRate(30),
+          repeat: true,
+        ),
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.deepPurple[800]!.withOpacity(0.25),
+                Colors.black.withOpacity(0.9),
+              ],
+              stops: const [0.3, 0.8],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGradientOverlay() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 1.2,
+          colors: [
+            Colors.transparent,
+            Colors.deepPurple[700]!.withOpacity(0.3),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
-    _controller.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
+
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.deepPurple[900]!.withOpacity(0.9),
-              Colors.purple[800]!.withOpacity(0.7),
-              Colors.purple[600]!.withOpacity(0.5),
-            ],
+      body: Stack(
+        children: [
+          _buildBackground(),
+          _buildGradientOverlay(),
+          Center(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.18),
+                  _buildTitle()
+                ],
+              ),
+            ),
           ),
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/tarot_card_silhouette.jpg'),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                      Colors.black.withOpacity(0.2),
-                      BlendMode.dstATop,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.black.withOpacity(0.7),
-                      Colors.deepPurple[900]!.withOpacity(0.8),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: Colors.purpleAccent.withOpacity(0.5),
-                    width: 2,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/tarot_card_silhouette.jpg',
-                          width: 200,
-                          height: 300,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Astral Tarot',
-                          style: GoogleFonts.cinzel(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                color: Colors.purple[300]!.withOpacity(0.8),
-                                offset: const Offset(0, 2),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          loc?.unveilTheStars ?? 'Unveil the Stars',
-                          style: GoogleFonts.cinzel(
-                            fontSize: 18,
-                            color: Colors.purpleAccent,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
+
+
+
+  Widget _buildTitle() {
+    final loc = S.of(context);
+
+    return Column(
+      children: [
+        AnimatedBuilder(
+          animation: _titleController,
+          builder: (context, child) {
+            final shimmerValue = sin(_titleController.value * pi * 2) * 0.5 + 0.5;
+
+            return ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [
+                  Colors.white,
+                  Color(0xFFE6E6FA),
+                  Colors.purpleAccent.shade100,
+                  Colors.white,
+                ],
+                stops: [0.0, shimmerValue * 0.5, shimmerValue, 1.0],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(bounds),
+              child: Text(
+                ' ASTRAL TAROT ',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.cinzel(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 4,
+                  color: Colors.white,
+                  decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+                  shadows: [
+                    Shadow(
+                      color: Colors.purple[300]!.withOpacity(0.8),
+                      offset: const Offset(0, 4),
+                      blurRadius: 15,
+                    ),
+                    Shadow(
+                      color: Colors.purpleAccent.withOpacity(0.3 + shimmerValue * 0.2),
+                      offset: const Offset(0, 2),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        SizedBox(height: MediaQuery.of(context).size.height * 0.001),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.purple[200]!.withOpacity(0.4)),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            loc!.unveilTheStars,
+            style: GoogleFonts.cinzel(
+              color: Colors.purple[100]!.withOpacity(0.7),
+              fontSize: 16,
+              letterSpacing: 4,
+              fontWeight: FontWeight.w500,
+              decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 }
