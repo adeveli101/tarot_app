@@ -207,7 +207,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           ),
           SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.02),
+              padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.01),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

@@ -195,14 +195,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       fontSize: 16,
                     ),
                   ),
-                  Text(
-                    state.isPremium ? loc.unlimited : "${state.dailyFreeFalCount}/3",
-                    style: GoogleFonts.cinzel(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+
                 ],
               ),
             ],

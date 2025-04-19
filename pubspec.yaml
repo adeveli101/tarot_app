@@ -2,7 +2,8 @@ name: tarot_fal
 description: "Tarot falı uygulaması."
 publish_to: 'none'
 
-version: 1.0.0+2
+# app bundle version "3"
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -91,10 +92,10 @@ flutter:
 flutter_intl:
   enabled: true
 
-  flutter_launcher_icons:
-    android: "launcher_icon"
-    ios: true
-    image_path: "assets/image_fx_c.jpg"
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/image_fx_c.jpg"
 
 flutter_native_splash:
   color: "6A1B9A"
