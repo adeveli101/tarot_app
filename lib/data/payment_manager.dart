@@ -345,7 +345,7 @@ class PaymentDialogState extends State<PaymentDialog> {
                   Column(
                     children: [
                       ..._products.map((product) => _buildPurchaseOption(product)),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 5),
                       TapAnimatedScale(
                         onTap: () => _showCouponSheet(context),
                         child: Container(
@@ -361,8 +361,8 @@ class PaymentDialogState extends State<PaymentDialog> {
                           ),
                           child: Text(
                             loc.redeem,
-                            style: GoogleFonts.cinzel(
-                              fontSize: 16,
+                            style: GoogleFonts.cabin(
+                              fontSize: 17,
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
@@ -372,7 +372,7 @@ class PaymentDialogState extends State<PaymentDialog> {
                       ),
                     ],
                   ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 TapAnimatedScale(
                   onTap: () => Navigator.pop(context),
                   child: Container(
@@ -385,7 +385,7 @@ class PaymentDialogState extends State<PaymentDialog> {
                       loc.cancel,
                       style: GoogleFonts.cinzel(
                         fontSize: 16,
-                        color: Colors.white70,
+                        color: Colors.red,
                         fontWeight: FontWeight.w600,
                       ),
                       textAlign: TextAlign.center,
@@ -454,7 +454,7 @@ class PaymentDialogState extends State<PaymentDialog> {
               Text(
                 '$credits ${loc!.mysticalTokens}',
                 style: GoogleFonts.cinzel(
-                  fontSize: 16,
+                  fontSize: 12,
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -462,7 +462,7 @@ class PaymentDialogState extends State<PaymentDialog> {
               Text(
                 product.price,
                 style: GoogleFonts.cinzel(
-                  fontSize: 16,
+                  fontSize: 12,
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),

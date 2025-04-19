@@ -207,7 +207,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           ),
           SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
+              padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.02),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -239,7 +239,8 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
                           size: 24,
                         ),
                         tooltip: loc.settings,
-                        onPressed: widget.onSettingsTap,
+                        onPressed: () => widget.onSettingsTap?.call(),
+
                         splashRadius: 24,
                         splashColor: Colors.grey.withOpacity(0.9),
                       ),
@@ -521,7 +522,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
               loc!.differentInterpretation,
               style: GoogleFonts.cinzel(
                 color: Colors.white70,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
                 decoration: TextDecoration.none, // Alt çizgi kaldırıldı
               ),
@@ -539,7 +540,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.black54,
+            color: Colors.purple,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(color: Colors.purple[300]!.withOpacity(0.5)),
           ),
@@ -556,7 +557,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
                 state.isPremium ? "Premium" : "${state.userTokens.toStringAsFixed(1)} ${S.of(context)!.mysticalTokens}",
                 style: GoogleFonts.cinzel(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 12,
                   decoration: TextDecoration.none, // Alt çizgi kaldırıldı
                 ),
               ),
@@ -591,13 +592,14 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.card_giftcard, color: Colors.white, size: 16),
-            const SizedBox(width: 4),
+            const SizedBox(width: 5),
             Text(
               loc!.redeem,
               style: GoogleFonts.cinzel(
                 color: Colors.white,
                 fontSize: 10,
-                decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+
+                decoration: TextDecoration.none,
               ),
             ),
           ],
@@ -1330,7 +1332,7 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
                   '${cost.toStringAsFixed(1)} ${loc.mysticalTokens}',
                   style: GoogleFonts.cinzel(
                     color: Colors.white70,
-                    fontSize: 12,
+                    fontSize: 9,
                     fontWeight: FontWeight.w600,
                     decoration: TextDecoration.none,
                   ),

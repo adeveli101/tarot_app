@@ -82,7 +82,7 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     final lastReset = await _userDataManager.getLastReset();
     if (lastReset < now || lastReset == 0) {
       await _userDataManager.saveDailyFreeReads(0); // Günlük ücretsiz okuma sıfırlanır
-      await _userDataManager.saveTokens(3.0); // Başlangıç tokenları
+      await _userDataManager.saveTokens(10.0); // Başlangıç tokenları
       await _userDataManager.savePremiumStatus(false);
       await _userDataManager.saveLastReset(now);
     }
