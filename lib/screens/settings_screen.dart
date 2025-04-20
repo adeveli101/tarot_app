@@ -174,14 +174,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       fontSize: 13,
                     ),
                   ),
-                  Text(
-                    state.isPremium ? loc.premium : "${state.userTokens.toStringAsFixed(1)} ${loc.mysticalTokens}", // "Premium" ve "Tokens" localize
-                    style: GoogleFonts.cinzel(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+
                 ],
               ),
               const SizedBox(height: 8),

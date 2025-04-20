@@ -325,9 +325,16 @@
   "areYouSure": "Satın almak istediğinizden emin misiniz:",
   "forText": "için",
   "confirm": "Onayla",
-  "couponAlreadyUsed": "Bu kupon zaten kullanılmış."
+  "couponAlreadyUsed": "Bu kupon zaten kullanılmış.",
 
 
+  "paymentSuccessful": "Ödeme Başarılı",
+  "arcana": "Sır",
+  "suit": "Takım",
+  "celticCrossConscious": "Kelt Haçı Bilinçli",
+  "longPressHint": "Uzun Basma İpucu",
+  "instructions": "Talimatlar",
+  "slideToDrawCards": "Kart Çekmek İçin Kaydırın"
 
 
 }

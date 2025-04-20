@@ -50,7 +50,6 @@ class PaymentManager {
       '500_tokens',
       '1000_tokens',
       '2500_tokens',
-      'premium_subscription'
     ];
     try {
       final available = await _inAppPurchase.isAvailable();
@@ -149,7 +148,6 @@ class PaymentManager {
     final currentTokens = await tarotBloc.userDataManager.getTokens();
     await tarotBloc.userDataManager.saveTokens(currentTokens + credits);
     tarotBloc.emit(TarotInitial(
-      isPremium: tarotBloc.state.isPremium,
       userTokens: currentTokens + credits,
       dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
       userName: tarotBloc.state.userName,
@@ -176,7 +174,6 @@ class PaymentManager {
             final currentTokens = await tarotBloc.userDataManager.getTokens();
             await tarotBloc.userDataManager.saveTokens(currentTokens + credits);
             tarotBloc.emit(TarotInitial(
-              isPremium: tarotBloc.state.isPremium,
               userTokens: currentTokens + credits,
               dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
               userName: tarotBloc.state.userName,
@@ -187,7 +184,6 @@ class PaymentManager {
           } else if (purchase.productID == 'premium_subscription') {
             await tarotBloc.userDataManager.savePremiumStatus(true);
             tarotBloc.emit(TarotInitial(
-              isPremium: true,
               userTokens: tarotBloc.state.userTokens,
               dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
               userName: tarotBloc.state.userName,

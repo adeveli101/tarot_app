@@ -143,7 +143,6 @@ class DrawCategoryReading extends TarotEvent {
 
 // States
 abstract class TarotState extends Equatable {
-  final bool isPremium;
   final double userTokens;
   final int dailyFreeFalCount;
   final String? lastSelectedCategory;
@@ -153,7 +152,6 @@ abstract class TarotState extends Equatable {
   final bool userInfoCollected;
 
   const TarotState({
-    required this.isPremium,
     required this.userTokens,
     required this.dailyFreeFalCount,
     this.lastSelectedCategory,
@@ -165,7 +163,6 @@ abstract class TarotState extends Equatable {
 
   @override
   List<Object?> get props => [
-    isPremium,
     userTokens,
     dailyFreeFalCount,
     lastSelectedCategory,
@@ -176,7 +173,6 @@ abstract class TarotState extends Equatable {
   ];
 
   TarotState copyWith({
-    bool? isPremium,
     double? userTokens,
     int? dailyFreeFalCount,
     String? lastSelectedCategory,
@@ -189,7 +185,6 @@ abstract class TarotState extends Equatable {
 
 class TarotInitial extends TarotState {
   const TarotInitial({
-    super.isPremium = false,
     super.userTokens = 0.0,
     super.dailyFreeFalCount = 0,
     super.lastSelectedCategory,
@@ -201,7 +196,6 @@ class TarotInitial extends TarotState {
 
   @override
   TarotState copyWith({
-    bool? isPremium,
     double? userTokens,
     int? dailyFreeFalCount,
     String? lastSelectedCategory,
@@ -211,7 +205,6 @@ class TarotInitial extends TarotState {
     bool? userInfoCollected,
   }) {
     return TarotInitial(
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -225,7 +218,6 @@ class TarotInitial extends TarotState {
 
 class TarotLoading extends TarotState {
   const TarotLoading({
-    required super.isPremium,
     required super.userTokens,
     required super.dailyFreeFalCount,
     super.lastSelectedCategory,
@@ -237,7 +229,6 @@ class TarotLoading extends TarotState {
 
   @override
   TarotState copyWith({
-    bool? isPremium,
     double? userTokens,
     int? dailyFreeFalCount,
     String? lastSelectedCategory,
@@ -247,7 +238,6 @@ class TarotLoading extends TarotState {
     bool? userInfoCollected,
   }) {
     return TarotLoading(
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -263,7 +253,6 @@ class TarotError extends TarotState {
   final String message;
   const TarotError(
       this.message, {
-        required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
         super.lastSelectedCategory,
@@ -278,7 +267,6 @@ class TarotError extends TarotState {
 
   @override
   TarotState copyWith({
-    bool? isPremium,
     double? userTokens,
     int? dailyFreeFalCount,
     String? lastSelectedCategory,
@@ -289,7 +277,6 @@ class TarotError extends TarotState {
   }) {
     return TarotError(
       message,
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -305,7 +292,6 @@ class TarotCardsLoaded extends TarotState {
   final List<TarotCard> cards;
   const TarotCardsLoaded(
       this.cards, {
-        required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
         super.lastSelectedCategory,
@@ -320,7 +306,6 @@ class TarotCardsLoaded extends TarotState {
 
   @override
   TarotState copyWith({
-    bool? isPremium,
     double? userTokens,
     int? dailyFreeFalCount,
     String? lastSelectedCategory,
@@ -331,7 +316,6 @@ class TarotCardsLoaded extends TarotState {
   }) {
     return TarotCardsLoaded(
       cards,
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -347,7 +331,6 @@ class CouponRedeemed extends TarotState {
   final String message;
   const CouponRedeemed(
       this.message, {
-        required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
         super.lastSelectedCategory,
@@ -373,7 +356,6 @@ class CouponRedeemed extends TarotState {
   }) {
     return CouponRedeemed(
       message,
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -389,7 +371,6 @@ class CouponInvalid extends TarotState {
   final String message;
   const CouponInvalid(
       this.message, {
-        required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
         super.lastSelectedCategory,
@@ -415,7 +396,6 @@ class CouponInvalid extends TarotState {
   }) {
     return CouponInvalid(
       message,
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -431,7 +411,6 @@ class SingleCardDrawn extends TarotState {
   final TarotCard card;
   const SingleCardDrawn(
       this.card, {
-        required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
         super.lastSelectedCategory,
@@ -457,7 +436,6 @@ class SingleCardDrawn extends TarotState {
   }) {
     return SingleCardDrawn(
       card,
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -473,7 +451,6 @@ class SpreadDrawn extends TarotState {
   final Map<String, TarotCard> spread;
   const SpreadDrawn(
       this.spread, {
-        required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
         super.lastSelectedCategory,
@@ -499,7 +476,6 @@ class SpreadDrawn extends TarotState {
   }) {
     return SpreadDrawn(
       spread,
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -519,7 +495,6 @@ class FalYorumuLoaded extends TarotState {
       this.yorum, {
         required this.tokenCount,
         required this.cost,
-        required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
         super.lastSelectedCategory,
@@ -547,7 +522,6 @@ class FalYorumuLoaded extends TarotState {
       yorum,
       tokenCount: tokenCount,
       cost: cost,
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -563,7 +537,6 @@ class InsufficientResources extends TarotState {
   final double requiredTokens;
   const InsufficientResources(
       this.requiredTokens, {
-        required super.isPremium,
         required super.userTokens,
         required super.dailyFreeFalCount,
         super.lastSelectedCategory,
@@ -589,7 +562,6 @@ class InsufficientResources extends TarotState {
   }) {
     return InsufficientResources(
       requiredTokens,
-      isPremium: isPremium ?? this.isPremium,
       userTokens: userTokens ?? this.userTokens,
       dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,

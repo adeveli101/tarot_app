@@ -91,6 +91,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "arcana": MessageLookupByLibrary.simpleMessage("Sır"),
     "areYouSure": MessageLookupByLibrary.simpleMessage(
       "Satın almak istediğinizden emin misiniz:",
     ),
@@ -177,6 +178,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "categorySpreadReadingError": m7,
     "celticCrossChallenge": MessageLookupByLibrary.simpleMessage("Zorluk"),
+    "celticCrossConscious": MessageLookupByLibrary.simpleMessage(
+      "Kelt Haçı Bilinçli",
+    ),
     "celticCrossCurrentSituation": MessageLookupByLibrary.simpleMessage(
       "Mevcut Durum",
     ),
@@ -341,6 +345,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "horseshoeSpreadError": m17,
     "horseshoeStrengths": MessageLookupByLibrary.simpleMessage("Güçler"),
     "hundredTokens": MessageLookupByLibrary.simpleMessage("100 Token"),
+    "instructions": MessageLookupByLibrary.simpleMessage("Talimatlar"),
     "instructionsDrawCards": MessageLookupByLibrary.simpleMessage(
       "Kartları manuel olarak çekmek için bu düğmeyi kullanın.",
     ),
@@ -372,6 +377,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Bu kartlar hayatınızdaki önemli dinamikleri vurguluyor.",
     ),
     "lightMeaning": MessageLookupByLibrary.simpleMessage("Işık (Olumlu):"),
+    "longPressHint": MessageLookupByLibrary.simpleMessage("Uzun Basma İpucu"),
     "loveDescription": MessageLookupByLibrary.simpleMessage(
       "İlişkileriniz hakkında derinlemesine bilgi alın",
     ),
@@ -426,6 +432,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Mali geçmişinizi, şu anınızı ve geleceğinizi keşfedin.",
     ),
     "pastPresentFutureReadingError": m21,
+    "paymentSuccessful": MessageLookupByLibrary.simpleMessage("Ödeme Başarılı"),
     "pleaseWait": MessageLookupByLibrary.simpleMessage("Lütfen Bekleyin."),
     "pointsToWatch": MessageLookupByLibrary.simpleMessage(
       "Dikkat Edilmesi Gerekenler",
@@ -493,6 +500,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Hızlı cevap için ideal",
     ),
     "singleCardReadingError": m24,
+    "slideToDrawCards": MessageLookupByLibrary.simpleMessage(
+      "Kart Çekmek İçin Kaydırın",
+    ),
     "solution": MessageLookupByLibrary.simpleMessage("Çözüm"),
     "specialNote": MessageLookupByLibrary.simpleMessage("Özel Not"),
     "spiritualDescription": MessageLookupByLibrary.simpleMessage(
@@ -509,6 +519,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "spreadSelection": MessageLookupByLibrary.simpleMessage("Açılım Seçimi"),
     "startJourney": MessageLookupByLibrary.simpleMessage("Yolculuğa Başla"),
+    "suit": MessageLookupByLibrary.simpleMessage("Takım"),
     "swipeForMore": MessageLookupByLibrary.simpleMessage(
       "Daha fazla bilgi için kaydırın",
     ),

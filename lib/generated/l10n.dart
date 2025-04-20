@@ -1600,6 +1600,48 @@ abstract class S {
   /// In en, this message translates to:
   /// **'This coupon has already been used.'**
   String get couponAlreadyUsed;
+
+  /// No description provided for @paymentSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Ödeme Başarılı'**
+  String get paymentSuccessful;
+
+  /// No description provided for @arcana.
+  ///
+  /// In en, this message translates to:
+  /// **'Sır'**
+  String get arcana;
+
+  /// No description provided for @suit.
+  ///
+  /// In en, this message translates to:
+  /// **'Takım'**
+  String get suit;
+
+  /// No description provided for @celticCrossConscious.
+  ///
+  /// In en, this message translates to:
+  /// **'Kelt Haçı Bilinçli'**
+  String get celticCrossConscious;
+
+  /// No description provided for @longPressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Uzun Basma İpucu'**
+  String get longPressHint;
+
+  /// No description provided for @instructions.
+  ///
+  /// In en, this message translates to:
+  /// **'Talimatlar'**
+  String get instructions;
+
+  /// No description provided for @slideToDrawCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Kart Çekmek İçin Kaydırın'**
+  String get slideToDrawCards;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

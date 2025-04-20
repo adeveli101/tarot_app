@@ -329,5 +329,15 @@
   "areYouSure": "Are you sure you want to purchase",
   "forText": "for",
   "confirm": "Confirm",
-  "couponAlreadyUsed": "This coupon has already been used."
+  "couponAlreadyUsed": "This coupon has already been used.",
+
+
+  "paymentSuccessful": "Ödeme Başarılı",
+  "arcana": "Sır",
+  "suit": "Takım",
+  "celticCrossConscious": "Kelt Haçı Bilinçli",
+  "longPressHint": "Uzun Basma İpucu",
+  "instructions": "Talimatlar",
+  "slideToDrawCards": "Kart Çekmek İçin Kaydırın"
+
 }

@@ -814,4 +814,25 @@ class STr extends S {
 
   @override
   String get couponAlreadyUsed => 'Bu kupon zaten kullanılmış.';
+
+  @override
+  String get paymentSuccessful => 'Ödeme Başarılı';
+
+  @override
+  String get arcana => 'Sır';
+
+  @override
+  String get suit => 'Takım';
+
+  @override
+  String get celticCrossConscious => 'Kelt Haçı Bilinçli';
+
+  @override
+  String get longPressHint => 'Uzun Basma İpucu';
+
+  @override
+  String get instructions => 'Talimatlar';
+
+  @override
+  String get slideToDrawCards => 'Kart Çekmek İçin Kaydırın';
 }

@@ -70,7 +70,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to initialize user: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
       ));
@@ -94,7 +93,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     final userGender = await _userDataManager.getUserGender();
     final userInfoCollected = await _userDataManager.getUserInfoCollected();
     emit(TarotInitial(
-      isPremium: isPremium,
       userTokens: userTokens,
       dailyFreeFalCount: dailyFreeFalCount,
       userName: userName,
@@ -116,7 +114,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     if (!isPremium && dailyFreeReads >= 3 && tokens < cost) {
       emit(InsufficientResources(
         cost,
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -131,7 +128,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     if (tokens < cost) {
       emit(InsufficientResources(
         cost,
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -147,7 +143,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     if (estimatedTokens > tokenLimit) {
       emit(TarotError(
         "Token limit exceeded for ${spreadType.name}: $estimatedTokens/$tokenLimit",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -219,7 +214,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to save reading to Firestore: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -260,7 +254,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
 
   Future<void> _onLoadTarotCards(LoadTarotCards event, Emitter<TarotState> emit) async {
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -275,7 +268,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       if (cards.isEmpty) throw Exception("No tarot cards loaded");
       emit(TarotCardsLoaded(
         cards,
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -287,7 +279,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to load tarot cards: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -305,7 +296,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final cards = repository.getAllCards();
       emit(TarotCardsLoaded(
         cards,
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -317,7 +307,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to shuffle deck: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -350,7 +339,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.singleCard;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.singleCard)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -391,7 +379,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.singleCard.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -403,7 +390,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw single card: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -419,7 +405,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.pastPresentFuture;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.pastPresentFuture)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -459,7 +444,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.pastPresentFuture.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -471,7 +455,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw past-present-future: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -487,7 +470,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.problemSolution;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.problemSolution)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -527,7 +509,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.problemSolution.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -539,7 +520,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw problem-solution: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -555,7 +535,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.fiveCardPath;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.fiveCardPath)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -595,7 +574,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.fiveCardPath.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -607,7 +585,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw five-card path: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -623,7 +600,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.relationshipSpread;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.relationshipSpread)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -663,7 +639,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.relationshipSpread.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -675,7 +650,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw relationship spread: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -691,7 +665,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.celticCross;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.celticCross)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -731,7 +704,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.celticCross.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -743,7 +715,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw Celtic Cross: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -759,7 +730,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.yearlySpread;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.yearlySpread)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -799,7 +769,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.yearlySpread.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -811,7 +780,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw yearly spread: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -827,7 +795,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.mindBodySpirit;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.mindBodySpirit)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -867,7 +834,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.mindBodySpirit.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -879,7 +845,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw Mind-Body-Spirit: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -895,7 +860,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.astroLogicalCross;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.astroLogicalCross)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -935,7 +899,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.astroLogicalCross.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -947,7 +910,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw AstroLogical Cross: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -963,7 +925,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.brokenHeart;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.brokenHeart)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -1003,7 +964,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.brokenHeart.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1015,7 +975,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw Broken Heart: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1031,7 +990,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.dreamInterpretation;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.dreamInterpretation)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -1071,7 +1029,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.dreamInterpretation.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1083,7 +1040,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw Dream Interpretation: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1099,7 +1055,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.horseshoeSpread;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.horseshoeSpread)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -1139,7 +1094,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.horseshoeSpread.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1151,7 +1105,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw Horseshoe Spread: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1167,7 +1120,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.careerPathSpread;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.careerPathSpread)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -1207,7 +1159,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.careerPathSpread.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1219,7 +1170,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw Career Path Spread: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1235,7 +1185,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.fullMoonSpread;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.fullMoonSpread)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -1275,7 +1224,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.fullMoonSpread.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1287,7 +1235,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw Full Moon Spread: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1303,7 +1250,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     _currentSpreadType = SpreadType.categoryReading;
     if (!await _checkCreditsAndTokenLimit(emit, SpreadType.categoryReading)) return;
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -1343,7 +1289,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         yorum,
         tokenCount: tokenCount,
         cost: SpreadType.categoryReading.costInCredits,
-        isPremium: isPremium,
         userTokens: userTokens,
         dailyFreeFalCount: dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1355,7 +1300,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(TarotError(
         "Failed to draw category reading: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1369,7 +1313,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
 
   Future<void> _onRedeemCoupon(RedeemCoupon event, Emitter<TarotState> emit) async {
     emit(TarotLoading(
-      isPremium: state.isPremium,
       userTokens: state.userTokens,
       dailyFreeFalCount: state.dailyFreeFalCount,
       lastSelectedCategory: state.lastSelectedCategory,
@@ -1381,15 +1324,13 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     try {
       final couponCode = event.couponCode.trim().toUpperCase();
       final validCoupons = {
-        'PREMIUM_TEST': {'type': 'premium', 'value': true},
-        'CREDITS_50': {'type': 'credits', 'value': 50.0},
-        'FREE_READING': {'type': 'credits', 'value': 10.0},
+        'CREDITS_50': {'type': 'credits', 'value': 25.0},
+        'FREE_READING': {'type': 'credits', 'value': 5.0},
       };
 
       if (!validCoupons.containsKey(couponCode)) {
         emit(CouponInvalid(
           "Invalid or unrecognized coupon code",
-          isPremium: state.isPremium,
           userTokens: state.userTokens,
           dailyFreeFalCount: state.dailyFreeFalCount,
           lastSelectedCategory: state.lastSelectedCategory,
@@ -1402,27 +1343,13 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       }
 
       final coupon = validCoupons[couponCode]!;
-      if (coupon['type'] == 'premium') {
-        await _userDataManager.savePremiumStatus(coupon['value'] as bool);
-        emit(CouponRedeemed(
-          "Premium status updated successfully!",
-          isPremium: await _userDataManager.isPremiumUser(),
-          userTokens: state.userTokens,
-          dailyFreeFalCount: state.dailyFreeFalCount,
-          lastSelectedCategory: state.lastSelectedCategory,
-          userName: state.userName,
-          userAge: state.userAge,
-          userGender: state.userGender,
-          userInfoCollected: state.userInfoCollected,
-        ));
-      } else if (coupon['type'] == 'credits') {
+      if (coupon['type'] == 'credits') {
         final creditsToAdd = (coupon['value'] as num).toDouble();
         if (creditsToAdd <= 0) throw ArgumentError("Invalid credit amount");
         final currentTokens = await _userDataManager.getTokens();
         await _userDataManager.saveTokens(currentTokens + creditsToAdd);
         emit(CouponRedeemed(
           "Added $creditsToAdd credits successfully!",
-          isPremium: state.isPremium,
           userTokens: await _userDataManager.getTokens(),
           dailyFreeFalCount: state.dailyFreeFalCount,
           lastSelectedCategory: state.lastSelectedCategory,
@@ -1434,7 +1361,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       } else {
         emit(CouponInvalid(
           "Unsupported coupon type",
-          isPremium: state.isPremium,
           userTokens: state.userTokens,
           dailyFreeFalCount: state.dailyFreeFalCount,
           lastSelectedCategory: state.lastSelectedCategory,
@@ -1447,7 +1373,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     } catch (e) {
       emit(CouponInvalid(
         "Coupon redemption failed: ${e.toString()}",
-        isPremium: state.isPremium,
         userTokens: state.userTokens,
         dailyFreeFalCount: state.dailyFreeFalCount,
         lastSelectedCategory: state.lastSelectedCategory,
@@ -1459,7 +1384,6 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     }
   }
 
-  // Prompt fonksiyonları (değişmeden kalabilir, ancak PaymentManager ile uyumlu hale getirilebilir)
   String _generatePromptForSingleCard({
     required String category,
     required TarotCard card,

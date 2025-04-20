@@ -1,22 +1,35 @@
+// ignore_for_file: dead_code
+
 import 'dart:async';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart'; // CardSelection için eklendi
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:intl/intl.dart'; // CardSelection için eklendi
+
+// Projenizin doğru import yolları ile değiştirin
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/generated/l10n.dart';
-import 'package:tarot_fal/screens/profile_page.dart';
-import 'package:tarot_fal/screens/card_selection_animation.dart';
-import '../data/payment_manager.dart';
-import '../data/tarot_event_state.dart';
-import '../models/animations/tap_animations_scale.dart';
+import 'package:tarot_fal/screens/profile_page.dart'; // ProfilePage importu
+import 'package:tarot_fal/data/payment_manager.dart'; // PaymentManager importu
+import 'package:tarot_fal/data/tarot_event_state.dart';
+import 'package:tarot_fal/models/animations/tap_animations_scale.dart';
+import 'package:tarot_fal/models/tarot_card.dart'; // CardSelection için eklendi
+import 'package:tarot_fal/data/tarot_repository.dart'; // CardSelection için eklendi
+import 'package:tarot_fal/screens/reading_result.dart';
+
+import 'card_selection_animation.dart'; // ReadingResultScreen importu
+
+//---------- TarotReadingScreen Başlangıcı ----------
 
 class TarotReadingScreen extends StatefulWidget {
-  final VoidCallback? onSettingsTap;
+  final VoidCallback? onSettingsTap; // Nullable callback
 
-  const TarotReadingScreen({super.key, required this.onSettingsTap});
+  const TarotReadingScreen({super.key, this.onSettingsTap}); // required kaldırıldı
 
   @override
   State<TarotReadingScreen> createState() => _TarotReadingScreenState();
@@ -24,28 +37,46 @@ class TarotReadingScreen extends StatefulWidget {
 
 class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProviderStateMixin {
   late AnimationController _titleController;
+  late AnimationController _glowController;
 
   @override
   void initState() {
     super.initState();
     _titleController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(seconds: 5),
       vsync: this,
-    )..forward();
+    )..repeat(reverse: true);
+    _glowController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
   }
 
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _glowController.dispose();
+    super.dispose();
+  }
+
+  // Yerelleştirme fallback'li ödeme dialogu
+  // ignore: unused_element
   void _showPaymentDialog(BuildContext context, double requiredTokens) {
+    final loc = S.of(context);
     PaymentManager.showPaymentDialog(
       context,
       requiredTokens: requiredTokens,
       onSuccess: () {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context)!.couponRedeemed("Mystical Tokens added successfully"))),
+          SnackBar(
+              content: Text(loc!.paymentSuccessful), // Fallback eklendi
+              backgroundColor: Colors.green),
         );
       },
     );
   }
 
+  // Kupon Sheet gösterme
   void _showCouponSheet(BuildContext context) {
     final paymentManager = PaymentManager();
     paymentManager.initialize();
@@ -60,8 +91,9 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           child: Center(
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
+              // BlocProvider.value burada gerekli olabilir, CouponSheet'in Bloc'a ihtiyacı varsa
               child: BlocProvider.value(
-                value: BlocProvider.of<TarotBloc>(context),
+                value: context.read<TarotBloc>(), // Mevcut Bloc'u sağla
                 child: CouponSheet(manager: paymentManager),
               ),
             ),
@@ -70,16 +102,10 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOut,
-          ),
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
           child: ScaleTransition(
             scale: Tween<double>(begin: 0.7, end: 1.0).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutExpo,
-              ),
+              CurvedAnimation(parent: animation, curve: Curves.easeOutExpo),
             ),
             child: child,
           ),
@@ -89,6 +115,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     ).whenComplete(() => paymentManager.dispose());
   }
 
+  // Profil sayfasına gitme
   void _navigateToProfilePage(BuildContext context) {
     Navigator.push(
       context,
@@ -98,13 +125,10 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           const begin = Offset(1.0, 0.0);
           const end = Offset.zero;
           var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOutQuart));
-          return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            ),
-            child: SlideTransition(
-              position: animation.drive(tween),
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: FadeTransition(
+              opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
               child: child,
             ),
           );
@@ -114,39 +138,17 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     );
   }
 
+  // Kategori seçim sheet'ini gösterme
   void _showCategorySheet(BuildContext context) {
     HapticFeedback.selectionClick();
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => BlocProvider.value(
+    showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => BlocProvider.value( // Bloc'u aktar
           value: BlocProvider.of<TarotBloc>(context),
-          child: const CategorySelectionSheet(),
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.0, 1.0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOutQuart,
-            )),
-            child: FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              ),
-              child: child,
-            ),
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 600),
-        opaque: false,
-        barrierColor: Colors.black54.withOpacity(0.5),
-        barrierDismissible: true,
-      ),
-    );
+          child: const CategorySelectionSheet(), // Bu dosyadaki CategorySelectionSheet'i çağır
+        ));
   }
 
   @override
@@ -154,95 +156,83 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     final loc = S.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           BlocConsumer<TarotBloc, TarotState>(
             listener: (context, state) {
+              // !!! DÜZELTME: CardSelectionAnimationScreen'e yönlendiren listener kaldırıldı !!!
+              /*
               if (state is SingleCardDrawn || state is SpreadDrawn) {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) => CardSelectionAnimationScreen(
-                      cardCount: state is SingleCardDrawn ? 1 : (state as SpreadDrawn).spread.length,
-                    ),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      const begin = Offset(0.0, 1.0);
-                      const end = Offset.zero;
-                      var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOutQuart));
-                      return FadeTransition(
-                        opacity: CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeInOut,
-                        ),
-                        child: SlideTransition(
-                          position: animation.drive(tween),
-                          child: child,
-                        ),
-                      );
-                    },
-                    transitionDuration: const Duration(milliseconds: 700),
-                  ),
-                );
-              } else if (state is InsufficientResources) {
-                _showPaymentDialog(context, state.requiredTokens);
+                // ... eski yönlendirme kodu ...
+              } else */
+              if (state is InsufficientResources) {
+                if (kDebugMode) {
+                  print("Listener (TarotReadingScreen): InsufficientResources detected.");
+                }
+                // Ana ekranda ödeme dialogunu göstermek yerine,
+                // ilgili işlem (örn: spread seçimi) sırasında kontrol etmek daha mantıklı olabilir.
+                // _showPaymentDialog(context, state.requiredTokens);
               } else if (state is CouponRedeemed) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc!.couponRedeemed(state.message))),
+                  SnackBar(
+                      content: Text(loc!.couponRedeemed(state.message)),
+                      backgroundColor: Colors.green[700]),
                 );
               } else if (state is CouponInvalid) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc!.couponInvalid(state.message))),
+                  SnackBar(
+                      content: Text(loc!.couponInvalid(state.message)),
+                      backgroundColor: Colors.orange[800]),
                 );
               } else if (state is TarotError) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(loc!.errorMessage(state.message))),
+                  SnackBar(
+                      content: Text(loc!.errorMessage(state.message)),
+                      backgroundColor: Colors.redAccent),
                 );
               }
             },
             builder: (context, state) {
-              if (state is TarotLoading) return _buildLoadingWidget();
+              // TarotInitial hariç loading durumları
+              if (state is TarotLoading && state is! TarotInitial) {
+                return _buildLoadingWidget();
+              }
               return _buildMainContent(context, state);
             },
           ),
+          // Üst Bar
           SafeArea(
             child: Padding(
-              padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.01),
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      _buildUserInfoBar(context),
-                      const SizedBox(width: 8),
-                      _buildRedeemButton(context),
-                    ],
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(child: _buildUserInfoBar(context)),
+                        const SizedBox(width: 8),
+                        Flexible(child: _buildRedeemButton(context)),
+                      ],
+                    ),
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.visibility_outlined,
-                          color: Color(0xB9D8BFD8),
-                          size: 24,
-                        ),
+                      _buildAppBarButton(
+                        context: context,
+                        icon: Icons.person_outline,
                         tooltip: loc!.profile,
                         onPressed: () => _navigateToProfilePage(context),
-                        splashRadius: 24,
-                        splashColor: Colors.grey.withOpacity(0.3),
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.settings_outlined,
-                          color: Color(0xB9D8BFD8),
-                          size: 24,
-                        ),
+                      const SizedBox(width: 4),
+                      _buildAppBarButton(
+                        context: context,
+                        icon: Icons.settings_outlined,
                         tooltip: loc.settings,
-                        onPressed: () => widget.onSettingsTap?.call(),
-
-                        splashRadius: 24,
-                        splashColor: Colors.grey.withOpacity(0.9),
+                        onPressed: widget.onSettingsTap ?? () {}, // Null kontrolü eklendi
                       ),
                     ],
                   ),
@@ -255,32 +245,41 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     );
   }
 
+  // --- TarotReadingScreen Helper Widget'ları ---
+
   Widget _buildLoadingWidget() {
     return Center(
       child: Lottie.asset(
         'assets/animations/tarot_loading.json',
         width: 200,
         height: 200,
+        frameRate: FrameRate(60),
       ),
     );
   }
 
   Widget _buildMainContent(BuildContext context, TarotState state) {
+    final loc = S.of(context);
     return Stack(
       fit: StackFit.expand,
       children: [
         _buildBackground(),
-        _buildGradientOverlay(),
         SafeArea(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildTitle(),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.45),
-              _buildMainCard(context, state),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-              _buildBottomInfo(),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.only(top: 60.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(height: 25),
+
+                _buildTitle(context),
+                const Spacer(flex: 2),
+                _buildMainCard(context, state),
+                const Spacer(flex: 1),
+                _buildBottomInfo(loc!.differentInterpretation),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ],
@@ -291,118 +290,62 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Added image asset
-
-
         Image.asset(
           'assets/image_fx_c.jpg',
           fit: BoxFit.cover,
         ),
-
         Lottie.asset(
           'assets/animations/tarot_shuffle.json',
           fit: BoxFit.contain,
-          frameRate: FrameRate(30),
+          frameRate: FrameRate(60),
           repeat: true,
         ),
-
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.deepPurple[800]!.withOpacity(0.25),
-                Colors.black.withOpacity(0.9),
+                Colors.deepPurple[800]!.withOpacity(0.45),
+                Colors.black.withOpacity(0.7),
               ],
-              stops: const [0.3, 0.8],
+              stops: const [0.3, 1.1],
             ),
           ),
         ),
       ],
     );
   }
-
-  Widget _buildGradientOverlay() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.center,
-          radius: 1.2,
-          colors: [
-            Colors.transparent,
-            Colors.deepPurple[700]!.withOpacity(0.3),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTitle() {
+  Widget _buildTitle(BuildContext context) {
     final loc = S.of(context);
-
     return Column(
       children: [
         AnimatedBuilder(
           animation: _titleController,
           builder: (context, child) {
-            final shimmerValue = sin(_titleController.value * pi * 2) * 0.5 + 0.5;
-
+            final shimmerValue = (sin(_titleController.value * 2 * pi) + 1) / 2;
             return ShaderMask(
               shaderCallback: (bounds) => LinearGradient(
-                colors: [
-                  Colors.white,
-                  Color(0xFFE6E6FA),
-                  Colors.purpleAccent.shade100,
-                  Colors.white,
-                ],
-                stops: [0.0, shimmerValue * 0.5, shimmerValue, 1.0],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ).createShader(bounds),
+                colors: [ Colors.white, Colors.purpleAccent.shade100.withOpacity(0.8), Colors.white, Colors.purpleAccent.shade100.withOpacity(0.8), Colors.white,],
+                stops: [ 0.0, (shimmerValue * 0.4).clamp(0.0, 1.0), (shimmerValue * 0.8).clamp(0.0, 1.0), (shimmerValue * 1.2).clamp(0.0, 1.0), 1.0,],
+                tileMode: TileMode.mirror, transform: GradientRotation(pi / 4),
+              ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+              blendMode: BlendMode.srcIn,
               child: Text(
                 ' ASTRAL TAROT ',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.cinzel(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 4,
-                  color: Colors.white,
-                  decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-                  shadows: [
-                    Shadow(
-                      color: Colors.purple[300]!.withOpacity(0.8),
-                      offset: const Offset(0, 4),
-                      blurRadius: 15,
-                    ),
-                    Shadow(
-                      color: Colors.purpleAccent.withOpacity(0.3 + shimmerValue * 0.2),
-                      offset: const Offset(0, 2),
-                      blurRadius: 8,
-                    ),
-                  ],
+                style: GoogleFonts.cinzelDecorative(
+                  fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: 5, color: Colors.white,
+                  shadows: [ Shadow(color: Colors.purple[700]!.withOpacity(0.7), offset: const Offset(2, 3), blurRadius: 10),],
                 ),
               ),
             );
           },
         ),
-        SizedBox(height: MediaQuery.of(context).size.height * 0.001),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.purple[200]!.withOpacity(0.4)),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            loc!.unveilTheStars,
-            style: GoogleFonts.cinzel(
-              color: Colors.purple[100]!.withOpacity(0.7),
-              fontSize: 16,
-              letterSpacing: 4,
-              fontWeight: FontWeight.w500,
-              decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-            ),
-          ),
+        const SizedBox(height: 10),
+        Text(
+          loc!.unveilTheStars,
+          style: GoogleFonts.cinzel( color: Colors.purple[100]!.withOpacity(0.8), fontSize: 15, letterSpacing: 3, fontWeight: FontWeight.w500,),
         ),
       ],
     );
@@ -410,155 +353,134 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
 
   Widget _buildMainCard(BuildContext context, TarotState state) {
     return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.1),
         child: _buildStartButton(context, state),
       ),
     );
   }
 
+  // Başlat Butonu Widget'ı (Geliştirilmiş ve Hata Düzeltilmiş)
   Widget _buildStartButton(BuildContext context, TarotState state) {
     final loc = S.of(context);
-    const maxFreeReadsPerDay = 3;
-    const minTokensRequired = 1.0;
-    final canStart = state.isPremium || state.dailyFreeFalCount < maxFreeReadsPerDay || state.userTokens >= minTokensRequired;
+    // Başlatma koşulu (her zaman başlatılabilir yapıldı, kontrolü kaldırdık)
+    final bool canStart = true; // Veya eski kontrol: state.dailyFreeFalCount < maxFreeReadsPerDay || state.userTokens >= minTokensRequired;
 
     return TapAnimatedScale(
-      onTap: () {
+      // !!! DÜZELTME: onTap için boş fonksiyon atandı !!!
+      onTap: canStart
+          ? () { // canStart true ise asıl fonksiyon
         HapticFeedback.lightImpact();
-        _showCategorySheet(context);
-      },
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.6,
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: canStart
-                ? [
-              Color(0xFF2D0A4E),
-              Color(0xFF4B0082),
-            ]
-                : [
-              Colors.grey[900]!.withOpacity(0.3),
-              Color(0xFF2D0A40),
-              Color(0xFF2D0A40),
-              Color(0xFF4B0082),
-              Colors.grey[900]!.withOpacity(0.3),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: canStart ? Color(0xFFDA70D6).withOpacity(0.6) : Colors.grey[400]!.withOpacity(0.3),
-              blurRadius: 15,
-              spreadRadius: 1,
-              offset: const Offset(0, 5),
+        _showCategorySheet(context); // Kategori seçimini aç
+      }
+          : () {}, // canStart false ise boş fonksiyon (tip uyumu için)
+      child: AnimatedBuilder( // Parlama animasyonu için
+        animation: _glowController,
+        builder: (context, child) {
+          // Parlama yoğunluğu (sadece canStart ise)
+          final double glow = canStart ? (sin(_glowController.value * pi) * 0.4 + 0.3) : 0.0;
+          return Container(
+            width: MediaQuery.of(context).size.width * 0.65, // Biraz daha geniş
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18), // İç boşluklar
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: canStart
+                    ? [Colors.purple[800]!, Colors.indigo[900]!] // Aktif renkler
+                    : [Colors.grey[800]!, Colors.grey[900]!], // Pasif renkler
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(35), // Daha yuvarlak kenarlar
+              boxShadow: [ // Gölge efekti
+                BoxShadow(
+                  color: canStart
+                      ? Colors.purpleAccent.withOpacity(glow) // Aktif parlama
+                      : Colors.black.withOpacity(0.4), // Pasif gölge
+                  blurRadius: 18, // Daha yumuşak gölge
+                  spreadRadius: 2,
+                ),
+              ],
+              border: Border.all( // Çerçeve
+                color: canStart
+                    ? Colors.purpleAccent.withOpacity(0.5) // Aktif çerçeve
+                    : Colors.grey[700]!, // Pasif çerçeve
+                width: 1.5,
+              ),
             ),
-          ],
-          border: Border.all(
-            color: canStart ? Colors.purpleAccent.withOpacity(0.3) : Colors.white.withOpacity(0.1),
-            width: 1.6,
-          ),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            if (canStart) ...[
-              Positioned(
-                left: 10,
-                child: Icon(Icons.auto_awesome, color: Colors.white.withOpacity(0.2), size: 16),
-              ),
-              Positioned(
-                right: 10,
-                child: Icon(Icons.star, color: Colors.white.withOpacity(0.2), size: 16),
-              ),
-            ],
-            Text(
-              loc!.startJourney,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cinzel(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 2,
-                color: Colors.white.withOpacity(canStart ? 1.0 : 0.7),
-                decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-                shadows: canStart
-                    ? [
-                  Shadow(
-                    color: Colors.purpleAccent.withOpacity(0.8),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+            child: Row( // İkon ve Metin
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.auto_awesome, // Yıldız ikonu
+                  color: Colors.white.withOpacity(canStart ? 1.0 : 0.5),
+                  size: 20,
+                  shadows: canStart ? [Shadow(color: Colors.white.withOpacity(0.5), blurRadius: 5)] : null,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  loc!.startJourney, // Buton metni (Fallback eklendi)
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.cinzel(
+                    fontSize: 16, // Biraz daha küçük font
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2, // Harf aralığı
+                    color: Colors.white.withOpacity(canStart ? 1.0 : 0.6), // Pasifse soluklaştır
                   ),
-                ]
-                    : null,
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
-
-  Widget _buildBottomInfo() {
-    final loc = S.of(context);
-    return Center(
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.05),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.purple[800]!.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.purple[200]!.withOpacity(0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.info_outline, color: Colors.white70, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              loc!.differentInterpretation,
-              style: GoogleFonts.cinzel(
-                color: Colors.white70,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+  Widget _buildBottomInfo(String infoText) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: Text( infoText, style: GoogleFonts.cinzel( color: Colors.white.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.w400,), textAlign: TextAlign.center,),
     );
   }
 
   Widget _buildUserInfoBar(BuildContext context) {
+    final loc = S.of(context);
     return BlocBuilder<TarotBloc, TarotState>(
       builder: (context, state) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.purple,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.purple[300]!.withOpacity(0.5)),
+            gradient: LinearGradient(
+              colors: [Colors.purple[700]!.withOpacity(0.8), Colors.deepPurple[800]!.withOpacity(0.9)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [ BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 3, offset: const Offset(0, 1)) ],
           ),
+          // Ana Row'un taşmasını önlemek için Flexible veya Expanded eklemeye gerek yok,
+          // çünkü bu widget zaten dışarıda bir Flexible içinde.
+          // Ancak iç Row'un içeriğini yönetmemiz gerekiyor.
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min, // Row'un sadece içeriği kadar yer kaplamasını sağlar
             children: [
-              Icon(
-                Icons.star,
-                color: state.isPremium ? Colors.amber : Colors.grey,
-                size: 16,
+              Icon( Icons.stars, color: Colors.yellowAccent[100], size: 14), // Boyutu biraz küçülttük
+              const SizedBox(width: 4),
+              // Token Miktarı - Çok uzayabilir diye Flexible içine alalım
+              Flexible(
+                child: Text(
+                  state.userTokens.toStringAsFixed(1),
+                  style: GoogleFonts.orbitron( color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold), // Font boyutunu biraz küçülttük
+                  overflow: TextOverflow.clip, // Taşarsa ... göster
+                  maxLines: 1, // Tek satırda kalmasını sağla
+                ),
               ),
               const SizedBox(width: 4),
-              Text(
-                state.isPremium ? "Premium" : "${state.userTokens.toStringAsFixed(1)} ${S.of(context)!.mysticalTokens}",
-                style: GoogleFonts.cinzel(
-                  color: Colors.white,
-                  fontSize: 12,
-                  decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+              // "Mystical Tokens" Yazısı - Bu da uzayabilir, Flexible içine alalım
+              Flexible(
+                child: Text(
+                  loc!.mysticalTokens, // Fallback eklendi
+                  style: GoogleFonts.cinzel( color: Colors.white.withOpacity(0.8), fontSize: 9), // Font boyutunu biraz küçülttük
+                  overflow: TextOverflow.ellipsis, // Taşarsa ... göster
+                  maxLines: 1, // Tek satırda kalmasını sağla
                 ),
               ),
             ],
@@ -567,54 +489,28 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
       },
     );
   }
-
   Widget _buildRedeemButton(BuildContext context) {
     final loc = S.of(context);
     return TapAnimatedScale(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        _showCouponSheet(context);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.purple[700]!.withOpacity(0.8),
-              Colors.deepPurple[900]!.withOpacity(0.6),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+      onTap: () { HapticFeedback.lightImpact(); _showCouponSheet(context); },
+      child: Container( padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration( color: Colors.black.withOpacity(0.4), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.purpleAccent.withOpacity(0.4), width: 1),),
+        child: Row( mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.card_giftcard, color: Colors.white, size: 16),
-            const SizedBox(width: 5),
-            Text(
-              loc!.redeem,
-              style: GoogleFonts.cinzel(
-                color: Colors.white,
-                fontSize: 10,
-
-                decoration: TextDecoration.none,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+            Icon(Icons.card_giftcard, color: Colors.amber[300], size: 12),
+            const SizedBox(width: 6),
+            Text( loc!.redeem, style: GoogleFonts.cinzel( color: Colors.white.withOpacity(0.9), fontSize: 11, fontWeight: FontWeight.w500),),
+          ],),),);
   }
 
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    super.dispose();
+  Widget _buildAppBarButton({ required BuildContext context, required IconData icon, required String tooltip, required VoidCallback onPressed}) {
+    return IconButton( icon: Icon(icon, color: Colors.white.withOpacity(0.8), size: 24), tooltip: tooltip, onPressed: onPressed, splashRadius: 20, splashColor: Colors.purpleAccent.withOpacity(0.3), highlightColor: Colors.purpleAccent.withOpacity(0.2),);
   }
 }
+
+//---------- TarotReadingScreen Sonu ----------
+
+//---------- CategorySelectionSheet Başlangıcı ----------
 
 class CategorySelectionSheet extends StatelessWidget {
   const CategorySelectionSheet({super.key});
@@ -623,243 +519,69 @@ class CategorySelectionSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = S.of(context);
     return DraggableScrollableSheet(
-      initialChildSize: 0.9,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
+      initialChildSize: 0.85, minChildSize: 0.4, maxChildSize: 0.95,
       builder: (context, scrollController) => Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple[900]!, Colors.black87],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Stack(
-          children: [
-            Column(
+            gradient: LinearGradient( colors: [Colors.deepPurple[900]!, Colors.black87], begin: Alignment.topLeft, end: Alignment.bottomRight,),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)), border: Border.all(color: Colors.purpleAccent.withOpacity(0.2))),
+        child: Stack( children: [
+          Column( children: [
+            _buildSheetHeader(context, loc!.categorySelection, loc.chooseTopic),
+            Expanded( child: ListView( controller: scrollController, padding: const EdgeInsets.only(left: 16, right: 16, bottom: 20, top: 10),
               children: [
-                _buildSheetHeader(context, loc!.categorySelection, loc.chooseTopic),
-                Expanded(
-                  child: ListView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      _buildCategoryTile(
-                        context: context,
-                        title: loc.loveRelationships,
-                        description: loc.loveDescription,
-                        icon: Icons.favorite,
-                        categoryKey: 'love',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildCategoryTile(
-                        context: context,
-                        title: loc.career,
-                        description: loc.careerDescription,
-                        icon: Icons.work,
-                        categoryKey: 'career',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildCategoryTile(
-                        context: context,
-                        title: loc.money,
-                        description: loc.moneyDescription,
-                        icon: Icons.attach_money,
-                        categoryKey: 'money',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildCategoryTile(
-                        context: context,
-                        title: loc.general,
-                        description: loc.generalDescription,
-                        icon: Icons.psychology,
-                        categoryKey: 'general',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildCategoryTile(
-                        context: context,
-                        title: loc.spiritualMystical,
-                        description: loc.spiritualMysticalDescription,
-                        icon: Icons.star_border,
-                        categoryKey: 'spiritual',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Positioned(
-              top: 16,
-              right: 16,
-              child: _buildCloseButton(context),
-            ),
-          ],
-        ),
-      ),
-    );
+                _buildCategoryTile( context: context, title: loc.loveRelationships, description: loc.loveDescription, icon: Icons.favorite_border, categoryKey: 'love',), const SizedBox(height: 14),
+                _buildCategoryTile( context: context, title: loc.career, description: loc.careerDescription, icon: Icons.business_center_outlined, categoryKey: 'career',), const SizedBox(height: 14),
+                _buildCategoryTile( context: context, title: loc.money, description: loc.moneyDescription, icon: Icons.monetization_on_outlined, categoryKey: 'money',), const SizedBox(height: 14),
+                _buildCategoryTile( context: context, title: loc.general, description: loc.generalDescription, icon: Icons.lightbulb_outline, categoryKey: 'general',), const SizedBox(height: 14),
+                _buildCategoryTile( context: context, title: loc.spiritualMystical, description: loc.spiritualMysticalDescription, icon: Icons.auto_awesome_outlined, categoryKey: 'spiritual',), const SizedBox(height: 30),
+              ],),),],),
+          Positioned( top: 12, right: 12, child: _buildCloseButton(context),),
+        ],),),);
   }
 
   Widget _buildSheetHeader(BuildContext context, String title, String subtitle) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: Column(
+    return Container( padding: const EdgeInsets.only(top: 20, bottom: 10, left: 20, right: 20),
+      child: Column( mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(top: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Text(
-            title,
-            style: GoogleFonts.cinzel(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.cinzel(
-              fontSize: 16,
-              color: Colors.white70,
-              decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-            ),
-          ),
-        ],
-      ),
-    );
+          Container( width: 50, height: 5, decoration: BoxDecoration( color: Colors.white.withOpacity(0.4), borderRadius: BorderRadius.circular(2.5),),), const SizedBox(height: 20),
+          Text( title, style: GoogleFonts.cinzelDecorative( fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.5,),), const SizedBox(height: 8),
+          Text( subtitle, textAlign: TextAlign.center, style: GoogleFonts.cinzel( fontSize: 15, color: Colors.white.withOpacity(0.7),),),
+          Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 30, thickness: 1),
+        ],),);
   }
 
-  Widget _buildCategoryTile({
-    required BuildContext context,
-    required String title,
-    required String description,
-    required IconData icon,
-    required String categoryKey,
-  }) {
+  Widget _buildCategoryTile({ required BuildContext context, required String title, required String description, required IconData icon, required String categoryKey,}) {
     return TapAnimatedScale(
       onTap: () {
         HapticFeedback.selectionClick();
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => BlocProvider.value(
-              value: BlocProvider.of<TarotBloc>(context),
-              child: SpreadSelectionSheet(categoryKey: categoryKey),
-            ),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 1.0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOutQuart,
-                )),
-                child: FadeTransition(
-                  opacity: CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeInOut,
-                  ),
-                  child: child,
-                ),
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 600),
-            opaque: false,
-            barrierColor: Colors.black54.withOpacity(0.5),
-            barrierDismissible: true,
-          ),
-        );
+        Navigator.push( context, MaterialPageRoute( builder: (_) => BlocProvider.value( value: context.read<TarotBloc>(), child: SpreadSelectionSheet(categoryKey: categoryKey),)),);
       },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.purple[700]!.withOpacity(0.6),
-              Colors.deepPurple[900]!.withOpacity(0.5),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.purple[300]!.withOpacity(0.5)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.amber[200], size: 28),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.cinzel(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    description,
-                    style: GoogleFonts.cinzel(
-                      fontSize: 14,
-                      color: Colors.grey[300],
-                      decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+      child: Container( padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        decoration: BoxDecoration( gradient: LinearGradient( colors: [ Colors.purple[800]!.withOpacity(0.5), Colors.indigo[900]!.withOpacity(0.6),], begin: Alignment.centerLeft, end: Alignment.centerRight,),
+            borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.purpleAccent.withOpacity(0.3), width: 1), boxShadow: [ BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 5, offset: Offset(0, 2)) ]),
+        child: Row( children: [
+          Container( padding: const EdgeInsets.all(10), decoration: BoxDecoration( color: Colors.purpleAccent.withOpacity(0.15), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: Colors.amber[300], size: 26),), const SizedBox(width: 16),
+          Expanded( child: Column( crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text( title, style: GoogleFonts.cinzel( fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white,),), const SizedBox(height: 6),
+              Text( description, style: GoogleFonts.lato( fontSize: 13, color: Colors.white.withOpacity(0.7), height: 1.3), maxLines: 2, overflow: TextOverflow.ellipsis,),
+            ],),), const SizedBox(width: 10),
+          Icon(Icons.arrow_forward_ios_rounded, color: Colors.white.withOpacity(0.5), size: 18)
+        ],),),);
   }
 
   Widget _buildCloseButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.pop(context),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withOpacity(0.6),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.purple[300]!.withOpacity(0.5),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: const Icon(Icons.close, color: Colors.white, size: 24),
-      ),
-    );
+    return GestureDetector( onTap: () => Navigator.pop(context),
+      child: Container( padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration( shape: BoxShape.circle, color: Colors.black.withOpacity(0.5), boxShadow: [ BoxShadow( color: Colors.purple[300]!.withOpacity(0.4), blurRadius: 4, offset: const Offset(0, 2), ), ],),
+        child: const Icon(Icons.close, color: Colors.white70, size: 22),),);
   }
 }
+
+//---------- CategorySelectionSheet Sonu ----------
+
+
+//---------- SpreadSelectionSheet Başlangıcı ----------
 
 class SpreadSelectionSheet extends StatefulWidget {
   final String categoryKey;
@@ -874,87 +596,50 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
+    final spreads = _getSpreadsForCategory(widget.categoryKey, context);
+
     return Container(
+      height: MediaQuery.of(context).size.height * 0.9, width: MediaQuery.of(context).size.width,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.deepPurple[900]!, Colors.black87],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: _buildSheetHeader(loc!.spreadSelection, loc.chooseSpread),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    final spreads = _getSpreadsForCategory(widget.categoryKey);
-                    if (index >= spreads.length) return null;
-                    final spread = spreads[index];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                      child: _buildSpreadTile(
-                        context: context,
-                        title: spread['title'],
-                        description: spread['description'],
-                        cardCount: spread['cardCount'],
-                        event: spread['event'],
-                        cost: spread['cost'],
-                      ),
-                    );
-                  },
-                  childCount: _getSpreadsForCategory(widget.categoryKey).length,
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            top: 20,
-            right: 12,
-            bottom: 730,
-            child: _buildCloseButton(context),
-          ),
-        ],
-      ),
-    );
+        gradient: LinearGradient( colors: [Colors.deepPurple[900]!, Colors.black.withOpacity(0.95)], begin: Alignment.topCenter, end: Alignment.bottomCenter,),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),),
+      child: Stack( children: [
+        CustomScrollView( slivers: [
+          SliverPadding( padding: const EdgeInsets.only(top: 20), sliver: SliverToBoxAdapter( child: _buildSheetHeader(loc!.spreadSelection, loc.chooseSpread),),),
+          SliverPadding( padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            sliver: SliverList( delegate: SliverChildBuilderDelegate( (context, index) {
+              if (index >= spreads.length) return null; final spreadData = spreads[index];
+              return Padding( padding: const EdgeInsets.only(bottom: 14),
+                child: _buildSpreadTile( context: context, title: spreadData['title'], description: spreadData['description'], spreadType: spreadData['spreadType'], categoryKey: widget.categoryKey,),);},
+              childCount: spreads.length,),),),
+          const SliverToBoxAdapter( child: SizedBox(height: 60),),],),
+        Positioned( top: 60, right: 12, child: _buildCloseButton(context),),
+      ],),);
   }
 
   Widget _buildSheetHeader(String title, String subtitle) {
     return Container(
-      padding: const EdgeInsets.only(top: 60, left: 16, right: 16, bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.only(top: 20, bottom: 10, left: 20, right: 20),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(top: 16),
+            width: 50,
+            height: 5,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(2),
+              color: Colors.white.withOpacity(0.4),
+              borderRadius: BorderRadius.circular(2.5),
             ),
           ),
+          const SizedBox(height: 20),
           Text(
             title,
-            style: GoogleFonts.cinzel(
-              fontSize: 24,
+            style: GoogleFonts.cinzelDecorative(
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
-              decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+              letterSpacing: 1.5,
+              decoration: TextDecoration.none, // <-- EKLENDİ
             ),
           ),
           const SizedBox(height: 8),
@@ -962,239 +647,33 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             subtitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.cinzel(
-              fontSize: 16,
-              color: Colors.white70,
-              decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+              fontSize: 15,
+              color: Colors.white.withOpacity(0.7),
+              decoration: TextDecoration.none, // <-- ZATEN VARDI/EKLENDİ
             ),
           ),
+          Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 30, thickness: 1),
         ],
       ),
     );
   }
 
-  List<Map<String, dynamic>> _getSpreadsForCategory(String categoryKey) {
+  List<Map<String, dynamic>> _getSpreadsForCategory(String categoryKey, BuildContext context) {
     final loc = S.of(context);
     switch (categoryKey) {
-      case 'love':
-        return [
-          {
-            'title': loc!.singleCard,
-            'description': loc.singleCardDescription,
-            'cardCount': 1,
-            'event': () => DrawSingleCard(),
-            'cost': SpreadType.singleCard.costInCredits,
-          },
-          {
-            'title': loc.relationshipSpread,
-            'description': loc.relationshipSpreadDescription,
-            'cardCount': 7,
-            'event': () => DrawRelationshipSpread(),
-            'cost': SpreadType.relationshipSpread.costInCredits,
-          },
-          {
-            'title': loc.brokenHeart,
-            'description': loc.brokenHeartDescription,
-            'cardCount': 5,
-            'event': () => DrawBrokenHeart(),
-            'cost': SpreadType.brokenHeart.costInCredits,
-          },
-          {
-            'title': loc.pastPresentFuture,
-            'description': loc.pastPresentFutureDescriptionLove,
-            'cardCount': 3,
-            'event': () => DrawPastPresentFuture(),
-            'cost': SpreadType.pastPresentFuture.costInCredits,
-          },
-          {
-            'title': loc.mindBodySpirit,
-            'description': loc.mindBodySpiritDescriptionLove,
-            'cardCount': 3,
-            'event': () => DrawMindBodySpirit(),
-            'cost': SpreadType.mindBodySpirit.costInCredits,
-          },
-          {
-            'title': loc.fullMoonSpread,
-            'description': loc.fullMoonSpreadDescriptionLove,
-            'cardCount': 5,
-            'event': () => DrawFullMoonSpread(),
-            'cost': SpreadType.fullMoonSpread.costInCredits,
-          },
-        ];
-      case 'career':
-        return [
-          {
-            'title': loc!.singleCard,
-            'description': loc.singleCardDescription,
-            'cardCount': 1,
-            'event': () => DrawSingleCard(),
-            'cost': SpreadType.singleCard.costInCredits,
-          },
-          {
-            'title': loc.pastPresentFuture,
-            'description': loc.pastPresentFutureDescription,
-            'cardCount': 3,
-            'event': () => DrawPastPresentFuture(),
-            'cost': SpreadType.pastPresentFuture.costInCredits,
-          },
-          {
-            'title': loc.fiveCardPath,
-            'description': loc.fiveCardPathDescription,
-            'cardCount': 5,
-            'event': () => DrawFiveCardPath(),
-            'cost': SpreadType.fiveCardPath.costInCredits,
-          },
-          {
-            'title': loc.careerPathSpread,
-            'description': loc.careerPathSpreadDescription,
-            'cardCount': 5,
-            'event': () => DrawCareerPathSpread(),
-            'cost': SpreadType.careerPathSpread.costInCredits,
-          },
-          {
-            'title': loc.problemSolution,
-            'description': loc.problemSolutionDescriptionCareer,
-            'cardCount': 3,
-            'event': () => DrawProblemSolution(),
-            'cost': SpreadType.problemSolution.costInCredits,
-          },
-          {
-            'title': loc.horseshoeSpread,
-            'description': loc.horseshoeSpreadDescriptionCareer,
-            'cardCount': 7,
-            'event': () => DrawHorseshoeSpread(),
-            'cost': SpreadType.horseshoeSpread.costInCredits,
-          },
-        ];
-      case 'money':
-        return [
-          {
-            'title': loc!.singleCard,
-            'description': loc.singleCardDescription,
-            'cardCount': 1,
-            'event': () => DrawSingleCard(),
-            'cost': SpreadType.singleCard.costInCredits,
-          },
-          {
-            'title': loc.problemSolution,
-            'description': loc.problemSolutionDescriptionMoney,
-            'cardCount': 3,
-            'event': () => DrawProblemSolution(),
-            'cost': SpreadType.problemSolution.costInCredits,
-          },
-          {
-            'title': loc.horseshoeSpread,
-            'description': loc.horseshoeSpreadDescriptionMoney,
-            'cardCount': 7,
-            'event': () => DrawHorseshoeSpread(),
-            'cost': SpreadType.horseshoeSpread.costInCredits,
-          },
-          {
-            'title': loc.pastPresentFuture,
-            'description': loc.pastPresentFutureDescriptionMoney,
-            'cardCount': 3,
-            'event': () => DrawPastPresentFuture(),
-            'cost': SpreadType.pastPresentFuture.costInCredits,
-          },
-          {
-            'title': loc.careerPathSpread,
-            'description': loc.careerPathSpreadDescriptionMoney,
-            'cardCount': 5,
-            'event': () => DrawCareerPathSpread(),
-            'cost': SpreadType.careerPathSpread.costInCredits,
-          },
-        ];
-      case 'general':
-        return [
-          {
-            'title': loc!.singleCard,
-            'description': loc.singleCardDescription,
-            'cardCount': 1,
-            'event': () => DrawSingleCard(),
-            'cost': SpreadType.singleCard.costInCredits,
-          },
-          {
-            'title': loc.celticCrossReading,
-            'description': loc.celticCrossDescription,
-            'cardCount': 10,
-            'event': () => DrawCelticCross(),
-            'cost': SpreadType.celticCross.costInCredits,
-          },
-          {
-            'title': loc.yearlySpreadReading,
-            'description': loc.yearlySpreadDescription,
-            'cardCount': 12,
-            'event': () => DrawYearlySpread(),
-            'cost': SpreadType.yearlySpread.costInCredits,
-          },
-          {
-            'title': loc.astroLogicalCross,
-            'description': loc.astroLogicalCrossDescriptionGeneral,
-            'cardCount': 5,
-            'event': () => DrawAstroLogicalCross(),
-            'cost': SpreadType.astroLogicalCross.costInCredits,
-          },
-          {
-            'title': loc.horseshoeSpread,
-            'description': loc.horseshoeSpreadDescriptionGeneral,
-            'cardCount': 7,
-            'event': () => DrawHorseshoeSpread(),
-            'cost': SpreadType.horseshoeSpread.costInCredits,
-          },
-          {
-            'title': loc.pastPresentFuture,
-            'description': loc.pastPresentFutureDescriptionGeneral,
-            'cardCount': 3,
-            'event': () => DrawPastPresentFuture(),
-            'cost': SpreadType.pastPresentFuture.costInCredits,
-          },
-        ];
-      case 'spiritual':
-        return [
-          {
-            'title': loc!.singleCard,
-            'description': loc.singleCardDescription,
-            'cardCount': 1,
-            'event': () => DrawSingleCard(),
-            'cost': SpreadType.singleCard.costInCredits,
-          },
-          {
-            'title': loc.mindBodySpirit,
-            'description': loc.mindBodySpiritDescriptionSpiritual,
-            'cardCount': 3,
-            'event': () => DrawMindBodySpirit(),
-            'cost': SpreadType.mindBodySpirit.costInCredits,
-          },
-          {
-            'title': loc.dreamInterpretation,
-            'description': loc.dreamInterpretationDescriptionSpiritual,
-            'cardCount': 3,
-            'event': () => DrawDreamInterpretation(),
-            'cost': SpreadType.dreamInterpretation.costInCredits,
-          },
-          {
-            'title': loc.fullMoonSpread,
-            'description': loc.fullMoonSpreadDescriptionSpiritual,
-            'cardCount': 5,
-            'event': () => DrawFullMoonSpread(),
-            'cost': SpreadType.fullMoonSpread.costInCredits,
-          },
-          {
-            'title': loc.astroLogicalCross,
-            'description': loc.astroLogicalCrossDescriptionSpiritual,
-            'cardCount': 5,
-            'event': () => DrawAstroLogicalCross(),
-            'cost': SpreadType.astroLogicalCross.costInCredits,
-          },
-          {
-            'title': loc.celticCrossReading,
-            'description': loc.celticCrossDescriptionSpiritual,
-            'cardCount': 10,
-            'event': () => DrawCelticCross(),
-            'cost': SpreadType.celticCross.costInCredits,
-          },
-        ];
-      default:
-        return [];
+      case 'love': return [ {'title': loc!.singleCard, 'description': loc.singleCardDescription,
+        'spreadType': SpreadType.singleCard}, {'title': loc.relationshipSpread,
+        'description': loc.relationshipSpreadDescription, 'spreadType': SpreadType.relationshipSpread},
+        {'title': loc.brokenHeart, 'description': loc.brokenHeartDescription,
+          'spreadType': SpreadType.brokenHeart}, {'title': loc.pastPresentFuture,
+          'description': loc.pastPresentFutureDescriptionLove, 'spreadType': SpreadType.pastPresentFuture},
+        {'title': loc.mindBodySpirit, 'description': loc.mindBodySpiritDescriptionLove,
+          'spreadType': SpreadType.mindBodySpirit}, {'title': loc.fullMoonSpread, 'description': loc.fullMoonSpreadDescriptionLove, 'spreadType': SpreadType.fullMoonSpread},];
+      case 'career': return [ {'title': loc!.singleCard, 'description': loc.singleCardDescription, 'spreadType': SpreadType.singleCard}, {'title': loc.pastPresentFuture, 'description': loc.pastPresentFutureDescription, 'spreadType': SpreadType.pastPresentFuture}, {'title': loc.fiveCardPath, 'description': loc.fiveCardPathDescription, 'spreadType': SpreadType.fiveCardPath}, {'title': loc.careerPathSpread, 'description': loc.careerPathSpreadDescription, 'spreadType': SpreadType.careerPathSpread}, {'title': loc.problemSolution, 'description': loc.problemSolutionDescriptionCareer, 'spreadType': SpreadType.problemSolution}, {'title': loc.horseshoeSpread, 'description': loc.horseshoeSpreadDescriptionCareer, 'spreadType': SpreadType.horseshoeSpread},];
+      case 'money': return [ {'title': loc!.singleCard, 'description': loc.singleCardDescription, 'spreadType': SpreadType.singleCard}, {'title': loc.problemSolution, 'description': loc.problemSolutionDescriptionMoney, 'spreadType': SpreadType.problemSolution}, {'title': loc.horseshoeSpread, 'description': loc.horseshoeSpreadDescriptionMoney, 'spreadType': SpreadType.horseshoeSpread}, {'title': loc.pastPresentFuture, 'description': loc.pastPresentFutureDescriptionMoney, 'spreadType': SpreadType.pastPresentFuture}, {'title': loc.careerPathSpread, 'description': loc.careerPathSpreadDescriptionMoney, 'spreadType': SpreadType.careerPathSpread},];
+      case 'general': return [ {'title': loc!.singleCard, 'description': loc.singleCardDescription, 'spreadType': SpreadType.singleCard}, {'title': loc.celticCrossReading, 'description': loc.celticCrossDescription, 'spreadType': SpreadType.celticCross}, {'title': loc.yearlySpreadReading, 'description': loc.yearlySpreadDescription, 'spreadType': SpreadType.yearlySpread}, {'title': loc.astroLogicalCross, 'description': loc.astroLogicalCrossDescriptionGeneral, 'spreadType': SpreadType.astroLogicalCross}, {'title': loc.horseshoeSpread, 'description': loc.horseshoeSpreadDescriptionGeneral, 'spreadType': SpreadType.horseshoeSpread}, {'title': loc.pastPresentFuture, 'description': loc.pastPresentFutureDescriptionGeneral, 'spreadType': SpreadType.pastPresentFuture},];
+      case 'spiritual': return [ {'title': loc!.singleCard, 'description': loc.singleCardDescription, 'spreadType': SpreadType.singleCard}, {'title': loc.mindBodySpirit, 'description': loc.mindBodySpiritDescriptionSpiritual, 'spreadType': SpreadType.mindBodySpirit}, {'title': loc.dreamInterpretation, 'description': loc.dreamInterpretationDescriptionSpiritual, 'spreadType': SpreadType.dreamInterpretation}, {'title': loc.fullMoonSpread, 'description': loc.fullMoonSpreadDescriptionSpiritual, 'spreadType': SpreadType.fullMoonSpread}, {'title': loc.astroLogicalCross, 'description': loc.astroLogicalCrossDescriptionSpiritual, 'spreadType': SpreadType.astroLogicalCross}, {'title': loc.celticCrossReading, 'description': loc.celticCrossDescriptionSpiritual, 'spreadType': SpreadType.celticCross},];
+      default: return [];
     }
   }
 
@@ -1202,67 +681,52 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
     required BuildContext context,
     required String title,
     required String description,
-    required int cardCount,
-    required Function event,
-    required double cost,
+    required SpreadType spreadType,
+    required String categoryKey,
   }) {
     final loc = S.of(context);
+    final int cardCount = spreadType.cardCount;
+    final double cost = spreadType.costInCredits;
+
     return TapAnimatedScale(
       onTap: () {
         HapticFeedback.selectionClick();
-        Navigator.pop(context); // Kapat SpreadSelectionSheet
-        context.read<TarotBloc>().add(event() as TarotEvent);
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => CardSelectionAnimationScreen(cardCount: cardCount),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              const begin = Offset(0.0, 1.0);
-              const end = Offset.zero;
-              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: Curves.easeInOutQuart));
-              return FadeTransition(
-                opacity: CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOut,
-                ),
-                child: SlideTransition(
-                  position: animation.drive(tween),
-                  child: child,
-                ),
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 700),
+          MaterialPageRoute(
+            builder: (_) => BlocProvider.value(
+              value: context.read<TarotBloc>(),
+              child: CardSelectionAnimationScreen(
+                spreadType: spreadType,
+                categoryKey: categoryKey,
+              ),
+            ),
           ),
         );
       },
       child: Container(
         padding: const EdgeInsets.all(16),
-        constraints: BoxConstraints(
-          minHeight: 130,
-          maxWidth: MediaQuery.of(context).size.width * 0.85,
-        ),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.purple[700]!.withOpacity(0.7),
-              Colors.deepPurple[900]!.withOpacity(0.6),
+              Colors.purple[800]!.withOpacity(0.5),
+              Colors.indigo[900]!.withOpacity(0.6),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.purple[300]!.withOpacity(0.6)),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.purpleAccent.withOpacity(0.3), width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
+              blurRadius: 5,
+              offset: Offset(0, 2),
+            )
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1272,70 +736,71 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
                   child: Text(
                     title,
                     style: GoogleFonts.cinzel(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
-                      decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+                      decoration: TextDecoration.none, // <-- EKLENDİ
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                const SizedBox(width: 10),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.purple[600],
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.purpleAccent.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     loc!.cardCount(cardCount),
                     style: GoogleFonts.cinzel(
-                      color: Colors.white,
-                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      decoration: TextDecoration.none, // Alt çizgi kaldırıldı
+                      decoration: TextDecoration.none, // <-- EKLENDİ
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Flexible(
-              child: Text(
-                description,
-                style: GoogleFonts.cinzel(
-                  fontSize: 14,
-                  color: Colors.white70,
-                  decoration: TextDecoration.none, // Alt çizgi kaldırıldı
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+            Text(
+              description,
+              style: GoogleFonts.lato(
+                fontSize: 13,
+                color: Colors.white.withOpacity(0.7),
+                height: 1.3,
+                decoration: TextDecoration.none, // <-- EKLENDİ
               ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Align(
               alignment: Alignment.bottomRight,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.purple[800]!.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+                  color: Colors.black.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.yellowAccent.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.stars_rounded, color: Colors.yellowAccent[100], size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${cost.toStringAsFixed(1)} ${loc.mysticalTokens}',
+                      style: GoogleFonts.orbitron(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.none, // <-- EKLENDİ
+                      ),
                     ),
                   ],
-                ),
-                child: Text(
-                  '${cost.toStringAsFixed(1)} ${loc.mysticalTokens}',
-                  style: GoogleFonts.cinzel(
-                    color: Colors.white70,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.none,
-                  ),
                 ),
               ),
             ),
@@ -1344,25 +809,10 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
       ),
     );
   }
-}
-
-Widget _buildCloseButton(BuildContext context) {
-  return GestureDetector(
-    onTap: () => Navigator.pop(context),
-    child: Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.black.withOpacity(0.6),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple[300]!.withOpacity(0.5),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: const Icon(Icons.close, color: Colors.white, size: 24),
-    ),
-  );
+  Widget _buildCloseButton(BuildContext context) {
+    return GestureDetector( onTap: () => Navigator.pop(context),
+      child: Container( padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration( shape: BoxShape.circle, color: Colors.black.withOpacity(0.5), boxShadow: [ BoxShadow( color: Colors.purple[300]!.withOpacity(0.4), blurRadius: 4, offset: const Offset(0, 2), ), ],),
+        child: const Icon(Icons.close, color: Colors.white70, size: 22),),);
+  }
 }
