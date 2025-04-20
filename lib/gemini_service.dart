@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
   late final GenerativeModel _model;
-  final String modelName = 'gemini-2.5-pro-exp-03-25';
+  final String modelName = 'gemini-2.0-flash';
   final double temperature = 0.3; // Düşük sıcaklık daha tutarlı sonuçlar için
   final int maxOutputTokens = 1600; // Maksimum çıktı token sayısı
 
