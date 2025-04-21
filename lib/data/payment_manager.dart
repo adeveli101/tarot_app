@@ -1,258 +1,353 @@
-// ignore_for_file: invalid_use_of_visible_for_testing_member
+// payment_manager.dart
+
+// ignore_for_file: invalid_use_of_visible_for_testing_member, use_build_context_synchronously
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// shared_preferences artık doğrudan burada kullanılmıyor
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/data/tarot_event_state.dart';
-import 'package:tarot_fal/generated/l10n.dart';
+import 'package:tarot_fal/generated/l10n.dart'; // Yerelleştirme için
 import 'package:tarot_fal/models/animations/tap_animations_scale.dart';
+import 'package:tarot_fal/data/user_data_manager.dart'; // UserDataManager import edildi
 
+// ---- PaymentManager Sınıfı ----
 class PaymentManager {
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
-  final VoidCallback? onPurchaseSuccess;
+  final VoidCallback? onPurchaseSuccess; // Satın alma başarılı olduğunda çağrılacak callback
+  final UserDataManager _userDataManager = UserDataManager(); // UserDataManager örneği
 
+  // Satın alınabilir ürünlerin ID'leri ve karşılık gelen kredi miktarları
   final Map<String, double> _creditValues = {
-    '25_tokens': 25.0,    // $0.49
-    '50_tokens': 50.0,    // $0.99
-    '150_tokens': 150.0,  // $2.99 + 10 bonus
-    '300_tokens': 300.0,  // $5.99 + 25 bonus
-    '500_tokens': 500.0,  // $9.99 + 50 bonus
-    '1000_tokens': 1000.0, // $19.99 + 150 bonus
-    '2500_tokens': 2500.0, // $49.99 + 500 bonus
+    '25_tokens': 25.0,
+    '50_tokens': 50.0,
+    '150_tokens': 150.0,
+    '300_tokens': 300.0,
+    '500_tokens': 500.0,
+    '1000_tokens': 1000.0,
+    '2500_tokens': 2500.0,
+    // TODO: Premium abonelik ürün ID'sini buraya ekleyin (eğer varsa)
+    // 'premium_subscription': 0.0, // Premium için kredi değeri 0 olabilir
   };
+
+  // --- Yerel Kupon Listesi ---
+  // validCoupons map'i BURADAN SİLİNDİ. Tüm kupon mantığı TarotBloc'ta.
 
   PaymentManager({this.onPurchaseSuccess});
 
+  /// In-App Purchase servisini başlatır ve satın alma akışını dinler.
   Future<void> initialize() async {
-    final streamAvailable = await _inAppPurchase.isAvailable();
-    if (!streamAvailable) {
-      debugPrint('In-app purchase stream not available');
+    final bool available = await _inAppPurchase.isAvailable();
+    if (!available) {
+      debugPrint('Ödeme Yöneticisi: In-App Purchase servisi kullanılamıyor.');
       return;
     }
+    // Mevcut aboneliği iptal et (varsa)
+    await _subscription?.cancel();
+    // Satın alma akışını dinle
     _subscription = _inAppPurchase.purchaseStream.listen(
-      _handlePurchaseUpdates,
-      onError: (error) => debugPrint('Payment stream error: $error'),
-      onDone: () => debugPrint('Payment stream completed'),
+      _handlePurchaseUpdates, // Gelen güncellemeleri işle
+      onDone: () {
+        debugPrint('Ödeme Yöneticisi: Satın alma akışı tamamlandı.');
+        _subscription?.cancel(); // Akış bitince aboneliği iptal et
+      },
+      onError: (error) {
+        debugPrint('Ödeme Yöneticisi: Satın alma akışı hatası: $error');
+        // Hata durumunda da aboneliği iptal etmek iyi olabilir
+        _subscription?.cancel();
+      },
+      cancelOnError: true, // Hata durumunda otomatik iptal et
     );
+    debugPrint('Ödeme Yöneticisi: Başlatıldı ve satın alma akışı dinleniyor.');
   }
 
+  /// Mağazadan satın alınabilir ürün detaylarını yükler.
   Future<List<ProductDetails>> loadProducts() async {
-    const productIds = [
-      '25_tokens',
-      '50_tokens',
-      '150_tokens',
-      '300_tokens',
-      '500_tokens',
-      '1000_tokens',
-      '2500_tokens',
-    ];
+    // Tanımlı ürün ID'lerini al
+    final Set<String> productIds = _creditValues.keys.toSet();
+    // TODO: Varsa premium ürün ID'sini de ekleyin
+    // productIds.add('premium_subscription');
+
     try {
-      final available = await _inAppPurchase.isAvailable();
+      final bool available = await _inAppPurchase.isAvailable();
       if (!available) {
-        debugPrint('In-app purchase service unavailable');
+        debugPrint('Ödeme Yöneticisi: Ürünler yüklenemedi - servis kullanılamıyor.');
         return [];
       }
-      final response = await _inAppPurchase.queryProductDetails(productIds.toSet());
+      // Ürün detaylarını sorgula
+      final ProductDetailsResponse response = await _inAppPurchase.queryProductDetails(productIds);
+
+      // Hataları logla
       if (response.notFoundIDs.isNotEmpty) {
-        debugPrint('Products not found: ${response.notFoundIDs}');
+        debugPrint('Ödeme Yöneticisi: Bulunamayan ürün ID\'leri: ${response.notFoundIDs}');
       }
       if (response.error != null) {
-        debugPrint('Product query error: ${response.error!.message}');
-        return [];
+        debugPrint('Ödeme Yöneticisi: Ürün sorgulama hatası: ${response.error!.message}');
+        return []; // Hata durumunda boş liste dön
       }
+
+      // Ürünleri fiyata göre sırala (isteğe bağlı)
+      response.productDetails.sort((a, b) => a.rawPrice.compareTo(b.rawPrice));
+
+      debugPrint('Ödeme Yöneticisi: ${response.productDetails.length} ürün yüklendi.');
       return response.productDetails;
     } catch (e) {
-      debugPrint('Failed to load products: $e');
+      debugPrint('Ödeme Yöneticisi: Ürün yükleme sırasında istisna oluştu: $e');
       return [];
     }
   }
 
+  /// Seçilen ürünü satın alma işlemini başlatır.
   Future<bool> buyProduct(ProductDetails product, BuildContext context) async {
     try {
-      final loc = S.of(context);
-      final confirmed = await _showConfirmationDialog(context, product);
-      if (!confirmed) return false;
+      final loc = S.of(context); // Yerelleştirme için
+      // Kullanıcıya satın alma onayı göster
+      final bool confirmed = await _showConfirmationDialog(context, product);
+      if (!confirmed) {
+        debugPrint('Ödeme Yöneticisi: Kullanıcı satın almayı iptal etti.');
+        return false; // Kullanıcı iptal etti
+      }
 
-      final purchaseParam = PurchaseParam(productDetails: product);
-      return product.id.contains('premium')
-          ? await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam)
-          : await _inAppPurchase.buyConsumable(purchaseParam: purchaseParam);
+      final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
+      bool purchaseInitiated;
+
+      // Ürün tipine göre doğru satın alma metodu çağır
+      // TODO: 'premium_subscription' ID'sini doğru şekilde kontrol edin
+      if (product.id == 'premium_subscription') { // Örnek premium ID
+        purchaseInitiated = await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+      } else {
+        // Diğer tüm ürünler tüketilebilir (kredi paketleri)
+        purchaseInitiated = await _inAppPurchase.buyConsumable(purchaseParam: purchaseParam);
+      }
+      debugPrint('Ödeme Yöneticisi: Satın alma başlatıldı (${product.id}): $purchaseInitiated');
+      return purchaseInitiated;
+
     } catch (e) {
-      debugPrint('Purchase failed: $e');
+      debugPrint('Ödeme Yöneticisi: Satın alma başlatma hatası (${product.id}): $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(S.of(context)!.errorMessage('Purchase failed: $e'))),
+        SnackBar(content: Text(S.of(context)!.errorMessage('Satın alma başlatılamadı: $e'))),
       );
       return false;
     }
   }
 
+  /// Satın alma öncesi kullanıcıya onay dialogu gösterir.
   Future<bool> _showConfirmationDialog(BuildContext context, ProductDetails product) async {
-    final loc = S.of(context);
+    final loc = S.of(context); // Yerelleştirme için
     return await showDialog<bool>(
       context: context,
+      barrierDismissible: false, // Dışarı tıklayarak kapatmayı engelle
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.deepPurple[900],
-        title: Text(
-          loc!.confirmPurchase,
-          style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold),
+        backgroundColor: Colors.deepPurple[900]?.withOpacity(0.95), // Arka plan rengi
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)), // Kenar yuvarlatma
+        title: Row(
+          children: [
+            const Icon(Icons.shopping_cart_checkout, color: Colors.purpleAccent), // İkon
+            const SizedBox(width: 10),
+            Text(
+              loc!.confirmPurchase, // Yerelleştirilmiş başlık
+              style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
         ),
         content: Text(
-          '${loc.areYouSure} ${product.title} ${loc.forText} ${product.price}?',
-          style: GoogleFonts.cinzel(color: Colors.white70),
+          // Yerelleştirilmiş içerik (ürün adı ve fiyatı ile)
+          loc.purchaseConfirmation(product.title, product.price),
+          style: GoogleFonts.lato(color: Colors.white70, fontSize: 15), // İçerik fontu
         ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly, // Butonları hizala
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(loc.cancel, style: GoogleFonts.cinzel(color: Colors.white70)),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white70, // Buton rengi
+            ),
+            onPressed: () => Navigator.pop(context, false), // İptal
+            child: Text(loc.cancel, style: GoogleFonts.cinzel(fontWeight: FontWeight.w600)),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(loc.confirm, style: GoogleFonts.cinzel(color: Colors.white)),
+          ElevatedButton( // Onay butonu daha belirgin olsun
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purpleAccent, // Buton rengi
+              foregroundColor: Colors.black87,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(context, true), // Onay
+            child: Text(loc.confirm, style: GoogleFonts.cinzel(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
-    ) ?? false;
+    ) ?? false; // Dialog kapatılırsa (örneğin geri tuşu ile) false dön
   }
 
-  Future<bool> redeemCoupon(String code, BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final redeemedCoupons = prefs.getStringList('redeemed_coupons') ?? [];
-    if (redeemedCoupons.contains(code)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(S.of(context)!.couponAlreadyUsed)),
-      );
-      return false;
-    }
-
-    final tarotBloc = _findTarotBloc(context);
-    if (tarotBloc == null) return false;
-
-    final validCoupons = {
-      'WELCOME10': 10.0,
-      'TAROT50': 50.0,
-      'FIRSTFREE': 25.0,
-      'LOYALTY100': 100.0,
-    };
-
-    final credits = validCoupons[code.toUpperCase()];
-    if (credits == null) {
-      tarotBloc.add(RedeemCoupon(code));
-      return false;
-    }
-
-    final currentTokens = await tarotBloc.userDataManager.getTokens();
-    await tarotBloc.userDataManager.saveTokens(currentTokens + credits);
-    tarotBloc.emit(TarotInitial(
-      userTokens: currentTokens + credits,
-      dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
-      userName: tarotBloc.state.userName,
-      userAge: tarotBloc.state.userAge,
-      userGender: tarotBloc.state.userGender,
-      userInfoCollected: tarotBloc.state.userInfoCollected,
-    ));
-
-    redeemedCoupons.add(code);
-    await prefs.setStringList('redeemed_coupons', redeemedCoupons);
-    return true;
+  /// Girilen kupon kodunun daha önce kullanılıp kullanılmadığını kontrol eder.
+  ///
+  /// Returns: `true` eğer kupon DAHA ÖNCE kullanılmışsa, aksi takdirde `false`.
+  /// Kuponun geçerliliğini veya token eklemeyi KONTROL ETMEZ. Bu iş TarotBloc'tadır.
+  Future<bool> redeemCoupon(String code) async {
+    // UserDataManager üzerinden kontrol yap
+    final bool alreadyUsed = await _userDataManager.isCouponUsed(code);
+    debugPrint("Ödeme Yöneticisi: Kupon '$code' kontrol edildi. Zaten kullanılmış mı? $alreadyUsed");
+    return alreadyUsed;
   }
 
+  /// Satın alma akışından gelen güncellemeleri işler.
   void _handlePurchaseUpdates(List<PurchaseDetails> purchases) async {
-    final tarotBloc = _findTarotBloc(navigatorKey.currentContext!);
-    if (tarotBloc == null) return;
+    // NavigatorKey üzerinden global context'i al
+    final context = navigatorKey.currentContext;
+    if (context == null) {
+      debugPrint("Ödeme Yöneticisi: _handlePurchaseUpdates - Global context bulunamadı.");
+      return;
+    }
+    // Context üzerinden TarotBloc'u bul
+    final tarotBloc = BlocProvider.of<TarotBloc>(context);
 
     for (var purchase in purchases) {
-      switch (purchase.status) {
-        case PurchaseStatus.purchased:
-        case PurchaseStatus.restored:
-          if (_creditValues.containsKey(purchase.productID)) {
-            final credits = _creditValues[purchase.productID] ?? 0.0;
-            final currentTokens = await tarotBloc.userDataManager.getTokens();
-            await tarotBloc.userDataManager.saveTokens(currentTokens + credits);
-            tarotBloc.emit(TarotInitial(
-              userTokens: currentTokens + credits,
-              dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
-              userName: tarotBloc.state.userName,
-              userAge: tarotBloc.state.userAge,
-              userGender: tarotBloc.state.userGender,
-              userInfoCollected: tarotBloc.state.userInfoCollected,
-            ));
-          } else if (purchase.productID == 'premium_subscription') {
-            await tarotBloc.userDataManager.savePremiumStatus(true);
-            tarotBloc.emit(TarotInitial(
-              userTokens: tarotBloc.state.userTokens,
-              dailyFreeFalCount: tarotBloc.state.dailyFreeFalCount,
-              userName: tarotBloc.state.userName,
-              userAge: tarotBloc.state.userAge,
-              userGender: tarotBloc.state.userGender,
-              userInfoCollected: tarotBloc.state.userInfoCollected,
-            ));
+      bool purchaseProcessed = false; // Satın almanın işlenip işlenmediğini takip et
+
+      // --- Başarılı Satın Alma veya Geri Yükleme Durumu ---
+      if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
+        debugPrint('Ödeme Yöneticisi: İşleniyor ${purchase.status == PurchaseStatus.restored ? "geri yüklenen" : "yeni"} satın alma: ${purchase.productID}');
+
+        bool creditsOrPremiumUpdated = false;
+
+        // 1. Kredi Ekleme (Tüketilebilir Ürünler)
+        if (_creditValues.containsKey(purchase.productID)) {
+          final creditsToAdd = _creditValues[purchase.productID] ?? 0.0;
+          if (creditsToAdd > 0) {
+            final currentTokens = await _userDataManager.getTokens();
+            await _userDataManager.saveTokens(currentTokens + creditsToAdd);
+            creditsOrPremiumUpdated = true;
+            debugPrint('Ödeme Yöneticisi: ${purchase.productID} için $creditsToAdd kredi eklendi. Yeni bakiye: ${currentTokens + creditsToAdd}');
+            // Başarı mesajı göster
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(S.of(context)!.creditsAdded(creditsToAdd.toStringAsFixed(0)))),
+            );
           }
+        }
+        // 2. Premium Abonelik (Tüketilemez Ürün)
+        else if (purchase.productID == 'premium_subscription') { // Örnek ID
+          await _userDataManager.savePremiumStatus(true);
+          creditsOrPremiumUpdated = true;
+          debugPrint('Ödeme Yöneticisi: Premium abonelik aktif edildi.');
+          // Başarı mesajı göster
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(S.of(context)!.premiumActivated)),
+          );
+        }
+
+        // 3. Satın Almayı Tamamla (Mağazaya bildir)
+        if (purchase.pendingCompletePurchase) {
           await _inAppPurchase.completePurchase(purchase);
-          debugPrint('Purchase completed: ${purchase.productID}');
-          onPurchaseSuccess?.call();
-          break;
-        case PurchaseStatus.error:
-          debugPrint('Purchase error: ${purchase.error?.message}');
-          if (navigatorKey.currentContext != null) {
-            ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
-              SnackBar(content: Text('Purchase failed: ${purchase.error?.message}')),
-            );
-          }
-          break;
-        case PurchaseStatus.pending:
-          debugPrint('Purchase pending: ${purchase.productID}');
-          if (navigatorKey.currentContext != null) {
-            ScaffoldMessenger.of(navigatorKey.currentContext!).showSnackBar(
-              SnackBar(content: Text('Purchase pending...')),
-            );
-          }
-          break;
-        default:
-          debugPrint('Unhandled purchase status: ${purchase.status}');
+          debugPrint('Ödeme Yöneticisi: Satın alma mağaza tarafında tamamlandı: ${purchase.productID}');
+        } else {
+          debugPrint('Ödeme Yöneticisi: Satın alma zaten tamamlanmış olarak işaretlenmişti: ${purchase.productID}');
+        }
+
+        // 4. Gerekirse UI'ı Güncellemek İçin BLoC'a Event Gönder
+        if (creditsOrPremiumUpdated) {
+          // Bloc'un kullanıcı verilerini yeniden yüklemesini tetikle
+          // tarotBloc.add(LoadUserDataEvent()); // Kendi event isminizi kullanın
+          // VEYA basitçe mevcut state'i kopyalayarak emit et (ama bu en iyi pratik değil)
+          // Şimdilik sadece loglama ve SnackBar ile devam edelim.
+          onPurchaseSuccess?.call(); // Callback'i çağır
+        }
+
+        purchaseProcessed = true; // Bu satın alma işlendi
+      }
+      // --- Hata Durumu ---
+      else if (purchase.status == PurchaseStatus.error) {
+        debugPrint('Ödeme Yöneticisi: Satın alma hatası (${purchase.productID}): ${purchase.error?.code} - ${purchase.error?.message}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context)!.purchaseFailed(purchase.error?.message ?? 'Bilinmeyen Hata'))), // Yerelleştirme
+        );
+        // Hatalı da olsa satın almayı tamamla (mağazanın takılı kalmaması için)
+        if (purchase.pendingCompletePurchase) {
+          await _inAppPurchase.completePurchase(purchase);
+        }
+        purchaseProcessed = true; // Hata durumu da işlendi
+      }
+      // --- Beklemede Durumu ---
+      else if (purchase.status == PurchaseStatus.pending) {
+        debugPrint('Ödeme Yöneticisi: Satın alma beklemede: ${purchase.productID}');
+        // Kullanıcıya bilgi verilebilir
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context)!.purchasePending)), // Yerelleştirme
+        );
+        // Beklemede durumu işlenmiş sayılmaz, akış devam eder.
+      }
+      // --- İptal Durumu ---
+      else if (purchase.status == PurchaseStatus.canceled) {
+        debugPrint('Ödeme Yöneticisi: Satın alma iptal edildi: ${purchase.productID}');
+        // İptal edilen satın almayı tamamla
+        if (purchase.pendingCompletePurchase) {
+          await _inAppPurchase.completePurchase(purchase);
+        }
+        purchaseProcessed = true; // İptal durumu da işlendi
+      }
+      // --- Diğer Durumlar ---
+      else {
+        debugPrint('Ödeme Yöneticisi: Bilinmeyen satın alma durumu (${purchase.productID}): ${purchase.status}');
+        // Bilinmeyen durumdaki satın almayı da tamamlamak iyi olabilir
+        if (purchase.pendingCompletePurchase) {
+          await _inAppPurchase.completePurchase(purchase);
+        }
+        purchaseProcessed = true; // Bilinmeyen durum da işlendi
+      }
+
+      // Eğer satın alma işlendiyse (başarılı, hatalı, iptal) logla
+      if (purchaseProcessed) {
+        debugPrint('Ödeme Yöneticisi: Satın alma detayı işlendi: ID=${purchase.productID}, Status=${purchase.status}');
       }
     }
   }
 
-  TarotBloc? _findTarotBloc(BuildContext? context) {
-    try {
-      return context != null ? BlocProvider.of<TarotBloc>(context) : null;
-    } catch (e) {
-      debugPrint('TarotBloc not found in context: $e');
-      return null;
-    }
-  }
-
+  /// PaymentManager'ı temizler ve stream aboneliğini iptal eder.
   void dispose() {
     _subscription?.cancel();
     _subscription = null;
-    debugPrint('PaymentManager disposed');
+    debugPrint('Ödeme Yöneticisi: Dispose edildi.');
   }
 
+  /// Satın alma seçeneklerini içeren bir dialog gösterir.
   static Future<void> showPaymentDialog(
       BuildContext context, {
-        double requiredTokens = 0.0,
-        VoidCallback? onSuccess,
+        double requiredTokens = 0.0, // Gerekli token (bilgi amaçlı)
+        VoidCallback? onSuccess, // Başarılı satın alma sonrası callback
       }) {
+    // Yeni bir PaymentManager örneği oluştur
     final paymentManager = PaymentManager(onPurchaseSuccess: onSuccess);
+    // Başlat ve stream'i dinle
     paymentManager.initialize();
+
     return showDialog<void>(
       context: context,
-      builder: (_) => PaymentDialog(manager: paymentManager, requiredTokens: requiredTokens),
-      barrierDismissible: false,
-    ).then((_) => paymentManager.dispose());
+      builder: (_) =>
+      // BlocProvider.value kullanarak mevcut TarotBloc'u dialoga aktar
+      BlocProvider.value(
+          value: BlocProvider.of<TarotBloc>(context),
+          child: PaymentDialog(
+              manager: paymentManager, requiredTokens: requiredTokens)),
+      barrierDismissible: false, // Dışarı tıklayarak kapatmayı engelle
+    ).then((_) {
+      // Dialog kapatıldığında PaymentManager'ı dispose et
+      paymentManager.dispose();
+    });
   }
 }
 
+// ---- PaymentDialog Widget ----
 class PaymentDialog extends StatefulWidget {
   final PaymentManager manager;
   final double requiredTokens;
 
-  const PaymentDialog({super.key, required this.manager, required this.requiredTokens});
+  const PaymentDialog({
+    super.key,
+    required this.manager,
+    required this.requiredTokens,
+  });
 
   @override
   PaymentDialogState createState() => PaymentDialogState();
@@ -269,198 +364,264 @@ class PaymentDialogState extends State<PaymentDialog> {
     _loadProducts();
   }
 
+  /// Ürünleri yükler ve state'i günceller.
   Future<void> _loadProducts() async {
+    // Başlangıçta state'i yükleniyor olarak ayarla
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
     final products = await widget.manager.loadProducts();
+    // Widget hala bağlıysa state'i güncelle
     if (mounted) {
       setState(() {
         _products = products;
         _isLoading = false;
-        _errorMessage = products.isEmpty ? S.of(context)!.errorMessage('Failed to load products') : null;
+        // Ürün yüklenemezse hata mesajı ayarla
+        if (products.isEmpty) {
+          _errorMessage = S.of(context)!.failedToLoadProducts; // Yerelleştirme
+          debugPrint("PaymentDialog: Ürünler yüklenemedi veya boş liste döndü.");
+        }
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final loc = S.of(context);
+    final loc = S.of(context); // Yerelleştirme için
     final screenSize = MediaQuery.of(context).size;
 
     return AlertDialog(
-      backgroundColor: Colors.transparent,
-      contentPadding: EdgeInsets.zero,
+      backgroundColor: Colors.transparent, // Şeffaf arka plan
+      contentPadding: EdgeInsets.zero, // İçeriğin kendi padding'i olacak
+      // Dialog içeriğini oluşturan Container
       content: Container(
-        width: screenSize.width * 0.9,
-        constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
+        width: screenSize.width * 0.9, // Ekran genişliğinin %90'ı
+        constraints: BoxConstraints(maxHeight: screenSize.height * 0.8), // Maksimum yükseklik
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple[900]!, Colors.black87],
+          gradient: LinearGradient( // Arka plan gradient'i
+            colors: [Colors.deepPurple[900]!, Colors.black.withOpacity(0.9)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
+          borderRadius: BorderRadius.circular(20), // Yuvarlak kenarlar
+          border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)), // İnce çerçeve
+          boxShadow: [ // Gölge efekti
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
+              color: Colors.purpleAccent.withOpacity(0.2),
+              blurRadius: 15,
+              spreadRadius: 2,
               offset: const Offset(0, 5),
             ),
           ],
         ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  loc!.purchaseCredits,
-                  style: GoogleFonts.cinzel(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+        child: Column( // Ana düzen dikey olacak
+          mainAxisSize: MainAxisSize.min, // İçerik kadar yer kapla
+          children: [
+            // Başlık Bölümü
+            Padding(
+              padding: const EdgeInsets.only(top: 20.0, left: 20, right: 20),
+              child: Text(
+                loc!.purchaseCredits, // Yerelleştirilmiş başlık
+                style: GoogleFonts.cinzelDecorative( // Özel font
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            // Gerekli Kredi Bilgisi (varsa)
+            if (widget.requiredTokens > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, left: 20, right: 20),
+                child: Text(
+                  loc.insufficientCreditsMessage(widget.requiredTokens.toStringAsFixed(0)), // Yerelleştirme
+                  style: GoogleFonts.lato(color: Colors.orangeAccent[100], fontSize: 14), // Font ve renk
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            const SizedBox(height: 10), // Boşluk
+            Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 20), // Ayırıcı çizgi
+
+            // Ürün Listesi veya Yükleme/Hata Göstergesi
+            Expanded( // Listenin scroll edilebilir olması için
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: Colors.purpleAccent))
+                  : _errorMessage != null
+                  ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Text(
+                      _errorMessage!,
+                      style: GoogleFonts.lato(color: Colors.redAccent, fontSize: 15), // Hata fontu
+                      textAlign: TextAlign.center,
+                    ),
+                  ))
+                  : _products.isEmpty // Ürünler yüklendi ama boşsa
+                  ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Text(
+                      loc.noProductsAvailable, // Yerelleştirme
+                      style: GoogleFonts.lato(color: Colors.white70, fontSize: 15),
+                      textAlign: TextAlign.center,
+                    ),
+                  ))
+                  : ListView.builder( // Ürün listesi
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                itemCount: _products.length,
+                itemBuilder: (context, index) {
+                  return _buildPurchaseOption(_products[index]); // Her ürün için seçenek oluştur
+                },
+              ),
+            ),
+
+            Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 20), // Ayırıcı çizgi
+
+            // Kupon Kullan Butonu
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              child: TapAnimatedScale(
+                onTap: () => _showCouponSheet(context), // Kupon sheet'ini aç
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.teal.shade600, Colors.cyan.shade800], // Farklı renk
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  loc.insufficientCreditsMessage(widget.requiredTokens),
-                  style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                if (_isLoading)
-                  const Center(child: CircularProgressIndicator(color: Colors.purpleAccent))
-                else if (_errorMessage != null)
-                  Text(
-                    _errorMessage!,
-                    style: GoogleFonts.cinzel(color: Colors.redAccent, fontSize: 16),
-                    textAlign: TextAlign.center,
-                  )
-                else
-                  Column(
+                  child: Row( // İkon ve Metin
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ..._products.map((product) => _buildPurchaseOption(product)),
-                      const SizedBox(height: 5),
-                      TapAnimatedScale(
-                        onTap: () => _showCouponSheet(context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.purple[700]!,
-                                Colors.deepPurple[900]!,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            loc.redeem,
-                            style: GoogleFonts.cabin(
-                              fontSize: 17,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                      Icon(Icons.card_giftcard, color: Colors.white.withOpacity(0.9), size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        loc.redeem, // Yerelleştirilmiş metin
+                        style: GoogleFonts.cinzel( // Font
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                const SizedBox(height: 10),
-                TapAnimatedScale(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      loc.cancel,
-                      style: GoogleFonts.cinzel(
-                        fontSize: 16,
-                        color: Colors.red,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
                 ),
-              ],
+              ),
             ),
-          ),
+
+            // İptal Butonu
+            Padding(
+              padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 15.0, top: 5.0),
+              child: TextButton( // Basit TextButton
+                onPressed: () => Navigator.pop(context), // Dialogu kapat
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                child: Text(
+                  loc.cancel, // Yerelleştirilmiş metin
+                  style: GoogleFonts.cinzel(
+                    fontSize: 16,
+                    color: Colors.white70, // Daha soluk renk
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  /// Kupon giriş ekranını (Modal Bottom Sheet) gösterir.
   void _showCouponSheet(BuildContext context) {
+    // Dialog içindeki context yerine ana Scaffold context'ini kullanmak daha iyi olabilir.
+    // Ancak bu yapı çalışıyorsa şimdilik kalabilir.
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => BlocProvider.value(
-        value: BlocProvider.of<TarotBloc>(context),
-        child: CouponSheet(manager: widget.manager),
+      isScrollControlled: true, // Klavye için önemli
+      backgroundColor: Colors.transparent, // Arka planı şeffaf yap
+      builder: (sheetContext) =>
+      // BlocProvider.value ile mevcut Bloc'u aktar
+      BlocProvider.value(
+          value: BlocProvider.of<TarotBloc>(context), // Dialog context'inden Bloc'u al
+          child: CouponSheet(manager: widget.manager) // PaymentManager'ı da aktar
       ),
     );
   }
 
+  /// Tek bir satın alma seçeneği widget'ını oluşturur.
   Widget _buildPurchaseOption(ProductDetails product) {
-    final loc = S.of(context);
+    final loc = S.of(context); // Yerelleştirme için
+    // Ürün ID'sinden kredi miktarını al
     final credits = widget.manager._creditValues[product.id] ?? 0.0;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TapAnimatedScale(
         onTap: () async {
-          setState(() => _isLoading = true);
+          // Satın alma işlemi
           final success = await widget.manager.buyProduct(product, context);
+          // Başarılı olursa (ve widget hala bağlıysa) dialogu kapat
+          // Not: Satın alma sonucu _handlePurchaseUpdates tarafından işlenecek.
+          // Bu nedenle burada dialogu hemen kapatmak yerine kullanıcıya bilgi vermek daha iyi olabilir.
           if (success && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(loc.couponRedeemed('Processing purchase...'))),
-            );
-            await Future.delayed(const Duration(seconds: 2));
-            if (mounted) Navigator.pop(context);
+            // Sadece işlemin başladığını belirtelim
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(content: Text(loc.purchaseProcessing)), // Yerelleştirme
+            // );
+            // Dialogun kapanması _handlePurchaseUpdates veya onPurchaseSuccess callback'ine bırakılabilir.
+            // Şimdilik burada kapatmıyoruz.
           }
-          if (mounted) setState(() => _isLoading = false);
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // İç boşluk
+          decoration: BoxDecoration( // Stil
             gradient: LinearGradient(
               colors: [
-                Colors.purple[700]!.withOpacity(0.9),
-                Colors.deepPurple[900]!.withOpacity(0.7),
+                Colors.purple.shade700.withOpacity(0.8),
+                Colors.deepPurple.shade800.withOpacity(0.9),
               ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
             ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(15), // Yuvarlak kenarlar
+            border: Border.all(color: Colors.purpleAccent.withOpacity(0.2)), // İnce çerçeve
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, // İçerikleri iki yana yasla
             children: [
-              Text(
-                '$credits ${loc!.mysticalTokens}',
-                style: GoogleFonts.cinzel(
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+              // Ürün Adı veya Kredi Miktarı
+              Expanded( // Metnin taşmasını engelle
+                child: Text(
+                  // product.title, // Ürün başlığı daha açıklayıcı olabilir
+                  '$credits ${loc!.mysticalTokens}', // Veya sadece kredi miktarı
+                  style: GoogleFonts.lato( // Font
+                    fontSize: 15,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis, // Taşarsa ...
                 ),
               ),
+              const SizedBox(width: 10), // Arada boşluk
+              // Fiyat
               Text(
-                product.price,
-                style: GoogleFonts.cinzel(
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                product.price, // Ürün fiyatı
+                style: GoogleFonts.orbitron( // Fiyat için farklı font
+                  fontSize: 15,
+                  color: Colors.yellowAccent.shade100, // Vurgulu renk
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -471,8 +632,9 @@ class PaymentDialogState extends State<PaymentDialog> {
   }
 }
 
+// ---- CouponSheet Widget ----
 class CouponSheet extends StatefulWidget {
-  final PaymentManager manager;
+  final PaymentManager manager; // PaymentManager gerekli
 
   const CouponSheet({super.key, required this.manager});
 
@@ -482,10 +644,10 @@ class CouponSheet extends StatefulWidget {
 
 class CouponSheetState extends State<CouponSheet> with SingleTickerProviderStateMixin {
   final TextEditingController _couponController = TextEditingController();
-  late AnimationController _sheetController;
-  bool _isProcessing = false;
-  String? _resultMessage;
-  bool? _couponSuccess;
+  late AnimationController _sheetController; // Animasyon için (isteğe bağlı)
+  bool _isProcessing = false; // İşlem yapılıyor mu?
+  String? _resultMessage; // Sonuç mesajı (başarı/hata)
+  bool? _couponSuccess; // Sonuç durumu (true: başarı, false: hata)
 
   @override
   void initState() {
@@ -493,7 +655,7 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
     _sheetController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
-    )..forward();
+    )..forward(); // Sheet açılırken animasyon
   }
 
   @override
@@ -505,187 +667,220 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    final loc = S.of(context);
+    final loc = S.of(context); // Yerelleştirme
 
+    // Bloc'tan gelen state değişikliklerini dinle
     return BlocListener<TarotBloc, TarotState>(
       listener: (context, state) {
-        if (state is CouponRedeemed) {
-          setState(() {
-            _isProcessing = false;
-            _couponSuccess = true;
-            _resultMessage = loc.couponRedeemed(state.message);
-          });
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) Navigator.pop(context);
-          });
-        } else if (state is CouponInvalid) {
-          setState(() {
-            _isProcessing = false;
-            _couponSuccess = false;
-            _resultMessage = loc.couponInvalid(state.message);
-          });
-        } else if (state is TarotError) {
-          setState(() {
-            _isProcessing = false;
-            _couponSuccess = false;
-            _resultMessage = loc.errorMessage(state.message);
-          });
+        // Sadece kupon işlemi (_isProcessing == true) sırasındaki state'leri dinle
+        if (_isProcessing) {
+          if (state is CouponRedeemed) {
+            // Başarılı: İşlemi bitir, başarı durumunu ayarla, mesajı göster
+            setState(() {
+              _isProcessing = false;
+              _couponSuccess = true;
+              _resultMessage = loc.couponRedeemed(state.message); // BLoC mesajı
+            });
+            // Başarıdan sonra sheet'i kapat
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) Navigator.pop(context);
+            });
+          } else if (state is CouponInvalid) {
+            // Geçersiz/Hata: İşlemi bitir, hata durumunu ayarla, mesajı göster
+            setState(() {
+              _isProcessing = false;
+              _couponSuccess = false;
+              _resultMessage = loc.couponInvalid(state.message); // BLoC mesajı
+            });
+          } else if (state is TarotError) {
+            // Genel Hata: İşlemi bitir, hata durumunu ayarla, mesajı göster
+            setState(() {
+              _isProcessing = false;
+              _couponSuccess = false;
+              _resultMessage = loc.errorMessage(state.message); // BLoC mesajı
+            });
+          }
+          // Not: TarotLoading state'i zaten _isProcessing ile yönetiliyor.
         }
       },
+      // İçeriği oluşturan Container
       child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.deepPurple[900]!.withOpacity(0.9),
-              Colors.black87.withOpacity(0.95),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 15,
-              offset: const Offset(0, -5),
-            ),
-          ],
+        // Padding: Klavye göründüğünde içeriğin yukarı kayması için
+        padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20 // Klavye yüksekliği + ekstra boşluk
         ),
-        padding: const EdgeInsets.all(20),
-        child: Stack(
+        // Stil
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.deepPurple[900]!.withOpacity(0.95), // Biraz daha opak
+                Colors.black.withOpacity(0.98), // Biraz daha opak
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)), // Sadece üst kenarlar yuvarlak
+            boxShadow: [ // Gölge
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 15,
+                offset: const Offset(0, -5), // Yukarı doğru gölge
+              ),
+            ],
+            border: Border(top: BorderSide(color: Colors.purpleAccent.withOpacity(0.3), width: 1.5)) // Üst çerçeve
+        ),
+        // Ana İçerik
+        child: Stack( // Kapatma butonu için Stack
           children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            Column( // Dikey düzen
+              mainAxisSize: MainAxisSize.min, // İçerik kadar yer kapla
+              crossAxisAlignment: CrossAxisAlignment.stretch, // Yatayda genişle
               children: [
+                // Başlık
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.star_border, size: 16, color: Colors.purpleAccent),
+                    Icon(Icons.confirmation_number_outlined, size: 24, color: Colors.purpleAccent[100]),
                     const SizedBox(width: 12),
                     Text(
-                      loc!.redeem,
-                      style: GoogleFonts.cinzel(
-                        fontSize: 26,
+                      loc!.redeem, // Yerelleştirme
+                      style: GoogleFonts.cinzelDecorative(
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Colors.purple[300]!.withOpacity(0.6),
-                            offset: const Offset(0, 3),
-                            blurRadius: 6,
-                          ),
-                        ],
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Icon(Icons.star_border, size: 16, color: Colors.purpleAccent),
+                    Icon(Icons.confirmation_number_outlined, size: 24, color: Colors.purpleAccent[100]),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 25),
+
+                // Kupon Kodu Giriş Alanı
                 Container(
-                  height: 50,
                   decoration: BoxDecoration(
-                    color: Colors.deepPurple[800]!.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.deepPurple[800]?.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.purpleAccent.withOpacity(0.3),
+                      color: Colors.purpleAccent.withOpacity(0.5),
                       width: 1,
                     ),
                   ),
                   child: TextField(
                     controller: _couponController,
-                    style: GoogleFonts.cinzel(color: Colors.white, fontSize: 14),
-                    maxLines: 1,
-                    maxLength: 20,
+                    style: GoogleFonts.lato(color: Colors.white, fontSize: 15), // Giriş metni stili
+                    textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
-                      hintText: loc.couponHint,
-                      hintStyle: GoogleFonts.cinzel(color: Colors.grey[400], fontSize: 14),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      counterText: "",
+                      hintText: loc.couponHint, // İpucu metni
+                      hintStyle: GoogleFonts.lato(color: Colors.white54, fontSize: 15),
+                      border: InputBorder.none, // Çerçeveyi kaldır
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      counterText: "", // Karakter sayacını gizle
+                      prefixIcon: Icon(Icons.vpn_key_outlined, color: Colors.purpleAccent[100], size: 20), // Başlangıç ikonu
                     ),
-                    enabled: !_isProcessing,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _redeemCoupon(context),
+                    enabled: !_isProcessing, // İşlem sırasında devre dışı bırak
+                    textCapitalization: TextCapitalization.characters, // Otomatik büyük harf
+                    maxLength: 30, // Maksimum uzunluk
+                    textInputAction: TextInputAction.done, // Klavye action butonu
+                    onSubmitted: (_) => _redeemCoupon(context), // Enter'a basınca gönder
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 25),
+
+                // Kupon Kullan Butonu
                 TapAnimatedScale(
-                  onTap: () => _redeemCoupon(context),
+
+                  onTap: _isProcessing ? () {} : () => _redeemCoupon(context), // Hata: null yerine () {} kullanıldı
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.purple[700]!.withOpacity(_isProcessing ? 0.5 : 0.9),
-                          Colors.deepPurple[900]!.withOpacity(_isProcessing ? 0.4 : 0.7),
-                        ],
+                        colors: _isProcessing
+                            ? [Colors.grey[700]!, Colors.grey[800]!] // Pasifken gri
+                            : [Colors.purpleAccent.shade100, Colors.purpleAccent.shade400], // Aktifken canlı renkler
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: !_isProcessing // Sadece aktifken gölge
+                          ? [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
+                          color: Colors.purpleAccent.withOpacity(0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                      ],
+                      ]
+                          : null,
                     ),
                     child: Center(
-                      child: _isProcessing
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(
+                      child: _isProcessing // İşlem varsa progress indicator
+                          ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                      )
+                          : Text( // İşlem yoksa metin
                         loc.redeem,
                         style: GoogleFonts.cinzel(
-                          fontSize: 18,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                          color: Colors.black87, // Koyu renk metin
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
                         ),
                       ),
                     ),
                   ),
                 ),
-                if (_resultMessage != null) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: _couponSuccess == true
-                          ? Colors.green.withOpacity(0.2)
-                          : Colors.red.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _couponSuccess == true
-                            ? Colors.green.withOpacity(0.4)
-                            : Colors.red.withOpacity(0.4),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _couponSuccess == true ? Icons.check_circle : Icons.error,
-                          color: _couponSuccess == true ? Colors.green : Colors.red,
-                          size: 18,
+
+                // Sonuç Mesajı Alanı
+                // AnimatedOpacity ile yumuşak geçiş
+                AnimatedOpacity(
+                  opacity: _resultMessage != null ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: _resultMessage == null ? const SizedBox(height: 16) : Padding( // Mesaj yoksa sadece boşluk
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: (_couponSuccess == true ? Colors.green : Colors.red).withOpacity(0.15), // Arka plan rengi
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: (_couponSuccess == true ? Colors.green : Colors.red).withOpacity(0.4), // Çerçeve rengi
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _resultMessage!,
-                            style: GoogleFonts.cinzel(
-                              fontSize: 12,
-                              color: Colors.white,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon( // Duruma göre ikon
+                            _couponSuccess == true ? Icons.check_circle_outline : Icons.highlight_off,
+                            color: _couponSuccess == true ? Colors.greenAccent.shade100 : Colors.redAccent.shade100, // İkon rengi
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded( // Mesajın taşmasını engelle
+                            child: Text(
+                              _resultMessage ?? '', // Boş değilse mesajı göster
+                              style: GoogleFonts.lato( // Mesaj fontu
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ],
+                ),
+                // Klavye göründüğünde en alta ekstra boşluk
+                SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 10 : 0),
               ],
             ),
+            // Kapatma Butonu
             Positioned(
-              top: 0,
-              right: 0,
+              top: -8, // Konumunu ayarla
+              right: -8,
               child: _buildCloseButton(context),
             ),
           ],
@@ -694,13 +889,19 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
     );
   }
 
-  void _redeemCoupon(BuildContext context) {
+  void _redeemCoupon(BuildContext context) async {
     if (_isProcessing) return;
+    FocusScope.of(context).unfocus(); // Klavyeyi kapat
+
     final code = _couponController.text.trim();
+    final S? loc = S.of(context);
+
     if (code.isEmpty) {
       setState(() {
+        _isProcessing = false;
         _couponSuccess = false;
-        _resultMessage = S.of(context)!.errorMessage('Coupon code cannot be empty');
+        // Yerelleştirme: 'couponCannotBeEmpty' getter'ı S sınıfında tanımlı olmalı.
+        _resultMessage = loc!.couponCannotBeEmpty;
       });
       return;
     }
@@ -711,42 +912,62 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
       _resultMessage = null;
     });
 
-    widget.manager.redeemCoupon(code, context).then((success) {
-      if (success && mounted) {
+    try {
+      // Önce kuponun daha önce kullanılıp kullanılmadığını kontrol et
+      final bool alreadyUsed = await widget.manager.redeemCoupon(code);
+
+      if (!mounted) return; // Widget dispose edilmiş olabilir
+
+      if (alreadyUsed) {
+        // Zaten kullanılmışsa hata göster
         setState(() {
           _isProcessing = false;
-          _couponSuccess = true;
-          _resultMessage = S.of(context)!.couponRedeemed('Coupon redeemed successfully!');
+          _couponSuccess = false;
+          _resultMessage = loc!.couponAlreadyUsed;
         });
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) Navigator.pop(context);
-        });
-      } else if (mounted) {
+      } else {
+        // Kullanılmamışsa, BLoC'a gönder
         context.read<TarotBloc>().add(RedeemCoupon(code));
+        // Sonuç BlocListener tarafından işlenecek, _isProcessing true kalacak
       }
-    });
+    } catch (e) {
+      debugPrint("Kupon ön kontrol hatası: $e");
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+          _couponSuccess = false;
+          _resultMessage = loc!.errorMessage("Bir hata oluştu."); // Genel hata
+        });
+      }
+    }
   }
 
+  /// Kapatma butonu widget'ını oluşturur.
   Widget _buildCloseButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.pop(context),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withOpacity(0.6),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.purple[300]!.withOpacity(0.5),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+    return Material( // Tıklama efekti için Material
+      color: Colors.transparent,
+      child: InkWell( // Tıklanabilir alan
+        borderRadius: BorderRadius.circular(15), // Yuvarlak tıklama alanı
+        onTap: () => Navigator.pop(context),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.black.withOpacity(0.4),
+          ),
+          child: const Icon(Icons.close, color: Colors.white70, size: 18), // İkon boyutu
         ),
-        child: const Icon(Icons.close, color: Colors.white, size: 24),
       ),
     );
   }
 }
 
+// ---- Global Navigator Key ----
+// Uygulamanızın ana MaterialApp widget'ına atanmalıdır.
+// Arka plandaki işlemlerden (örn: _handlePurchaseUpdates) context erişimi sağlar.
+// main.dart dosyanızda tanımlayabilirsiniz:
+// final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+// MaterialApp( navigatorKey: navigatorKey, ... );
+// Başka bir dosyada tanımlıysa oradan import edin.
+// Şimdilik burada tanımlı bırakalım:
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

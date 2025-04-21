@@ -7,10 +7,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/screens/settings_screen.dart';
-import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
+import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart'; // Assuming this is the home/main screen
 import '../data/tarot_bloc.dart';
 import '../data/tarot_event_state.dart';
-import '../main.dart';
+import '../main.dart'; // For MyAppState access if needed for locale
 import '../models/animations/tap_animations_scale.dart';
 
 class ReadingResultScreen extends StatefulWidget {
@@ -27,24 +27,47 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
+  // Store the spread and interpretation sections to build pages
+  Map<String, TarotCard>? _currentSpread;
+  List<String> _interpretationSections = [];
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
     _pageController.addListener(() {
-      setState(() {
-        _currentPage = _pageController.page?.round() ?? 0;
-      });
+      final page = _pageController.page;
+      if (page != null && page == page.roundToDouble()) {
+        if (_currentPage != page.round()) {
+          if (mounted) { // Add mounted check here too
+            setState(() {
+              _currentPage = page.round();
+            });
+          }
+          HapticFeedback.lightImpact();
+        }
+      }
     });
+
     _glowController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
+
+    // Initialize controller FIRST
     _fadeController = AnimationController(
-      duration: const Duration(seconds: 1),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
-    )..forward();
+    );
+
+    // Initialize animation object immediately AFTER controller initialization
     _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
+
+    // Schedule the state check and animation start AFTER the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return; // Ensure widget is still mounted
+      final currentState = context.read<TarotBloc>().state;
+    });
   }
 
   @override
@@ -55,16 +78,42 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
     super.dispose();
   }
 
-  void _shareReading(String content) {
-    Share.share(content);
+  // Helper to update page data based on state
+  void _updatePages(FalYorumuLoaded state) {
+    _currentSpread = state.spread; // Assumes FalYorumuLoaded includes spread
+    _interpretationSections = state.yorum
+        .split(RegExp(r'\n\n### ')) // Split interpretation into sections
+        .where((s) => s.trim().isNotEmpty) // Remove empty sections
+        .toList();
+    if (_currentPage >= _getTotalPageCount()) {
+      _currentPage = 0; // Reset page if necessary
+    }
+    setState(() {}); // Trigger rebuild with new page data
   }
 
+  int _getTotalPageCount() {
+    int count = 0;
+    if (_currentSpread != null && _currentSpread!.isNotEmpty) {
+      count++; // Add 1 for the drawn cards summary page
+    }
+    count += _interpretationSections.length; // Add pages for interpretation sections
+    return count.clamp(1, 100); // Ensure at least 1 page
+  }
+
+  void _shareReading(String content) {
+    Share.share(content);
+    HapticFeedback.mediumImpact();
+  }
+
+  // Navigate back to the main Tarot Reading Screen
   void _navigateToHome(BuildContext context) {
+    HapticFeedback.mediumImpact();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => TarotReadingScreen(
+        builder: (context) => TarotReadingScreen( // Navigate back to your main screen
           onSettingsTap: () {
+            // Keep the navigation logic for settings if needed
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -80,11 +129,12 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
           },
         ),
       ),
-          (route) => false,
+          (route) => false, // Remove all previous routes
     );
   }
 
   void _showCardDetails(TarotCard card) {
+    HapticFeedback.lightImpact();
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -94,102 +144,136 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
           child: Material(
             color: Colors.transparent,
             child: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              height: MediaQuery.of(context).size.height * 0.85,
-              padding: const EdgeInsets.all(20),
+              width: MediaQuery.of(context).size.width * 0.92, // Slightly wider
+              height: MediaQuery.of(context).size.height * 0.88, // Slightly taller
+              padding: const EdgeInsets.only(top: 25, left: 20, right: 20, bottom: 15),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.deepPurple[900]!, Colors.black87],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.purple.withOpacity(0.6),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    // Consistent gradient with other parts of the app
+                    colors: [Colors.indigo[900]!, Colors.purple[800]!, Colors.black87],
+                    stops: const [0.0, 0.6, 1.0],
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(25), // Smoother radius
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.purpleAccent.withOpacity(0.5), // Enhanced shadow
+                      blurRadius: 25,
+                      spreadRadius: 3,
+                    ),
+                  ],
+                  // Subtle border
+                  border: Border.all(color: Colors.purpleAccent.withOpacity(0.4), width: 1.5)
               ),
-              child: Stack(
+              child: Column( // Use Column for layout
                 children: [
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          card.name,
-                          style: GoogleFonts.cinzel(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                color: Colors.purpleAccent.withOpacity(0.5),
-                                offset: const Offset(2, 2),
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 20),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            'assets/tarot_card_images/${card.img}',
-                            height: 350,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.broken_image,
-                              color: Colors.white70,
-                              size: 80,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        _buildDetailSection(S.of(context)!.position, card.arcana),
-                        _buildDetailSection(S.of(context)!.meaning, card.suit),
-                        if (card.elemental != null) _buildDetailSection("Element", card.elemental!),
-                        _buildDetailSection("Keywords", card.keywords.join(", ")),
-                        _buildDetailSection("Fortune Telling", card.fortuneTelling.join("\n\n")),
-                        _buildDetailSection("Light Meanings", card.meanings.light.join("\n\n")),
-                        _buildDetailSection("Shadow Meanings", card.meanings.shadow.join("\n\n")),
-                        if (card.archetype != null) _buildDetailSection("Archetype", card.archetype!),
-                        if (card.hebrewAlphabet != null) _buildDetailSection("Hebrew Alphabet", card.hebrewAlphabet!),
-                        if (card.numerology != null) _buildDetailSection("Numerology", card.numerology!),
-                        if (card.mythicalSpiritual != null) _buildDetailSection("Mythical/Spiritual", card.mythicalSpiritual!),
-                        if (card.questionsToAsk != null) _buildDetailSection("Questions to Ask", card.questionsToAsk!.join("\n\n")),
-                        const SizedBox(height: 20),
-                        TapAnimatedScale(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: [Colors.deepPurple, Colors.purpleAccent]),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
+                  Expanded( // Make content scrollable
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // --- Card Name ---
+                          Text(
+                            card.name.toUpperCase(), // Uppercase for emphasis
+                            style: GoogleFonts.cinzelDecorative( // Use decorative for title
+                              fontSize: 26, // Slightly smaller for balance
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 1.5,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.purpleAccent.withOpacity(0.6),
+                                  offset: const Offset(1, 1), // Subtle shadow
+                                  blurRadius: 5,
                                 ),
                               ],
                             ),
-                            child: Text(
-                              S.of(context)!.close,
-                              style: GoogleFonts.cinzel(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 15),
+
+                          // --- Card Image ---
+                          Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [ // Add inner glow/shadow to image
+                                  BoxShadow(
+                                      color: Colors.white.withOpacity(0.15),
+                                      blurRadius: 15,
+                                      spreadRadius: 2
+                                  )
+                                ]
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.asset(
+                                'assets/tarot_card_images/${card.img}',
+                                height: MediaQuery.of(context).size.height * 0.4, // Responsive height
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => const Icon(
+                                  Icons.broken_image,
+                                  color: Colors.white54,
+                                  size: 100,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 20),
+
+                          // --- Details Sections ---
+                          // Using Lato for better readability of longer texts
+                          _buildDetailSection(S.of(context)!.arcana, card.arcana),
+                          _buildDetailSection(S.of(context)!.suit, card.suit),
+                          if (card.elemental != null && card.elemental!.isNotEmpty) _buildDetailSection("Element", card.elemental!),
+                          _buildDetailSection("Keywords", card.keywords.join(", ")),
+                          _buildDetailSection("Fortune Telling", card.fortuneTelling.join("\n\n")),
+                          _buildDetailSection("Light Meanings", card.meanings.light.join("\n\n")),
+                          _buildDetailSection("Shadow Meanings", card.meanings.shadow.join("\n\n")),
+                          if (card.archetype != null && card.archetype!.isNotEmpty) _buildDetailSection("Archetype", card.archetype!),
+                          if (card.hebrewAlphabet != null && card.hebrewAlphabet!.isNotEmpty) _buildDetailSection("Hebrew Alphabet", card.hebrewAlphabet!),
+                          if (card.numerology != null && card.numerology!.isNotEmpty) _buildDetailSection("Numerology", card.numerology!),
+                          if (card.mythicalSpiritual != null && card.mythicalSpiritual!.isNotEmpty) _buildDetailSection("Mythical/Spiritual", card.mythicalSpiritual!),
+                          if (card.questionsToAsk != null && card.questionsToAsk!.isNotEmpty)
+                            _buildDetailSection("Questions to Ask", card.questionsToAsk!.join("\n\n")),
+
+                          const SizedBox(height: 20), // Space before close button
+                        ],
+                      ),
                     ),
                   ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: _buildCloseButton(context),
+                  // --- Close Button --- (Positioned outside scroll)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10.0), // Space from scroll content
+                    child: TapAnimatedScale(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient( // Brighter gradient for button
+                              colors: [Colors.purpleAccent.shade100, Colors.purpleAccent.shade400]
+                          ),
+                          borderRadius: BorderRadius.circular(25), // Pill shape
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.purpleAccent.withOpacity(0.4),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          S.of(context)!.close.toUpperCase(), // Uppercase action text
+                          style: GoogleFonts.cinzel(
+                            fontSize: 16, // Clear font size
+                            color: Colors.black87, // Contrast color
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -198,248 +282,549 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
         );
       },
       transitionBuilder: (context, anim1, anim2, child) {
+        // Enhanced transition
         return FadeTransition(
-          opacity: CurvedAnimation(parent: anim1, curve: Curves.easeInOut),
+          opacity: CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
           child: ScaleTransition(
-            scale: CurvedAnimation(parent: anim1, curve: Curves.easeInOut),
+            scale: CurvedAnimation(parent: anim1, curve: Curves.elasticOut), // Elastic effect
+            alignment: Alignment.center,
             child: child,
           ),
         );
       },
-      transitionDuration: const Duration(milliseconds: 400),
+      transitionDuration: const Duration(milliseconds: 600), // Slightly longer duration
     );
   }
 
-  Widget _buildCloseButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.pop(context),
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.black.withOpacity(0.6),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.purple[300]!.withOpacity(0.5),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+  // Helper for the close button in the dialog
+  // ignore: unused_element
+  Widget _buildCloseButtonDialog(BuildContext context) {
+    return Positioned(
+      top: 8, // Closer to the edge
+      right: 8,
+      child: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Container(
+          padding: const EdgeInsets.all(6), // Smaller padding
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.black.withOpacity(0.5), // Semi-transparent background
+            boxShadow: [ // Subtle shadow for depth
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 3,
+              ),
+            ],
+          ),
+          child: const Icon(Icons.close, color: Colors.white70, size: 20), // Slightly smaller icon
         ),
-        child: const Icon(Icons.close, color: Colors.white, size: 16),
       ),
     );
   }
 
-  Widget _buildDetailSection(String title, String content) {
+  // Refined detail section widget
+  Widget _buildDetailSection(String title, String? content) {
+    if (content == null || content.trim().isEmpty) return const SizedBox.shrink();
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 12), // Increased vertical padding
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
-            style: GoogleFonts.cinzel(
-              fontSize: 18,
+            title.toUpperCase(),
+            style: GoogleFonts.cinzel( // Title font
+              fontSize: 16, // Slightly smaller title
               fontWeight: FontWeight.bold,
-              color: Colors.purpleAccent,
+              color: Colors.purpleAccent[100], // Consistent accent color
+              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10), // Increased space
           Text(
             content,
-            style: GoogleFonts.cinzel(
-              fontSize: 16,
-              color: Colors.white.withOpacity(0.9),
-              fontWeight: FontWeight.w500,
+            style: GoogleFonts.lato( // Content font (more readable)
+              fontSize: 15, // Standard content size
+              color: Colors.white.withOpacity(0.85), // High visibility
+              height: 1.5, // Good line spacing
+              fontWeight: FontWeight.w400,
             ),
+            textAlign: TextAlign.left, // Align text naturally
           ),
+          // Divider for separation
+          Divider(color: Colors.purpleAccent.withOpacity(0.2), thickness: 1, height: 30),
         ],
       ),
     );
   }
 
-  Widget _buildCardPage(String position, TarotCard card, SpreadDrawn? state) {
+
+  // --- Page Builder Widgets ---
+
+  // Page 0: Summary of Drawn Cards
+  Widget _buildDrawnCardsSummaryPage(Map<String, TarotCard> spread) {
     final loc = S.of(context);
     return SingleChildScrollView(
-        padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.06),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-    const SizedBox(height: 80),
-    AnimatedBuilder(
-    animation: _glowController,
-    builder: (context, child) {
-    return Container(
-    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-    decoration: BoxDecoration(
-    gradient: LinearGradient(
-    colors: [Colors.amber[300]!.withOpacity(0.8), Colors.deepPurple[900]!.withOpacity(0.9)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    ),
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-    BoxShadow(
-    color: Colors.amber[300]!.withOpacity(0.5 + _glowController.value * 0.3),
-    blurRadius: 10 + _glowController.value * 5,
-    spreadRadius: 2,
-    ),
-    ],
-    ),
-    child: Text(
-    position,
-    style: GoogleFonts.cinzel(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-    fontStyle: FontStyle.italic, // Pozisyon ismi italik
-    ),
-    textAlign: TextAlign.center,
-    ),
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.symmetric(
+        horizontal: MediaQuery.of(context).size.width * 0.05,
+        vertical: 20, // Add vertical padding
+      ).copyWith(top: kToolbarHeight + 20), // Ensure content is below AppBar
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Page Title
+          Text(
+            loc!.drawCards.toUpperCase(),
+            style: GoogleFonts.cinzelDecorative(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 2,
+              shadows: [
+                Shadow(color: Colors.purpleAccent.withOpacity(0.5), blurRadius: 5)
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            loc.tapCardForDetails, // Instruction text
+            style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
+          ),
+          Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 30, thickness: 1),
+          const SizedBox(height: 10),
+
+          // Cards Grid/Wrap
+          Wrap(
+            spacing: 15.0, // Horizontal space between cards
+            runSpacing: 25.0, // Vertical space between rows
+            alignment: WrapAlignment.center, // Center cards
+            children: spread.entries.map((entry) {
+              String position = entry.key;
+              TarotCard card = entry.value;
+              return _buildMiniCard(card, position);
+            }).toList(),
+          ),
+          const SizedBox(height: 80), // Space at the bottom before potential buttons
+        ],
+      ),
     );
-    },
-    ),
-    const SizedBox(height: 20),
-    GestureDetector(
-    onTap: () => _showCardDetails(card),
-    child: Container(
-    height: 360,
-    decoration: BoxDecoration(
-    borderRadius: BorderRadius.circular(20),
-    boxShadow: [
-    BoxShadow(
-    color: Colors.purpleAccent.withOpacity(0.4),
-    blurRadius: 15,
-    spreadRadius: 2,
-    ),
-    ],
-    ),
-    child: ClipRRect(
-    borderRadius: BorderRadius.circular(20),
-    child: Stack(
-    fit: StackFit.expand,
-    children: [
-    Image.asset(
-    'assets/tarot_card_images/${card.img}',
-    fit: BoxFit.contain,
-    ),
-    Container(
-    decoration: BoxDecoration(
-    gradient: RadialGradient(
-    center: Alignment.center,
-    radius: 1.5,
-    colors: [
-    Colors.transparent,
-    Colors.deepPurple[900]!.withOpacity(0.4),
-    ],
-    ),
-    ),
-    ),
-    ],
-    ),
-    ),
-    ),
-    ),
-    const SizedBox(height: 20),
-    Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    Text(
-    'Position: ',
-    style: GoogleFonts.cinzel(
-    fontSize: 18,
-    color: Colors.amber[300]!,
-    fontWeight: FontWeight.bold,
-    fontStyle: FontStyle.italic, // Etiket italik
-    ),
-    ),
-    const SizedBox(width: 5), // Etiket ile pozisyon ismi arasında boşluk
-    Text(
-    position,
-    style: GoogleFonts.cinzel(
-    fontSize: 18,
-    color: Colors.white,
-    fontWeight: FontWeight.bold,
-    fontStyle: FontStyle.italic, // Pozisyon ismi italik
-    ),
-    ),
-    ],
-    ),
-    const SizedBox(height: 10), // Kart adı ile pozisyon arasında boşluk
-    Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-    Text(
-    'Card: ',
-    style: GoogleFonts.cinzel(
-    fontSize: 18,
-    color: Colors.purple[300]!,
-    fontWeight: FontWeight.bold,
-    fontStyle: FontStyle.italic, // Etiket italik
-    ),
-    ),
-    const SizedBox(width: 5), // Etiket ile kart ismi arasında boşluk
-    Text(
-    card.name,
-    style: GoogleFonts.cinzel(
-    fontSize: 18,
-    color: Colors.white,
-    fontWeight: FontWeight.bold,
-    fontStyle: FontStyle.italic, // Kart ismi italik
-    ),
-    ),
-    const SizedBox(width: 8),
-    GestureDetector(
-    onTap: () => _showCardDetails(card),
-    child: Icon(
-    Icons.info_outline,
-    color: Colors.purpleAccent,
-    size: 18,
-    ),
-    ),
-    ],
-    ),
-    const SizedBox(height: 10),
-    Text(
-    '- MEANING: ',
-    style: GoogleFonts.cinzel(
-    fontSize: 18,
-    color: Colors.teal[300]!,
-    fontWeight: FontWeight.bold,
-    fontStyle: FontStyle.italic,
-    ),
-    ),
-    const SizedBox(height: 5),
-    _buildKeywords(card.keywords),
-    const SizedBox(height: 20),
-    _buildFortuneTelling(card.fortuneTelling),
-    const SizedBox(height: 20),
-    _buildMeanings(card),
-    const SizedBox(height: 40),
-    if (state != null) _buildPageIndicator(state.spread.length),
-    ],
-    ));
   }
+
+  // Widget for displaying a single card in the summary
+  Widget _buildMiniCard(TarotCard card, String position) {
+    final double cardWidth = MediaQuery.of(context).size.width * 0.28; // Responsive width
+    final double cardHeight = cardWidth * 1.5; // Maintain aspect ratio
+
+    return TapAnimatedScale(
+      onTap: () => _showCardDetails(card),
+      child: SizedBox( // Constrain the size of the tappable area
+        width: cardWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Take minimum space
+          children: [
+            Container(
+              width: cardWidth,
+              height: cardHeight,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10), // Smaller radius for mini card
+                image: DecorationImage(
+                  image: AssetImage('assets/tarot_card_images/${card.img}'),
+                  fit: BoxFit.cover,
+                  onError: (exception, stackTrace) {
+                    // Sadece debug modunda konsola yazdırır
+                    debugPrint("Error loading image: ${card.img} - $exception");
+                  },
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 8,
+                    offset: const Offset(2, 4),
+                  ),
+                  // Optional: Add a subtle glow on hover/tap (needs state management)
+                ],
+                border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Display position name below the card
+            Text(
+              position.replaceAll('_', ' ').splitMapJoin(RegExp(r'(?=[A-Z])'), onMatch: (m) => ' ', onNonMatch: (n) => n), // Format position name
+              style: GoogleFonts.cinzel(
+                fontSize: 11,
+                color: Colors.white.withOpacity(0.8),
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            // Optionally display card name too (can make it crowded)
+            /*
+             Text(
+               card.name,
+               style: GoogleFonts.lato(
+                 fontSize: 9,
+                 color: Colors.white70,
+               ),
+               textAlign: TextAlign.center,
+               maxLines: 1,
+               overflow: TextOverflow.ellipsis,
+             ),
+             */
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Page for displaying one section of the Gemini interpretation
+  Widget _buildFortuneTellingSectionPage(String sectionText) {
+    final loc = S.of(context);
+    final List<String> lines = sectionText.split('\n\n');
+    // Ensure title is correctly extracted, even if it's the only line
+    String title = lines.firstWhere((line) => line.trim().isNotEmpty, orElse: () => loc!.interpretation);
+    String content = lines.skipWhile((line) => line == title || line.trim().isEmpty).join('\n\n').trim();
+
+    // If content is empty after removing title, use the title as content
+    if (content.isEmpty && lines.length == 1) {
+      content = title;
+      title = loc!.interpretation; // Use generic title
+    } else if (title.startsWith("### ")) {
+      // Clean up title if it still has markdown
+      title = title.substring(4).trim();
+    } else if (title.trim().isEmpty) {
+      title = loc!.interpretationSection; // Fallback title
+    }
+
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width * 0.05,
+            vertical: 20,
+          ).copyWith(top: kToolbarHeight + 20), // Ensure content is below AppBar
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - (kToolbarHeight + 40)), // Adjust min height
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch content horizontally
+              mainAxisAlignment: MainAxisAlignment.start, // Align content to top
+              children: [
+                // Section Title with Glow
+                AnimatedBuilder(
+                  animation: _glowController,
+                  builder: (context, child) {
+                    final Color titleColor = _getTitleColor(title);
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            titleColor.withOpacity(0.7), // Use dynamic color
+                            Colors.deepPurple[900]!.withOpacity(0.9),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: titleColor.withOpacity(0.3 + _glowController.value * 0.3),
+                            blurRadius: 10 + _glowController.value * 5,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        title, // Display cleaned title
+                        style: GoogleFonts.cinzelDecorative( // Use decorative font for titles
+                          color: Colors.white,
+                          fontSize: 22, // Slightly smaller title
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20), // Increased space
+
+                // Interpretation Content Box
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient( // Consistent gradient for content
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.deepPurple[900]!.withOpacity(0.8), // Slightly adjusted opacity
+                        Colors.indigo[900]!.withOpacity(0.85),
+                        Colors.black.withOpacity(0.75),
+                      ],
+                      stops: const [0.1, 0.5, 0.9],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [ // Consistent shadow
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.3), // Softer shadow
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                    border: Border.all( // Consistent border
+                      color: Colors.purple[300]!.withOpacity(0.3),
+                      width: 1, // Thinner border
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: RichText(
+                    text: TextSpan(
+                      // Use Lato for better readability of interpretation text
+                      style: GoogleFonts.lato(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 16, // Readable text size
+                        height: 1.6, // Good line spacing for reading
+                        fontWeight: FontWeight.w400,
+                      ),
+                      children: _formatText(content), // Apply formatting
+                    ),
+                    textAlign: TextAlign.justify, // Justify text for block look
+                  ),
+                ),
+                const SizedBox(height: 80), // Space for page indicator and buttons
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+  // Helper to determine title color based on keywords
+  Color _getTitleColor(String title) {
+    // Use case-insensitive matching
+    title = title.toLowerCase();
+    if (RegExp(r'(dizilim|layout|symphony|elements|dynamics)').hasMatch(title)) {
+      return Colors.amber[400]!; // Brighter amber for layout
+    } else if (RegExp(r'(analiz|analysis|yorum|reflections|diagnosis|insight|evaluation|commentary)').hasMatch(title)) {
+      return Colors.purpleAccent[100]!; // Lighter purple for analysis
+    } else if (RegExp(r'(rehberlik|guidance|öneri|recommendations|whispers|suggestions|advice|tips)').hasMatch(title)) {
+      return Colors.tealAccent[100]!; // Lighter teal for guidance
+    } else if (RegExp(r'(sonuç|conclusion|summary|outcome|thoughts)').hasMatch(title)) {
+      return Colors.orangeAccent[100]!; // Lighter orange for conclusion
+    } else {
+      return Colors.white; // Default
+    }
+  }
+
+  // Text formatting logic (Using standard strings for Regex - CORRECTED)
+  List<TextSpan> _formatText(String text) {
+    List<TextSpan> spans = [];
+    final paragraphs = text.split(RegExp(r'\n{2,}')); // Split by double (or more) newlines
+
+    // Define Regex using standard strings with escaping
+    // Escape backslashes: \w -> \\w, \s -> \\s
+    final subheadingRegex = RegExp('^\\s*(-?\\s*[\\w\\s\'&]+):\\s*(.*)', dotAll: true);
+    final starRegex = RegExp('\\*(.*?)\\*'); // Escape asterisks
+
+    for (var paragraph in paragraphs) {
+      paragraph = paragraph.trim();
+      if (paragraph.isEmpty) continue;
+
+      var match = subheadingRegex.firstMatch(paragraph);
+
+      if (match != null) {
+        // --- Handle Subheading Paragraph ---
+        final String subheadingKey = match.group(1)?.trim() ?? '';
+        final String subheadingContent = match.group(2)?.trim() ?? '';
+
+        spans.add(TextSpan(
+          text: "$subheadingKey:\n", // Subheading text + newline
+          style: TextStyle(
+            color: _getSubheadingColor(subheadingKey), // Dynamic color based on subheading
+            fontWeight: FontWeight.bold,
+            fontSize: 17, // Slightly larger font for subheading
+            height: 1.8, // Add space after the subheading line
+          ),
+        ));
+
+        // Add the content after the subheading, processing it for stars
+        if (subheadingContent.isNotEmpty) {
+          // Pass the already defined starRegex to the helper
+          spans.addAll(_processStars(subheadingContent, starRegex));
+          spans.add(const TextSpan(text: "\n\n")); // Add space after subheading content
+        }
+
+      } else {
+        // --- Handle Regular Paragraph (No subheading detected) ---
+        // Process the whole paragraph for stars using the defined starRegex
+        spans.addAll(_processStars(paragraph, starRegex));
+        spans.add(const TextSpan(text: "\n\n")); // Space between paragraphs
+      }
+    }
+
+    // Remove trailing newlines if any resulted from processing
+    if (spans.isNotEmpty && spans.last.text == "\n\n") {
+      spans.removeLast();
+    }
+    return spans;
+  }
+
+  // Helper to process text with stars for emphasis (accepts starRegex)
+  // CORRECTED: Accepts RegExp as argument
+  List<TextSpan> _processStars(String text, RegExp starRegex) {
+    List<TextSpan> starSpans = [];
+    int lastEnd = 0;
+    for (Match match in starRegex.allMatches(text)) {
+      // Add normal text before the match
+      if (match.start > lastEnd) {
+        starSpans.add(_formatRegularTextSpan(text.substring(lastEnd, match.start)));
+      }
+      // Add the emphasized text (group 1 is the content between stars)
+      if (match.group(1) != null) {
+        starSpans.add(TextSpan(
+          text: match.group(1), // Use group 1 content
+          style: const TextStyle(
+            color: Colors.yellowAccent, // Brighter emphasis color
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+          ),
+        ));
+      }
+      lastEnd = match.end;
+    }
+    // Add any remaining normal text after the last match
+    if (lastEnd < text.length) {
+      starSpans.add(_formatRegularTextSpan(text.substring(lastEnd)));
+    }
+    return starSpans;
+  }
+
+  // Helper for consistent regular text styling (Remains the same)
+  TextSpan _formatRegularTextSpan(String text) {
+    // Inherits default style from RichText parent
+    return TextSpan(text: text);
+  }
+
+  // Subheading color logic (Remains the same)
+  Color _getSubheadingColor(String text) {
+    text = text.toLowerCase().replaceAll('-', '').trim(); // Normalize text
+    if (text.contains('position')) return Colors.amber[300]!;
+    if (text.contains('card')) return Colors.purple[300]!;
+    if (text.contains('meaning')) return Colors.teal[300]!;
+    if (text.contains('mystical interpretation')) return Colors.deepOrange[300]!;
+    if (text.contains('timeline') || text.contains('suggestions')) return Colors.cyan[300]!;
+    if (text.contains('watch out') || text.contains('pitfall')) return Colors.red[300]!;
+    if (text.contains('tips') || text.contains('advice')) return Colors.green[300]!;
+    if (text.contains('insight')) return Colors.blue[300]!;
+    if (text.contains('evaluation') || text.contains('değerlendirme')) return Colors.purpleAccent;
+    if (text.contains('special note') || text.contains('özel not')) return Colors.yellow[300]!;
+    if (text.contains('general analysis') || text.contains('genel analiz')) return Colors.indigo[300]!;
+    if (text.contains('emotional analysis') || text.contains('duygusal analiz')) return Colors.pink[300]!;
+    if (text.contains('healing') || text.contains('iyileşme')) return Colors.lime[300]!;
+    if (text.contains('symbolic') || text.contains('sembolik')) return Colors.orange[300]!;
+    if (text.contains('astrological') || text.contains('astrolojik')) return Colors.deepPurple[300]!;
+    if (text.contains('lunar') || text.contains('ay analizi')) return Colors.grey[300]!;
+    if (text.contains('holistic') || text.contains('bütünsel')) return Colors.teal[400]!;
+    // Fallback for keywords often used as subheadings
+    if (text.contains('keywords') || text.contains('anahtar kelimeler')) return Colors.lightBlue[200]!;
+    if (text.contains('fortune telling') || text.contains('kehanet')) return Colors.lightGreen[300]!;
+    return Colors.white.withOpacity(0.9); // Default
+  }
+
+
+
+
+  // --- Bottom Action Buttons and Page Indicator ---
+
+  Widget _buildBottomBar(BuildContext context, String? shareContent) {
+    final loc = S.of(context);
+    final totalPages = _getTotalPageCount();
+
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: const EdgeInsets.only(bottom: 15, top: 10, left: 16, right: 16),
+        decoration: BoxDecoration( // Add background gradient for better visibility
+          gradient: LinearGradient(
+            colors: [
+              Colors.black.withOpacity(0.0),
+              Colors.black.withOpacity(0.7),
+              Colors.black.withOpacity(0.9),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            stops: const [0.0, 0.4, 1.0],
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Page Indicator
+            if (totalPages > 1) ...[
+              _buildPageIndicator(totalPages),
+              const SizedBox(height: 15), // Space between indicator and buttons
+            ],
+            // Action Buttons Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: _buildActionButton(
+                    context: context,
+                    label: loc!.share,
+                    icon: Icons.share,
+                    onPressed: () => _shareReading(shareContent ?? loc.myTarotReading),
+                  ),
+                ),
+                const SizedBox(width: 16), // Space between buttons
+                Expanded(
+                  child: _buildActionButton(
+                    context: context,
+                    label: loc.returnToHome,
+                    icon: Icons.home_outlined, // Use outlined icon
+                    onPressed: () => _navigateToHome(context),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Refined Page Indicator
   Widget _buildPageIndicator(int pageCount) {
+    if (pageCount <= 1) return const SizedBox.shrink(); // Hide if only one page
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(
         pageCount,
             (index) => AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          width: _currentPage == index ? 16 : 10,
-          height: _currentPage == index ? 16 : 10,
+          duration: const Duration(milliseconds: 300), // Smooth transition
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(horizontal: 5), // Adjust spacing
+          width: _currentPage == index ? 12 : 8, // Active dot is larger
+          height: _currentPage == index ? 12 : 8,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _currentPage == index ? Colors.purpleAccent : Colors.white.withOpacity(0.4),
-            boxShadow: [
+            color: _currentPage == index
+                ? Colors.purpleAccent // Brighter active color
+                : Colors.white.withOpacity(0.4), // Dim inactive color
+            boxShadow: [ // Add shadow to active dot
               if (_currentPage == index)
                 BoxShadow(
-                  color: Colors.purpleAccent.withOpacity(0.6),
-                  blurRadius: 10,
-                  spreadRadius: 2,
+                  color: Colors.purpleAccent.withOpacity(0.5),
+                  blurRadius: 6,
+                  spreadRadius: 1,
                 ),
             ],
           ),
@@ -448,510 +833,100 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
     );
   }
 
-  Widget _buildKeywords(List<String> keywords) {
-    final loc = S.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: keywords.map((keyword) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Text(
-            '✦ $keyword',
-            style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildFortuneTelling(List<String> fortuneTelling) {
-    final loc = S.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.deepPurple[800]!.withOpacity(0.9),
-            Colors.black.withOpacity(0.8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: fortuneTelling.map((fortune) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(
-              '✦ $fortune',
-              style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildMeanings(TarotCard card) {
-    final loc = S.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.deepPurple[900]!.withOpacity(0.9),
-            Colors.black.withOpacity(0.8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            loc!.meaning,
-            style: GoogleFonts.cinzel(fontSize: 20, color: Colors.teal[300]!, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          _buildMeaningSection(
-            title: loc.lightMeaning,
-            meanings: card.meanings.light,
-            icon: Icons.lightbulb_outline,
-            color: Colors.green[300]!,
-          ),
-          const SizedBox(height: 12),
-          _buildMeaningSection(
-            title: loc.shadowMeaning,
-            meanings: card.meanings.shadow,
-            icon: Icons.nightlight_round,
-            color: Colors.red[300]!,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMeaningSection({
-    required String title,
-    required List<String> meanings,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: GoogleFonts.cinzel(fontSize: 18, color: color, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ...meanings.map(
-              (meaning) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text(
-              '✧ $meaning',
-              style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w500),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFortuneTellingPage(String yorum) {
-    final loc = S.of(context);
-    final sections = yorum.split(RegExp(r'\n\n### '));
-
-    return Stack(
-      children: [
-        PageView.builder(
-          controller: _pageController,
-          physics: const BouncingScrollPhysics(),
-          itemCount: sections.length,
-          onPageChanged: (index) {
-            setState(() {
-              _currentPage = index;
-            });
-            HapticFeedback.lightImpact();
-          },
-          itemBuilder: (context, index) {
-            String sectionText = sections[index];
-            if (index != 0) sectionText = "### $sectionText";
-
-            final List<String> lines = sectionText.split('\n\n');
-            String title = lines.firstWhere((line) => line.trim().isNotEmpty, orElse: () => '');
-            String content = lines.skipWhile((line) => line == title).join('\n').trim();
-
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.05),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 80),
-                        AnimatedBuilder(
-                          animation: _glowController,
-                          builder: (context, child) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    _getTitleColor(title).withOpacity(0.7),
-                                    Colors.deepPurple[900]!.withOpacity(0.9),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _getTitleColor(title).withOpacity(0.3 + _glowController.value * 0.3),
-                                    blurRadius: 10 + _glowController.value * 5,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                title.replaceAll('###', '').trim(),
-                                style: GoogleFonts.cinzel(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.deepPurple[900]!.withOpacity(0.7),
-                                Colors.indigo[900]!.withOpacity(0.8),
-                                Colors.black.withOpacity(0.7),
-                              ],
-                              stops: const [0.1, 0.5, 0.9],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.purple.withOpacity(0.4),
-                                blurRadius: 15,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                            border: Border.all(
-                              color: Colors.purple[300]!.withOpacity(0.3),
-                              width: 1.5,
-                            ),
-                          ),
-                          padding: const EdgeInsets.all(20),
-                          child: RichText(
-                            text: TextSpan(
-                              style: GoogleFonts.cinzel(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
-                                height: 1.5,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              children: _formatText(content),
-                            ),
-                            textAlign: TextAlign.justify,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        if (index == 0 && content.length < 150)
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.yellowAccent.withOpacity(0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.swipe_left,
-                                  color: Colors.yellowAccent,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  loc!.swipeForMore,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.cinzel(
-                                    color: Colors.yellowAccent,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        ),
-        Positioned(
-          bottom: 60,
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              sections.length,
-                  (index) => TweenAnimationBuilder(
-                tween: Tween<double>(
-                  begin: 0.0,
-                  end: _currentPage == index ? 1.0 : 0.0,
-                ),
-                duration: const Duration(milliseconds: 300),
-                builder: (context, value, child) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    width: 12 + (value * 8),
-                    height: 12 + (value * 4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color.lerp(
-                        Colors.white54,
-                        Colors.deepOrangeAccent,
-                        value,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.deepOrangeAccent.withOpacity(0.5 * value),
-                          blurRadius: 8 * value,
-                          spreadRadius: 2 * value,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 2,
-          left: 16,
-          right: 16,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  context: context,
-                  label: S.of(context)!.share,
-                  icon: Icons.share,
-                  onPressed: () => _shareReading(yorum),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildActionButton(
-                  context: context,
-                  label: S.of(context)!.returnToHome,
-                  icon: Icons.home,
-                  onPressed: () => _navigateToHome(context),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Color _getTitleColor(String title) {
-    if (RegExp(r'(Kart Dizilimi|Card Layout|The Divine Symphony of the Cards|The Layout of the Cards)').hasMatch(title)) {
-      return Colors.amber[300]!;
-    } else if (RegExp(r'(Analiz|Analysis|Interpretation|Analysis & Diagnosis|Deep Analysis|Reflections of Unified Destiny)').hasMatch(title)) {
-      return Colors.purple[300]!;
-    } else if (RegExp(r'(Rehberlik|Guidance|Recommendations|Strategic Recommendations|Guiding Whispers & Suggestions)').hasMatch(title)) {
-      return Colors.teal[300]!;
-    } else if (RegExp(r'(Sonuç|Conclusion|Concluding Thoughts|Final Summary|Summary Reflection)').hasMatch(title)) {
-      return Colors.deepOrange[300]!;
-    } else {
-      return Colors.white;
-    }
-  }
-
-  List<TextSpan> _formatText(String text) {
-    List<TextSpan> spans = [];
-    final paragraphs = text.split('\n\n');
-
-    for (var paragraph in paragraphs) {
-      paragraph = paragraph.trim();
-      if (paragraph.isEmpty) {
-        spans.add(const TextSpan(text: "\n\n"));
-        continue;
-      }
-
-      final subheadingRegex = RegExp(r'(Position|Card|Meaning|Mystical Interpretation|Timeline & Suggestions|Points to Watch Out For|Category-Specific Tips|Category-Specific Insight|Combined Evaluation of the Cards|Kartların Birleşik Değerlendirmesi|Special Note|Özel Not|General Analysis|Genel Analiz|Emotional Analysis|Duygusal Analiz|Healing Suggestions|İyileşme Önerileri|Symbolic Analysis|Sembolik Analiz|Astrological Insights|Astrolojik İçgörüler|Lunar Analysis|Ay Analizi|Holistic Analysis|Bütünsel Analiz):.*?(?=\n\n|$)', caseSensitive: false);
-      final starRegex = RegExp(r'\*(.*?)\*');
-
-      if (subheadingRegex.hasMatch(paragraph)) {
-        spans.add(TextSpan(
-          text: "$paragraph\n\n",
-          style: TextStyle(
-            color: _getSubheadingColor(paragraph),
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ));
-      } else if (starRegex.hasMatch(paragraph)) {
-        StringBuffer buffer = StringBuffer();
-        int lastEnd = 0;
-        for (Match match in starRegex.allMatches(paragraph)) {
-          buffer.write(paragraph.substring(lastEnd, match.start));
-          buffer.write(match.group(0));
-          lastEnd = match.end;
-        }
-        buffer.write(paragraph.substring(lastEnd));
-
-        String processedText = buffer.toString();
-        List<String> parts = processedText.split(starRegex);
-        for (int j = 0; j < parts.length; j++) {
-          if (j % 2 == 0) {
-            spans.add(TextSpan(text: parts[j]));
-          } else {
-            spans.add(TextSpan(
-              text: parts[j],
-              style: const TextStyle(
-                color: Colors.amber,
-                fontWeight: FontWeight.bold,
-                decoration: TextDecoration.underline,
-              ),
-            ));
-          }
-        }
-        spans.add(const TextSpan(text: "\n\n"));
-      } else {
-        spans.add(TextSpan(text: "$paragraph\n\n"));
-      }
-    }
-    return spans;
-  }
-
-  Color _getSubheadingColor(String text) {
-    if (text.contains('Position')) return Colors.amber[300]!;
-    if (text.contains('Card')) return Colors.purple[300]!;
-    if (text.contains('Meaning')) return Colors.teal[300]!;
-    if (text.contains('Mystical Interpretation')) return Colors.deepOrange[300]!;
-    if (text.contains('Timeline & Suggestions')) return Colors.cyan[300]!;
-    if (text.contains('Points to Watch Out For')) return Colors.red[300]!;
-    if (text.contains('Category-Specific Tips')) return Colors.green[300]!;
-    if (text.contains('Category-Specific Insight')) return Colors.blue[300]!;
-    if (text.contains('Combined Evaluation of the Cards') || text.contains('Kartların Birleşik Değerlendirmesi')) return Colors.purpleAccent;
-    if (text.contains('Special Note') || text.contains('Özel Not')) return Colors.yellow[300]!;
-    if (text.contains('General Analysis') || text.contains('Genel Analiz')) return Colors.indigo[300]!;
-    if (text.contains('Emotional Analysis') || text.contains('Duygusal Analiz')) return Colors.pink[300]!;
-    if (text.contains('Healing Suggestions') || text.contains('İyileşme Önerileri')) return Colors.lime[300]!;
-    if (text.contains('Symbolic Analysis') || text.contains('Sembolik Analiz')) return Colors.orange[300]!;
-    if (text.contains('Astrological Insights') || text.contains('Astrolojik İçgörüler')) return Colors.deepPurple[300]!;
-    if (text.contains('Lunar Analysis') || text.contains('Ay Analizi')) return Colors.grey[300]!;
-    if (text.contains('Holistic Analysis') || text.contains('Bütünsel Analiz')) return Colors.teal[400]!;
-    return Colors.white.withOpacity(0.9);
-  }
-
+  // Refined Action Button
   Widget _buildActionButton({
     required BuildContext context,
     required String label,
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    return TapAnimatedScale(
+    return TapAnimatedScale( // Use TapAnimatedScale for feedback
       onTap: onPressed,
-      child: AnimatedBuilder(
-        animation: _glowController,
-        builder: (context, child) {
-          return Container(
-            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.deepPurple[700]!, Colors.purple[900]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), // Adjusted padding
+        decoration: BoxDecoration(
+            gradient: LinearGradient( // Consistent gradient
+              colors: [Colors.deepPurple[600]!, Colors.purple[800]!], // Slightly lighter gradient
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20), // Rounded corners
+            boxShadow: [
+              BoxShadow( // Subtle shadow
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+            ],
+            border: Border.all(color: Colors.purpleAccent.withOpacity(0.3), width: 1) // Subtle border
+        ),
+        child: Row( // Use Row for icon and text
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min, // Prevent excessive width
+          children: [
+            Icon(icon, size: 18, color: Colors.white.withOpacity(0.9)), // Slightly smaller icon
+            const SizedBox(width: 8), // Space between icon and text
+            Flexible( // Allow text to wrap if needed
+              child: Text(
+                label,
+                style: GoogleFonts.cinzel(
+                  fontSize: 13, // Consistent font size
+                  color: Colors.white.withOpacity(0.9),
+                  fontWeight: FontWeight.w600, // Bold action text
                 ),
-              ],
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis, // Handle overflow
+                maxLines: 1,
+              ),
             ),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                Icon(icon, size: 16, color: Colors.white),
-                Text(
-                  label,
-                  style: GoogleFonts.cinzel(
-                    fontSize: 13,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
 
+
+  // --- Main Build Method ---
+
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
+
     return Scaffold(
+      // Extend body behind AppBar for seamless gradient
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+
+        backgroundColor: Colors.transparent, // Transparent AppBar
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white70),
+          onPressed: () => _navigateToHome(context), // Go home on back press
+        ),
+        actions: [
+          // Optional: Add share button directly to AppBar if preferred
+          /*
+            IconButton(
+              icon: const Icon(Icons.share_outlined, color: Colors.white70),
+              tooltip: loc.share,
+              onPressed: () {
+                final state = context.read<TarotBloc>().state;
+                if (state is FalYorumuLoaded) {
+                  _shareReading(state.yorum);
+                }
+              },
+            ),
+            */
+        ],
+      ),
       body: Container(
+        // Main background gradient
         decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.center,
-            radius: 1.5,
-            colors: [
-              Colors.deepPurple[900]!.withOpacity(0.9),
-              Colors.black.withOpacity(0.8),
-            ],
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.deepPurple[900]!, Colors.black], // Consistent background
+            stops: const [0.0, 0.8],
           ),
         ),
         child: BlocConsumer<TarotBloc, TarotState>(
@@ -960,144 +935,115 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(loc!.errorMessage(state.message)),
+                  backgroundColor: Colors.redAccent,
                   action: SnackBarAction(
                     label: loc.tryAgain,
-                    onPressed: () {
-                      context.read<TarotBloc>().add(LoadTarotCards());
-                    },
+                    onPressed: () => _navigateToHome(context), // Go home on error action
                   ),
                 ),
               );
+              _fadeController.forward(); // Ensure fade-in completes on error
+            } else if (state is FalYorumuLoaded) {
+              // Update page data when state changes
+              _updatePages(state);
+              _fadeController.forward(); // Start fade-in animation
+            } else if (state is! TarotLoading) {
+              // If it's not Loading or FalYorumuLoaded, still fade in
+              _fadeController.forward();
             }
           },
           builder: (context, state) {
+            Widget content;
+
             if (state is TarotLoading) {
-              return Center(
+              content = Center(
                 child: Lottie.asset(
                   'assets/animations/tarot_loading.json',
-                  width: 200,
-                  height: 200,
+                  width: 180, // Slightly smaller loading animation
+                  height: 180,
                   frameRate: FrameRate(60),
                 ),
               );
-            } else if (state is TarotInitial) {
-              return Center(
-                child: Text(
-                  loc!.pleaseWait,
-                  style: GoogleFonts.cinzel(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-                  textAlign: TextAlign.center,
-                ),
-              );
-            } else if (state is SingleCardDrawn) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.95, end: 1.0).animate(_fadeAnimation),
-                  child: Stack(
-                    children: [
-                      _buildCardPage(loc!.singleCard, state.card, null),
-                      _buildActionButtons(context, state.card.name, null),
-                    ],
-                  ),
-                ),
-              );
-            } else if (state is SpreadDrawn) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.95, end: 1.0).animate(_fadeAnimation),
-                  child: Stack(
-                    children: [
-                      PageView.builder(
-                        controller: _pageController,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: state.spread.length,
-                        itemBuilder: (context, index) => _buildCardPage(
-                          state.spread.keys.elementAt(index),
-                          state.spread.values.elementAt(index),
-                          state,
-                        ),
-                      ),
-                      _buildActionButtons(context, state.spread.values.elementAt(_currentPage).name, state),
-                    ],
-                  ),
-                ),
-              );
             } else if (state is FalYorumuLoaded) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.95, end: 1.0).animate(_fadeAnimation),
-                  child: Stack(
-                    children: [
-                      _buildFortuneTellingPage(state.yorum),
-                      _buildActionButtons(context, 'Fortune Telling', null, yorum: state.yorum),
-                    ],
+              final totalPages = _getTotalPageCount();
+              if (totalPages == 0) {
+                // Handle case where interpretation/spread might be empty
+                content = Center(
+                  child: Text(
+                    loc!.noReadingData,
+                    style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              } else {
+                content = Stack(
+                  children: [
+                    PageView.builder(
+                      controller: _pageController,
+                      physics: const BouncingScrollPhysics(), // Nice scroll physics
+                      itemCount: totalPages,
+                      itemBuilder: (context, index) {
+                        // Page 0: Drawn Cards Summary
+                        if (_currentSpread != null && _currentSpread!.isNotEmpty && index == 0) {
+                          return _buildDrawnCardsSummaryPage(_currentSpread!);
+                        }
+                        // Subsequent Pages: Interpretation Sections
+                        else {
+                          int interpretationIndex = index;
+                          // Adjust index if summary page exists
+                          if (_currentSpread != null && _currentSpread!.isNotEmpty) {
+                            interpretationIndex = index - 1;
+                          }
+                          // Check bounds
+                          if (interpretationIndex >= 0 && interpretationIndex < _interpretationSections.length) {
+                            String section = _interpretationSections[interpretationIndex];
+                            // Prepend the markdown if it's not the first section originally
+                            if (index > 0 || (_currentSpread == null || _currentSpread!.isEmpty)) {
+                              if(!section.trim().startsWith("###")) {
+                                section = "### ${section.trim()}";
+                              }
+                            }
+                            return _buildFortuneTellingSectionPage(section);
+                          } else {
+                            // Should not happen with correct itemCount, but fallback
+                            return Center(child: Text("Invalid Page Index", style: TextStyle(color: Colors.red)));
+                          }
+                        }
+                      },
+                    ),
+                    // Bottom Bar with Buttons and Indicator
+                    _buildBottomBar(context, state.yorum),
+                  ],
+                );
+              }
+            } else if (state is TarotError) {
+              content = Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(
+                    loc!.errorMessage(state.message),
+                    style: GoogleFonts.cinzel(color: Colors.red[300], fontSize: 16),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               );
-            } else if (state is TarotError) {
-              return Stack(
-                children: [
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        loc!.errorMessage(state.message),
-                        style: GoogleFonts.cinzel(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
+            } else {
+              // Handle other potential states (e.g., TarotInitial)
+              content = Center(
+                child: Text(
+                  loc!.pleaseWait, // Or a more specific message
+                  style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 16),
+                ),
               );
             }
-            return Stack(
-              children: [
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      loc!.errorMessage('Unexpected state: $state'),
-                      style: GoogleFonts.cinzel(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ],
+
+            // Apply fade-in animation to the content
+            return FadeTransition(
+              opacity: _fadeAnimation,
+              child: content,
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(BuildContext context, String title, SpreadDrawn? state, {String? yorum}) {
-    return Positioned(
-      bottom: 2,
-      left: 16,
-      right: 16,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: _buildActionButton(
-              context: context,
-              label: S.of(context)!.share,
-              icon: Icons.share,
-              onPressed: () => _shareReading(yorum ?? '$title Result: ${state?.spread.values.map((c) => c.name).join(', ') ?? ''}'),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildActionButton(
-              context: context,
-              label: S.of(context)!.returnToHome,
-              icon: Icons.home,
-              onPressed: () => _navigateToHome(context),
-            ),
-          ),
-        ],
       ),
     );
   }

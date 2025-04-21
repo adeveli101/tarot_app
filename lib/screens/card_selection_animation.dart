@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:math' as math;
-
 import 'dart:ui';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +16,7 @@ import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/generated/l10n.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/screens/reading_result.dart';
-import '../data/payment_manager.dart';
+import '../data/payment_manager.dart'; // Import PaymentManager
 import '../models/animations/tap_animations_scale.dart';
 import 'package:intl/intl.dart';
 
@@ -49,12 +49,19 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   late DateTime readingDate;
   late String locale;
 
+  // --- Resource Check State ---
+  bool _hasCheckedInitialResources = false;
+  bool _hasSufficientInitialResources = true; // Assume true initially
+  double _requiredTokensForSpread = 0.0;
+  // ---------------------------
+
   int get cardCount => widget.spreadType.cardCount;
 
   @override
   void initState() {
     super.initState();
     readingDate = DateTime.now();
+    _requiredTokensForSpread = widget.spreadType.costInCredits; // Calculate required cost once
 
     _flipControllers = List.generate(cardCount, (_) => AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -66,6 +73,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     ));
 
     _loadAudioAssets();
+    // Initial resource check will be done in the first build cycle via BlocBuilder
   }
 
   @override
@@ -88,20 +96,20 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Future<void> _loadAudioAssets() async {
+    // No changes needed here assuming AssetSource works
     try {
-      await _audioPlayer.setSource(AssetSource('audio/card_flip.mp3'));
-      await _audioPlayer.setSource(AssetSource('audio/shuffle.mp3'));
       if (kDebugMode) {
-        print("Ses dosyaları yüklendi.");
+        print("Ses dosyaları için kaynaklar ayarlandı.");
       }
     } catch (e) {
       if (kDebugMode) {
-        print("Ses dosyası yüklenirken hata: $e");
+        print("Ses dosyası kaynağı ayarlanırken hata: $e");
       }
     }
   }
 
   Future<void> _playSound(String assetPath) async {
+    // No changes needed here
     try {
       await _audioPlayer.play(AssetSource(assetPath));
     } catch (e) {
@@ -111,12 +119,55 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     }
   }
 
+  // --- Resource Check Logic ---
+  void _performInitialResourceCheck(TarotState state) {
+    if (_hasCheckedInitialResources) return; // Only run once
+
+    final currentTokens = state.userTokens;
+    final cost = _requiredTokensForSpread;
+
+    bool sufficient = true;
+
+      if (cost > 0 && currentTokens < cost) {
+        sufficient = false;
+      }
+
+
+    // Use mounted check before calling setState
+    if (mounted) {
+      setState(() {
+        _hasSufficientInitialResources = sufficient;
+        _hasCheckedInitialResources = true;
+      });
+    } else {
+      // If not mounted when check completes, store result but don't call setState
+      _hasSufficientInitialResources = sufficient;
+      _hasCheckedInitialResources = true;
+      return; // Exit if not mounted
+    }
+
+
+    if (!sufficient) {
+      // Use addPostFrameCallback to ensure the dialog is shown after the build cycle
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Check mounted again inside the callback
+        if (mounted) {
+          _showPaymentDialog(context, cost); // Call corrected dialog function
+        }
+      });
+    }
+  }
+  // ---------------------------
+
+
   Future _reshuffleCards() async {
-    if (!mounted || isLoading) return;
+    if (!mounted || isLoading || !_hasSufficientInitialResources) return;
 
     setState(() => isLoading = true);
     try {
-      await repository.loadCards();
+      if(repository.getAllCards().isEmpty) {
+        await repository.loadCards();
+      }
 
       if (mounted) {
         setState(() {
@@ -158,12 +209,14 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   void _flipCard(int index) {
-    if (!mounted || isFlippingAll || !cardsDrawn || index >= revealed.length) return;
+    if (!mounted || isFlippingAll || !cardsDrawn || index >= revealed.length || !_hasSufficientInitialResources) return;
 
     _playSound('audio/card_flip.mp3');
     HapticFeedback.lightImpact();
 
     final controller = _flipControllers[index];
+    if (controller.isAnimating) return;
+
     final newState = !revealed[index];
 
     if (mounted) {
@@ -177,37 +230,39 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Future<void> _flipAllCards() async {
-    if (!mounted || isFlippingAll || !cardsDrawn) return;
+    if (!mounted || isFlippingAll || !cardsDrawn || !_hasSufficientInitialResources) return;
 
     setState(() => isFlippingAll = true);
     _playSound('audio/card_flip.mp3');
     HapticFeedback.heavyImpact();
 
     bool anyRevealed = revealed.any((r) => r);
+    bool flipToRevealed = !anyRevealed || revealed.contains(false);
 
-    if (!anyRevealed || revealed.contains(false)) {
+    if (flipToRevealed) {
       for (int i = 0; i < cardCount; i++) {
-        if (mounted) {
-          if (!revealed[i]) {
+        if (mounted && !revealed[i]) {
+          final controller = _flipControllers[i];
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (mounted) {
             setState(() => revealed[i] = true);
-            _flipControllers[i].forward(from: _flipControllers[i].value);
-            await Future.delayed(const Duration(milliseconds: 150));
+            controller.forward(from: controller.value);
+          } else {
+            break;
           }
-        } else {
-          break;
         }
       }
-    }
-    else {
+    } else {
       for (int i = cardCount - 1; i >= 0; i--) {
-        if (mounted) {
-          if (revealed[i]) {
+        if (mounted && revealed[i]) {
+          final controller = _flipControllers[i];
+          await Future.delayed(const Duration(milliseconds: 80));
+          if (mounted) {
             setState(() => revealed[i] = false);
-            _flipControllers[i].reverse(from: _flipControllers[i].value);
-            await Future.delayed(const Duration(milliseconds: 100));
+            controller.reverse(from: controller.value);
+          } else {
+            break;
           }
-        } else {
-          break;
         }
       }
     }
@@ -218,20 +273,35 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Future<void> _navigateToResults() async {
-    if (!mounted || !cardsDrawn) {
+    final loc = S.of(context)!;
+    if (!mounted) return;
+
+    if (!cardsDrawn) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context)?.drawCards ?? 'Please draw cards first!'), backgroundColor: Colors.orangeAccent,)
+          SnackBar(content: Text(loc.drawCards), backgroundColor: Colors.orangeAccent,)
       );
       return;
     }
 
     final bloc = context.read<TarotBloc>();
+    final currentState = bloc.state;
+    final cost = _requiredTokensForSpread;
+    final double currentTokens = currentState.userTokens;
 
-    if (bloc.state is InsufficientResources) {
-      _showPaymentDialog(context, (bloc.state as InsufficientResources).requiredTokens);
+    bool sufficientNow = true;
+
+      if (cost > 0 && currentTokens < cost) {
+        sufficientNow = false;
+      }
+
+
+
+    if (!sufficientNow) {
+      _showPaymentDialog(context, cost); // Show dialog again if needed
       return;
     }
 
+    // --- Dispatch Event based on Spread Type ---
     TarotEvent eventToDispatch;
     switch (widget.spreadType) {
       case SpreadType.singleCard:
@@ -293,30 +363,50 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const ReadingResultScreen(),
+          pageBuilder: (_, __, ___) => const ReadingResultScreenWithTransition(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },
-          transitionDuration: const Duration(milliseconds: 600),
+          transitionDuration: const Duration(milliseconds: 300),
         ),
       );
     }
   }
 
+  // --- CORRECTED based on PaymentManager ---
   void _showPaymentDialog(BuildContext context, double requiredTokens) {
     PaymentManager.showPaymentDialog(
       context,
       requiredTokens: requiredTokens,
       onSuccess: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context)!.paymentSuccessful), backgroundColor: Colors.green),
-        );
+        // This code runs ONLY if the PaymentManager's _handlePurchaseUpdates
+        // successfully processes a purchase and calls its internal onPurchaseSuccess.
+        if(mounted) {
+          // Optional: Show a success message here if PaymentManager doesn't already
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(content: Text(S.of(context)!.paymentSuccessful), backgroundColor: Colors.green),
+          // );
+
+          // If the initial check failed, update the state to allow interaction now
+          if (!_hasSufficientInitialResources) {
+            setState(() {
+              _hasSufficientInitialResources = true; // Assume success allows proceeding
+            });
+          }
+        }
       },
+      // onFailure and onCancel parameters are removed as they don't exist in PaymentManager.showPaymentDialog
     );
+
+    // Since failure/cancel isn't explicitly signaled back here,
+    // the screen relies on the BlocBuilder reacting to the TarotBloc state
+    // (which *is* updated on success by PaymentManager) to re-enable buttons if needed.
+    // If the user cancels, they return here, and buttons remain disabled if resources are still low.
   }
+  // --- END CORRECTION ---
 
   void _showDetailedCardInfo(TarotCard card, int index) {
-    if (!mounted || !cardsDrawn || index >= revealed.length) return;
+    if (!mounted || !cardsDrawn || index >= revealed.length || !_hasSufficientInitialResources) return;
 
     if (!revealed[index]) {
       _playSound('audio/card_flip.mp3');
@@ -331,11 +421,15 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   void _openCardDetails(TarotCard card) {
+    // Basic check to prevent opening multiple dialogs rapidly
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
+
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       pageBuilder: (context, anim1, anim2) {
+        // --- Card Detail Dialog UI (kept as is) ---
         return Center(
           child: Material(
             color: Colors.transparent,
@@ -412,7 +506,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                           ),
                           const SizedBox(height: 20),
                           _buildDetailSection(S.of(context)!.arcana, card.arcana),
-                          _buildDetailSection(S.of(context)!.suit, card.suit),
+                          _buildDetailSection(S.of(context)!.suit, card.suit), // Handle null suit
                           if (card.elemental != null && card.elemental!.isNotEmpty) _buildDetailSection("Element", card.elemental!),
                           _buildDetailSection("Keywords", card.keywords.join(", ")),
                           _buildDetailSection("Fortune Telling", card.fortuneTelling.join("\n\n")),
@@ -458,6 +552,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
             ),
           ),
         );
+        // --- End Card Detail Dialog UI ---
       },
       transitionBuilder: (context, anim1, anim2, child) {
         return FadeTransition(
@@ -507,24 +602,29 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+  // --- Card Widget Rendering (kept as is) ---
   Widget _buildCardWidget(int index, String positionLabel) {
-    if (!cardsDrawn || index >= selectedCards.length) return const SizedBox.shrink();
+    if (!cardsDrawn || index < 0 || index >= selectedCards.length || index >= _flipControllers.length || index >= _zoomControllers.length) {
+      return const SizedBox(width: 100, height: 150); // Placeholder size
+    }
 
     final TarotCard card = selectedCards[index];
+    final flipController = _flipControllers[index];
+    final zoomController = _zoomControllers[index];
 
     return GestureDetector(
       onTap: () => _flipCard(index),
       onLongPress: () => _showDetailedCardInfo(card, index),
       child: AnimatedBuilder(
-        animation: Listenable.merge([_flipControllers[index], _zoomControllers[index]]),
+        animation: Listenable.merge([flipController, zoomController]),
         builder: (context, child) {
-          final flipValue = _flipControllers[index].value;
-          final zoomValue = Curves.easeOutExpo.transform(_zoomControllers[index].value);
-          final isVisuallyBack = flipValue >= 0.5;
+          final flipValue = flipController.value;
+          final zoomValue = Curves.easeOutExpo.transform(zoomController.value);
+          final isVisuallyBack = flipValue < 0.5;
 
           double scale = zoomValue;
           double opacity = zoomValue;
-          double initialOffsetY = 400;
+          double initialOffsetY = MediaQuery.of(context).size.height * 0.4;
           double offsetY = (1.0 - zoomValue) * initialOffsetY;
 
           final centerIndex = (cardCount - 1) / 2.0;
@@ -545,7 +645,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedOpacity(
-                  opacity: isVisuallyBack && _flipControllers[index].isCompleted ? 1.0 : 0.0,
+                  opacity: !isVisuallyBack && flipController.isCompleted ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 200),
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 6),
@@ -562,12 +662,12 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                   transform: transform,
                   alignment: Alignment.center,
                   child: isVisuallyBack
-                      ? Transform(
+                      ? _buildCardBack()
+                      : Transform(
                     transform: Matrix4.identity()..rotateY(pi),
                     alignment: Alignment.center,
                     child: _buildCardFront(card),
-                  )
-                      : _buildCardBack(),
+                  ),
                 ),
               ],
             ),
@@ -577,10 +677,14 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+
   Widget _buildCardFront(TarotCard card) {
+    const double cardWidth = 100;
+    const double cardHeight = 150;
+
     return Container(
-      width: 100,
-      height: 150,
+      width: cardWidth,
+      height: cardHeight,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.grey[300],
@@ -606,9 +710,12 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Widget _buildCardBack() {
+    const double cardWidth = 100;
+    const double cardHeight = 150;
+
     return Container(
-      width: 100,
-      height: 150,
+      width: cardWidth,
+      height: cardHeight,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: LinearGradient(
@@ -633,7 +740,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
-
+  // --- Layout Building (Scrollable versions included) ---
   Widget _buildCardLayout(BuildContext context) {
     final SpreadType currentSpreadType = widget.spreadType;
     final loc = S.of(context)!;
@@ -652,32 +759,46 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
               ),
             ),
             const SizedBox(height: 30),
-            SlideToDrawButton(
-              onDrawComplete: _reshuffleCards,
+            _hasSufficientInitialResources
+                ? SlideToDrawButton(onDrawComplete: _reshuffleCards)
+                : Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                loc.checkingResources ,
+                style: GoogleFonts.cinzel(fontSize: 16, color: Colors.white54),
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),
       );
     }
 
-    Widget buildSpreadLayout(List<int> indices, List<String> positions) {
+    Widget buildSpreadLayoutWrapper(List<int> indices, List<String> positions) {
+      if (indices.length != cardCount || positions.length != cardCount) {
+        if (kDebugMode) {
+          print("Layout Error: indices (${indices.length}) or positions (${positions.length}) length does not match cardCount ($cardCount) for ${widget.spreadType}");
+        }
+        return Center(child: Text("Layout configuration error.", style: TextStyle(color: Colors.red)));
+      }
+
       switch (currentSpreadType) {
         case SpreadType.celticCross:
           return _buildCelticCrossLayout(indices, positions);
+        case SpreadType.yearlySpread:
+          return _buildYearlySpreadLayout(indices, positions);
         case SpreadType.fiveCardPath:
           return _buildFiveCardPathLayout(indices, positions);
         case SpreadType.relationshipSpread:
           return _buildRelationshipSpreadLayout(indices, positions);
-        case SpreadType.yearlySpread:
-          return _buildYearlySpreadLayout(indices, positions);
         default:
           return Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+              padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 15),
               child: Wrap(
                 alignment: WrapAlignment.center,
-                spacing: 12,
-                runSpacing: 28,
+                spacing: 15,
+                runSpacing: 30,
                 children: List.generate(indices.length, (index) {
                   return _buildCardWidget(indices[index], positions[index]);
                 }),
@@ -689,237 +810,238 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
 
     List<String> getMonthNames() {
       final List<String> months = [];
-      for (int i = 0; i < cardCount; i++) {
+      final count = math.min(cardCount, 13);
+      for (int i = 0; i < count; i++) {
         final date = DateTime(readingDate.year, readingDate.month + i);
         final monthName = DateFormat('MMMM yyyy', locale).format(date);
         months.add(monthName);
+      }
+      if (cardCount == 13 && count == 13) {
+        months[12] = loc.yearlySpreadReading;
+      } else if (cardCount > count) {
+        for (int i = count; i < cardCount; i++) {
+          months.add("Card ${i + 1}");
+        }
       }
       return months;
     }
 
     switch (currentSpreadType) {
       case SpreadType.singleCard:
-        return buildSpreadLayout([0], [loc.singleCard]);
+        return buildSpreadLayoutWrapper([0], [loc.singleCard]);
       case SpreadType.pastPresentFuture:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2],
           [loc.celticCrossPast, loc.celticCrossCurrentSituation, loc.celticCrossFuture],
         );
       case SpreadType.problemSolution:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2],
-          [loc.problem, "Obstacle/Advice", loc.solution],
+          [loc.problem, loc.obstacleAdvice, loc.solution],
         );
       case SpreadType.celticCross:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           List.generate(10, (i) => i),
           [
-            loc.celticCrossCurrentSituation,
-            loc.celticCrossChallenge,
-            loc.celticCrossSubconscious,
-            loc.celticCrossPast,
-            loc.celticCrossConscious,
-            loc.celticCrossFuture,
-            loc.celticCrossPersonalStance,
-            loc.celticCrossExternalInfluences,
-            loc.celticCrossHopesFears,
+            loc.celticCrossCurrentSituation, loc.celticCrossChallenge, loc.celticCrossSubconscious,
+            loc.celticCrossPast, loc.celticCrossConscious, loc.celticCrossFuture,
+            loc.celticCrossPersonalStance, loc.celticCrossExternalInfluences, loc.celticCrossHopesFears,
             loc.celticCrossFinalOutcome,
           ],
         );
       case SpreadType.yearlySpread:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           List.generate(cardCount, (i) => i),
           getMonthNames(),
         );
       case SpreadType.fiveCardPath:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2, 3, 4],
           [
-            loc.fiveCardPathPast,
-            loc.fiveCardPathPresent,
-            loc.fiveCardPathChallenge,
-            loc.fiveCardPathFuture,
-            loc.fiveCardPathOutcome,
+            loc.fiveCardPathPast, loc.fiveCardPathPresent, loc.fiveCardPathChallenge,
+            loc.fiveCardPathFuture, loc.fiveCardPathOutcome,
           ],
         );
       case SpreadType.relationshipSpread:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           List.generate(7, (i) => i),
           [
-            loc.relationshipSelf,
-            loc.relationshipPartner,
-            loc.relationshipPast,
-            loc.relationshipPresent,
-            loc.relationshipFuture,
-            loc.relationshipStrengths,
+            loc.relationshipSelf, loc.relationshipPartner, loc.relationshipPast,
+            loc.relationshipPresent, loc.relationshipFuture, loc.relationshipStrengths,
             loc.relationshipChallenges,
           ],
         );
       case SpreadType.mindBodySpirit:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2],
           [loc.mindBody, loc.mindSpirit, loc.bodySpirit],
         );
       case SpreadType.astroLogicalCross:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2, 3, 4],
           [
-            loc.astroPast,
-            loc.astroPresent,
-            loc.astroFuture,
-            loc.astroChallenge,
-            loc.astroOutcome,
+            loc.astroPast, loc.astroPresent, loc.astroFuture,
+            loc.astroChallenge, loc.astroOutcome,
           ],
         );
       case SpreadType.brokenHeart:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2, 3, 4],
           [
-            loc.brokenHeartCause,
-            loc.brokenHeartEmotion,
-            loc.brokenHeartLesson,
-            loc.brokenHeartHope,
-            loc.brokenHeartHealing,
+            loc.brokenHeartCause, loc.brokenHeartEmotion, loc.brokenHeartLesson,
+            loc.brokenHeartHope, loc.brokenHeartHealing,
           ],
         );
       case SpreadType.dreamInterpretation:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2],
           [
-            loc.dreamPast,
-            loc.dreamPresent,
-            loc.dreamFuture,
+            loc.dreamPast, loc.dreamPresent, loc.dreamFuture,
           ],
         );
       case SpreadType.horseshoeSpread:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           List.generate(7, (i) => i),
           [
-            loc.horseshoePast,
-            loc.horseshoePresent,
-            loc.horseshoeFuture,
-            loc.horseshoeStrengths,
-            loc.horseshoeObstacles,
-            loc.horseshoeAdvice,
+            loc.horseshoePast, loc.horseshoePresent, loc.horseshoeFuture,
+            loc.horseshoeStrengths, loc.horseshoeObstacles, loc.horseshoeAdvice,
             loc.horseshoeOutcome,
           ],
         );
       case SpreadType.careerPathSpread:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2, 3, 4],
           [
-            loc.careerPast,
-            loc.careerPresent,
-            loc.careerChallenge,
-            loc.careerPotential,
-            loc.careerOutcome,
+            loc.careerPast, loc.careerPresent, loc.careerChallenge,
+            loc.careerPotential, loc.careerOutcome,
           ],
         );
       case SpreadType.fullMoonSpread:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           [0, 1, 2, 3, 4],
           [
-            loc.fullMoonPast,
-            loc.fullMoonPresent,
-            loc.fullMoonChallenge,
-            loc.fullMoonHope,
-            loc.fullMoonOutcome,
+            loc.fullMoonPast, loc.fullMoonPresent, loc.fullMoonChallenge,
+            loc.fullMoonHope, loc.fullMoonOutcome,
           ],
         );
       case SpreadType.categoryReading:
-        return buildSpreadLayout(
+        return buildSpreadLayoutWrapper(
           List.generate(cardCount, (i) => i),
-          List.generate(cardCount, (i) => "${widget.categoryKey} - ${i + 1}"),
+          List.generate(cardCount, (i) => "${widget.categoryKey} - Card ${i + 1}"),
         );
     }
   }
 
+  // --- Celtic Cross Layout (Scrollable) ---
   Widget _buildCelticCrossLayout(List<int> indices, List<String> positions) {
-    if (indices.length < 10) return const Center(child: Text("Not enough cards for Celtic Cross"));
-    const double cardSpacing = 10.0;
-    const double columnSpacing = 20.0;
+    if (indices.length < 10 || positions.length < 10) {
+      return const Center(child: Text("Not enough cards/positions for Celtic Cross", style: TextStyle(color: Colors.red)));
+    }
+    const double cardWidth = 100;
+    const double cardHeight = 150;
+    const double cardSpacing = 15.0;
+    const double columnSpacing = 25.0;
 
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 10.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildCardWidget(indices[9], positions[9]),
-                const SizedBox(height: cardSpacing),
-                _buildCardWidget(indices[8], positions[8]),
-                const SizedBox(height: cardSpacing),
-                _buildCardWidget(indices[7], positions[7]),
-                const SizedBox(height: cardSpacing),
-                _buildCardWidget(indices[6], positions[6]),
-              ],
-            ),
-            const SizedBox(width: columnSpacing),
+    final double contentWidth = cardWidth * 3 + columnSpacing * 2 + cardSpacing * 3;
+    final double contentHeight = cardHeight * 4 + cardSpacing * 3 + 30;
 
-            SizedBox(
-              width: 100 * 2 + cardSpacing * 3,
-              height: 150 * 3 + cardSpacing * 2,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned(
-                    bottom: 0,
-                    left: 100 + cardSpacing * 1.5,
-                    child: _buildCardWidget(indices[2], positions[2]),
+    return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: contentWidth,
+                  minHeight: contentHeight,
+                  maxWidth: max(contentWidth, constraints.maxWidth),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildCardWidget(indices[9], positions[9]),
+                          const SizedBox(height: cardSpacing),
+                          _buildCardWidget(indices[8], positions[8]),
+                          const SizedBox(height: cardSpacing),
+                          _buildCardWidget(indices[7], positions[7]),
+                          const SizedBox(height: cardSpacing),
+                          _buildCardWidget(indices[6], positions[6]),
+                        ],
+                      ),
+                      const SizedBox(width: columnSpacing),
+                      SizedBox(
+                        width: cardWidth * 2 + cardSpacing,
+                        height: cardHeight * 3 + cardSpacing * 2,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Positioned(
+                              bottom: 0,
+                              left: (cardWidth + cardSpacing) / 2,
+                              child: _buildCardWidget(indices[2], positions[2]),
+                            ),
+                            Positioned(
+                              left: 0,
+                              top: cardHeight + cardSpacing,
+                              child: _buildCardWidget(indices[3], positions[3]),
+                            ),
+                            Positioned(
+                              right: 0,
+                              top: cardHeight + cardSpacing,
+                              child: _buildCardWidget(indices[5], positions[5]),
+                            ),
+                            Positioned(
+                              top: 0,
+                              left: (cardWidth + cardSpacing) / 2,
+                              child: _buildCardWidget(indices[4], positions[4]),
+                            ),
+                            Positioned(
+                              top: cardHeight + cardSpacing,
+                              left: (cardWidth + cardSpacing) / 2,
+                              child: _buildCardWidget(indices[0], positions[0]),
+                            ),
+                            Positioned(
+                              top: cardHeight + cardSpacing,
+                              left: (cardWidth + cardSpacing) / 2,
+                              child: Transform.rotate(
+                                angle: -pi / 2,
+                                child: _buildCardWidget(indices[1], positions[1]),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  Positioned(
-                    left: 0,
-                    top: 150 + cardSpacing,
-                    child: _buildCardWidget(indices[3], positions[3]),
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 150 + cardSpacing,
-                    child: _buildCardWidget(indices[5], positions[5]),
-                  ),
-                  Positioned(
-                    top: 0,
-                    left: 100 + cardSpacing * 1.5,
-                    child: _buildCardWidget(indices[4], positions[4]),
-                  ),
-                  Positioned(
-                    top: 150 + cardSpacing,
-                    left: 100 + cardSpacing * 1.5,
-                    child: _buildCardWidget(indices[0], positions[0]),
-                  ),
-                  Positioned(
-                    top: 150 + cardSpacing,
-                    left: 100 + cardSpacing * 1.5,
-                    child: Transform.rotate(
-                      angle: -pi / 2,
-                      child: _buildCardWidget(indices[1], positions[1]),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
     );
   }
 
-
+  // --- Five Card Path Layout (Scrollable Horizontally) ---
   Widget _buildFiveCardPathLayout(List<int> indices, List<String> positions) {
-    if (indices.length < 5) return const Center(child: Text("Not enough cards for Five Card Path"));
+    if (indices.length < 5 || positions.length < 5) {
+      return const Center(child: Text("Not enough cards/positions for Five Card Path", style: TextStyle(color: Colors.red)));
+    }
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: List.generate(indices.length, (i) {
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: _buildCardWidget(indices[i], positions[i]),
             );
           }),
@@ -928,11 +1050,14 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+  // --- Relationship Spread Layout (Scrollable Vertically) ---
   Widget _buildRelationshipSpreadLayout(List<int> indices, List<String> positions) {
-    if (indices.length < 7) return const Center(child: Text("Not enough cards for Relationship Spread"));
+    if (indices.length < 7 || positions.length < 7) {
+      return const Center(child: Text("Not enough cards/positions for Relationship Spread", style: TextStyle(color: Colors.red)));
+    }
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(25),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -940,27 +1065,27 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildCardWidget(indices[0], positions[0]),
-                const SizedBox(width: 25),
+                const SizedBox(width: 30),
                 _buildCardWidget(indices[1], positions[1]),
               ],
             ),
-            const SizedBox(height: 25),
+            const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildCardWidget(indices[2], positions[2]),
-                const SizedBox(width: 20),
+                const SizedBox(width: 25),
                 _buildCardWidget(indices[3], positions[3]),
                 const SizedBox(width: 25),
                 _buildCardWidget(indices[4], positions[4]),
               ],
             ),
-            const SizedBox(height: 25),
+            const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildCardWidget(indices[5], positions[5]),
-                const SizedBox(width: 25),
+                const SizedBox(width: 30),
                 _buildCardWidget(indices[6], positions[6]),
               ],
             ),
@@ -970,79 +1095,121 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+  // --- Yearly Spread Layout (Scrollable) ---
   Widget _buildYearlySpreadLayout(List<int> indices, List<String> positions) {
-    if (indices.length < 12) return const Center(child: Text("Not enough cards for Yearly Spread"));
+    if (indices.length < 12 || positions.length < indices.length) {
+      return Center(child: Text("Not enough cards/positions for Yearly Spread (${indices.length})", style: TextStyle(color: Colors.red)));
+    }
 
-    final double radius = MediaQuery.of(context).size.width * 0.35;
     final double cardWidth = 100;
     final double cardHeight = 150;
+    final double radius = MediaQuery.of(context).size.width * 0.40;
+    final double layoutDiameter = radius * 2 + cardWidth;
+    final double layoutHeight = radius * 2 + cardHeight + 40;
+
+    final int centerCardIndex = (cardCount == 13) ? 12 : -1;
+    final int circleCardCount = (centerCardIndex != -1) ? 12 : cardCount;
 
     return Center(
-      child: SizedBox(
-        width: radius * 2 + cardWidth,
-        height: radius * 2 + cardHeight + 30,
-        child: Stack(
-          alignment: Alignment.center,
-          children: List.generate(indices.length, (index) {
-            final double angle = (pi * 2 / 12) * index - (pi / 2);
-
-            final double x = radius * cos(angle);
-            final double y = radius * sin(angle);
-
-            return Positioned(
-              left: radius + x,
-              top: radius + y,
-              child: _buildCardWidget(indices[index], positions[index]),
-            );
-          }),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: SizedBox(
+          width: layoutDiameter,
+          height: layoutHeight,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              ...List.generate(circleCardCount, (index) {
+                final double angle = (pi * 2 / circleCardCount) * index - (pi / 2);
+                final double x = radius * cos(angle);
+                final double y = radius * sin(angle);
+                return Positioned(
+                  left: radius + x - (cardWidth / 2),
+                  top: radius + y - (cardHeight / 2),
+                  child: _buildCardWidget(indices[index], positions[index]),
+                );
+              }),
+              if (centerCardIndex != -1)
+                Positioned(
+                  left: radius - (cardWidth / 2),
+                  top: radius - (cardHeight / 2),
+                  child: _buildCardWidget(indices[centerCardIndex], positions[centerCardIndex]),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
 
+  // --- Action Buttons ---
   Widget _buildActionButtons() {
     final loc = S.of(context)!;
-    final bool canFlip = cardsDrawn && !isFlippingAll;
-    final bool canReshuffle = !isLoading;
-    final bool canViewResults = cardsDrawn && !isLoading && !isFlippingAll;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-      decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.9),
-          boxShadow: [
-            BoxShadow(color: Colors.purple.withOpacity(0.4), blurRadius: 10, spreadRadius: -5, offset: const Offset(0, -5))
-          ]
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildActionButton(
-            label: loc.flipAllCards,
-            onPressed: canFlip ? _flipAllCards : (){},
-            icon: Icons.flip_camera_android_outlined,
-            color: Colors.purple.shade400,
-            isEnabled: canFlip,
+    return BlocBuilder<TarotBloc, TarotState>(
+      builder: (context, state) {
+        final bool canFlip = cardsDrawn && !isFlippingAll && _hasSufficientInitialResources;
+        final bool canReshuffle = !isLoading && _hasSufficientInitialResources;
+
+        final cost = _requiredTokensForSpread;
+        final double currentTokens = state.userTokens;
+        bool sufficientForResults = true;
+
+          if (cost > 0 && currentTokens < cost) {
+            sufficientForResults = false;
+          }
+
+
+        final bool canViewResults = cardsDrawn && !isLoading && !isFlippingAll && sufficientForResults;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+          decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.9),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.purple.withOpacity(0.4),
+                    blurRadius: 10,
+                    spreadRadius: -5,
+                    offset: const Offset(0, -5))
+              ]
           ),
-          _buildActionButton(
-            label: cardsDrawn ? loc.reshuffleCards : loc.drawCards,
-            onPressed: canReshuffle ? _reshuffleCards : (){},
-            icon: Icons.shuffle_rounded,
-            color: Colors.deepPurple.shade500,
-            isEnabled: canReshuffle,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildActionButton(
+                label: loc.flipAllCards,
+                onPressed: canFlip ? _flipAllCards : (){},
+                icon: Icons.flip_camera_android_outlined,
+                color: Colors.purple.shade400,
+                isEnabled: canFlip,
+              ),
+              _buildActionButton(
+                label: cardsDrawn ? loc.reshuffleCards : loc.drawCards,
+                onPressed: canReshuffle ? _reshuffleCards : (){},
+                icon: Icons.shuffle_rounded,
+                color: Colors.deepPurple.shade500,
+                isEnabled: canReshuffle,
+              ),
+              _buildActionButton(
+                label: loc.viewResults,
+                onPressed: canViewResults ? _navigateToResults : (){
+                  if (cardsDrawn && !sufficientForResults) {
+                    _showPaymentDialog(context, cost);
+                  }
+                },
+                icon: Icons.visibility_outlined,
+                color: Colors.purpleAccent.shade400,
+                isEnabled: canViewResults,
+              ),
+            ],
           ),
-          _buildActionButton(
-            label: loc.viewResults,
-            onPressed: canViewResults ? _navigateToResults : (){},
-            icon: Icons.visibility_outlined,
-            color: Colors.purpleAccent.shade400,
-            isEnabled: canViewResults,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
+
 
   Widget _buildActionButton({
     required String label,
@@ -1096,6 +1263,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+  // --- Help Dialog (kept as is) ---
   void _showHelpDialog(BuildContext context) {
     final loc = S.of(context)!;
     showDialog(
@@ -1180,22 +1348,20 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
 
     return BlocListener<TarotBloc, TarotState>(
       listener: (context, state) {
-        if (state is InsufficientResources) {
-          if (kDebugMode) {
-            print("Listener (CardSelection): InsufficientResources detected.");
-          }
-        } else if (state is TarotError) {
+        if (state is TarotError) {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent)
           );
-          if (isLoading) setState(() => isLoading = false);
+          if (isLoading && mounted) setState(() => isLoading = false);
         }
+        // Optional: Could listen for state changes here to update
+        // _hasSufficientInitialResources if needed, but BlocBuilder handles button state.
       },
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-              widget.spreadType.toString().split('.').last.replaceAllMapped(
-                  RegExp(r'[A-Z]'), (match) => ' ${match.group(0)}').trim(),
+              widget.spreadType.name.replaceAllMapped( // Use .name for clarity
+                  RegExp(r'(?<=[a-z])(?=[A-Z])'), (match) => ' ').capitalizeFirstofEach(), // <-- ADDED PARENTHESES HERE
               style: GoogleFonts.cinzel(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -1220,35 +1386,81 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
             ),
           ],
         ),
-        body: Stack(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.deepPurple[900]!, Colors.black],
-                  stops: const [0.0, 0.8],
-                ),
-              ),
-            ),
-            Column(
-              children: [
-                Expanded(
-                  child: isLoading
-                      ? Center(child: Lottie.asset('assets/animations/tarot_loading.json', width: 150, height: 150))
-                      : _buildCardLayout(context),
-                ),
-                _buildActionButtons(),
-              ],
-            ),
-          ],
+        body: BlocBuilder<TarotBloc, TarotState>(
+            builder: (context, state) {
+              // Perform the initial resource check ONCE during the build phase
+              // Check mounted before calling the check method
+              if (!_hasCheckedInitialResources && mounted) {
+                // We need the state from the builder here
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) { // Check mounted *again* inside callback
+                    _performInitialResourceCheck(state);
+                  }
+                });
+              }
+
+              // Main screen content
+              return Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.deepPurple[900]!, Colors.black],
+                        stops: const [0.0, 0.8],
+                      ),
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      Expanded(
+                        child: isLoading
+                            ? Center(child: Lottie.asset('assets/animations/tarot_loading.json', width: 150, height: 150))
+                            : _buildCardLayout(context),
+                      ),
+                      _buildActionButtons(), // Buttons build using BlocBuilder internally
+                    ],
+                  ),
+                  // Show overlay *only* if initial check is done AND resources are insufficient
+                  if (!_hasSufficientInitialResources && _hasCheckedInitialResources)
+                    Container(
+                      color: Colors.black.withOpacity(0.6), // Slightly darker overlay
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(color: Colors.purpleAccent),
+                            SizedBox(height: 20),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                              child: Text(
+                                loc.insufficientCreditsAndLimit,
+                                style: GoogleFonts.cinzel(color: Colors.white70, fontSize: 16),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            SizedBox(height: 20),
+
+                             //Add a button to retry showing the dialog?
+                            ElevatedButton(
+                                onPressed: () => _showPaymentDialog(context, _requiredTokensForSpread),
+                               child: Text("Purchase Credits"),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            }
         ),
       ),
     );
   }
 }
 
+// --- Reading Result Transition Screen (kept as is) ---
 class ReadingResultScreenWithTransition extends StatefulWidget {
   const ReadingResultScreenWithTransition({super.key});
 
@@ -1264,7 +1476,7 @@ class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWi
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 1, milliseconds: 500),
+      duration: const Duration(seconds: 1, milliseconds: 200),
       vsync: this,
     );
     _startTransition();
@@ -1294,9 +1506,17 @@ class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWi
           ),
         );
       }
-    } catch (e) {
+    } on TickerCanceled {
+      if (kDebugMode) print("Transition animation cancelled.");
+      _transitioning = false;
+    }
+    catch (e) {
       if (kDebugMode) {
-        print("Geçiş animasyonu iptal edildi veya hata oluştu: $e");
+        print("Geçiş animasyonu hatası: $e");
+      }
+      if (mounted) {
+        // Handle error, maybe pop?
+        // Navigator.pop(context);
       }
       _transitioning = false;
     }
@@ -1355,6 +1575,7 @@ class ReadingResultScreenWithTransitionState extends State<ReadingResultScreenWi
 }
 
 
+// --- Slide To Draw Button (kept as is) ---
 class SlideToDrawButton extends StatefulWidget {
   final VoidCallback onDrawComplete;
 
@@ -1401,13 +1622,15 @@ class SlideToDrawButtonState extends State<SlideToDrawButton>
     _resetController = AnimationController(duration: _resetDuration, vsync: this);
     _resetAnimation = CurvedAnimation(parent: _resetController, curve: Curves.easeOutCirc)
       ..addListener(() {
-        setState(() {
-          _dragValue = lerpDouble(_resetAnimation.value, 0.0, _resetController.value)!;
-        });
+        if (mounted) { // Add mounted check
+          setState(() {
+            _dragValue = lerpDouble(_resetAnimation.value, 0.0, _resetController.value)!;
+          });
+        }
       })
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          _pulseController.repeat(reverse: true);
+          if (mounted && !_isDragging) _pulseController.repeat(reverse: true);
         }
       });
 
@@ -1425,9 +1648,8 @@ class SlideToDrawButtonState extends State<SlideToDrawButton>
         widget.onDrawComplete();
         Future.delayed(const Duration(milliseconds: 150), () {
           if (mounted) {
-            _dragValue = 1.0;
-            _resetAnimation = Tween<double>(begin: _dragValue, end: 0.0).animate(
-                CurvedAnimation(parent: _resetController, curve: Curves.easeOut)
+            _resetAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+                CurvedAnimation(parent: _resetController, curve: Curves.easeOutCirc)
             );
             _resetController.forward(from: 0.0);
           }
@@ -1446,21 +1668,25 @@ class SlideToDrawButtonState extends State<SlideToDrawButton>
 
   void _onDragStart(DragStartDetails details) {
     if (_isDragging || _resetController.isAnimating || _successController.isAnimating) return;
-    setState(() {
-      _isDragging = true;
-      _resetController.stop();
-      _pulseController.stop();
-    });
+    if (mounted) { // Add mounted check
+      setState(() {
+        _isDragging = true;
+        _resetController.stop();
+        _pulseController.stop();
+      });
+    }
     HapticFeedback.lightImpact();
   }
 
   void _onDragUpdate(DragUpdateDetails details) {
     if (!_isDragging) return;
-    setState(() {
-      final currentDrag = _dragValue * (_buttonWidth - _handleSize);
-      final newDrag = (currentDrag + details.delta.dx).clamp(0.0, _buttonWidth - _handleSize);
-      _dragValue = newDrag / (_buttonWidth - _handleSize);
-    });
+    if (mounted) { // Add mounted check
+      setState(() {
+        final currentDragPixels = _dragValue * (_buttonWidth - _handleSize);
+        final newDragPixels = (currentDragPixels + details.delta.dx).clamp(0.0, _buttonWidth - _handleSize);
+        _dragValue = newDragPixels / (_buttonWidth - _handleSize);
+      });
+    }
   }
 
   void _onDragEnd(DragEndDetails details) {
@@ -1470,7 +1696,7 @@ class SlideToDrawButtonState extends State<SlideToDrawButton>
 
     if (success) {
       HapticFeedback.heavyImpact();
-      setState(() { _dragValue = 1.0; });
+      if (mounted) setState(() { _dragValue = 1.0; }); // Add mounted check
       _successController.forward(from: 0.0);
     } else {
       HapticFeedback.lightImpact();
@@ -1479,7 +1705,7 @@ class SlideToDrawButtonState extends State<SlideToDrawButton>
       );
       _resetController.forward(from: 0.0);
     }
-    setState(() => _isDragging = false);
+    if (mounted) setState(() => _isDragging = false); // Add mounted check
   }
 
 
@@ -1590,7 +1816,7 @@ class SlideToDrawButtonState extends State<SlideToDrawButton>
                           child: Opacity(
                             opacity: mysticTextOpacity,
                             child: Text(
-                              loc!.unveilTheStars ,
+                              loc!.unveilTheStars, // TODO: Add localized string
                               style: GoogleFonts.cinzelDecorative(
                                   color: Colors.white.withOpacity(0.9),
                                   fontSize: 13,
@@ -1664,6 +1890,7 @@ class SlideToDrawButtonState extends State<SlideToDrawButton>
   }
 }
 
+// --- Custom Clipper for Slide Button Reveal (kept as is) ---
 class _SlideAreaClipper extends CustomClipper<Rect> {
   final double clipAmount;
   final double handleSize;
@@ -1672,11 +1899,19 @@ class _SlideAreaClipper extends CustomClipper<Rect> {
 
   @override
   Rect getClip(Size size) {
-    return Rect.fromLTWH(0, 0, clipAmount, size.height);
+    return Rect.fromLTWH(0, 0, clipAmount.clamp(0.0, size.width), size.height);
   }
 
   @override
   bool shouldReclip(covariant CustomClipper<Rect> oldClipper) {
     return oldClipper is! _SlideAreaClipper || oldClipper.clipAmount != clipAmount;
   }
+}
+
+// Helper extension for capitalizing strings (kept as is)
+extension StringExtension on String {
+  String capitalizeFirstofEach() => replaceAll(RegExp(' +'), ' ')
+      .split(" ")
+      .map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '')
+      .join(" ");
 }

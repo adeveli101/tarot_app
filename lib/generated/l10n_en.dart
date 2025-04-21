@@ -835,4 +835,84 @@ class SEn extends S {
 
   @override
   String get slideToDrawCards => 'Kart Çekmek İçin Kaydırın';
+
+  @override
+  String get tapCardForDetails => 'Tap card for details';
+
+  @override
+  String get interpretation => 'Interpretation';
+
+  @override
+  String get interpretationSection => 'Interpretation Section';
+
+  @override
+  String get myTarotReading => 'My Tarot Reading';
+
+  @override
+  String get readingResult => 'Reading Result';
+
+  @override
+  String get noReadingData => 'No reading data available.';
+
+  @override
+  String get checkingResources => 'Checking resources...';
+
+  @override
+  String get obstacleAdvice => 'Obstacle / Advice';
+
+  @override
+  String purchaseConfirmation(String title, String price) {
+    return 'Do you want to buy $title for $price?';
+  }
+
+  @override
+  String creditsAdded(String count) {
+    return '$count credits added successfully!';
+  }
+
+  @override
+  String get premiumActivated => 'Premium subscription activated!';
+
+  @override
+  String purchaseFailed(String error) {
+    return 'Purchase failed: $error';
+  }
+
+  @override
+  String get purchasePending => 'Purchase pending...';
+
+  @override
+  String get failedToLoadProducts => 'Failed to load products.';
+
+  @override
+  String get noProductsAvailable => 'No products available at the moment.';
+
+  @override
+  String get couponCannotBeEmpty => 'Coupon code cannot be empty.';
+
+  @override
+  String get errorLoadingCardDetails => 'Error loading card details.';
+
+  @override
+  String get cards => 'Cards';
+
+  @override
+  String get noCardsInSpread => 'No cards found in this spread.';
+
+  @override
+  String get questionsToAsk => 'Questions to Ask';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String shareTitle(String spreadType, String dateStr) {
+    return '$spreadType Reading - $dateStr';
+  }
+
+  @override
+  String get invalidPage => 'Invalid Page';
 }

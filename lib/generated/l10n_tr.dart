@@ -835,4 +835,84 @@ class STr extends S {
 
   @override
   String get slideToDrawCards => 'Kart Çekmek İçin Kaydırın';
+
+  @override
+  String get tapCardForDetails => 'Detaylar için karta dokunun';
+
+  @override
+  String get interpretation => 'Yorumlama';
+
+  @override
+  String get interpretationSection => 'Yorum Bölümü';
+
+  @override
+  String get myTarotReading => 'Benim Tarot Falım';
+
+  @override
+  String get readingResult => 'Fal Sonucu';
+
+  @override
+  String get noReadingData => 'Fal verisi bulunamadı.';
+
+  @override
+  String get checkingResources => 'Kaynaklar kontrol ediliyor...';
+
+  @override
+  String get obstacleAdvice => 'Engel / Tavsiye';
+
+  @override
+  String purchaseConfirmation(String title, String price) {
+    return '$title ürününü $price karşılığında satın almak istiyor musunuz?';
+  }
+
+  @override
+  String creditsAdded(String count) {
+    return '$count kredi başarıyla eklendi!';
+  }
+
+  @override
+  String get premiumActivated => 'Premium abonelik etkinleştirildi!';
+
+  @override
+  String purchaseFailed(String error) {
+    return 'Satın alma başarısız: $error';
+  }
+
+  @override
+  String get purchasePending => 'Satın alma bekleniyor...';
+
+  @override
+  String get failedToLoadProducts => 'Ürünler yüklenemedi.';
+
+  @override
+  String get noProductsAvailable => 'Şu anda mevcut ürün bulunmamaktadır.';
+
+  @override
+  String get couponCannotBeEmpty => 'Kupon kodu boş olamaz.';
+
+  @override
+  String get errorLoadingCardDetails => 'Kart detayları yüklenirken hata oluştu.';
+
+  @override
+  String get cards => 'Kartlar';
+
+  @override
+  String get noCardsInSpread => 'Bu açılımda kart bulunamadı.';
+
+  @override
+  String get questionsToAsk => 'Sorulacak Sorular';
+
+  @override
+  String get overview => 'Genel Bakış';
+
+  @override
+  String get details => 'Detaylar';
+
+  @override
+  String shareTitle(String spreadType, String dateStr) {
+    return '$spreadType Okuması - $dateStr';
+  }
+
+  @override
+  String get invalidPage => 'Geçersiz Sayfa';
 }

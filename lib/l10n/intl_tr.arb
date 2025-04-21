@@ -334,7 +334,131 @@
   "celticCrossConscious": "Kelt Haçı Bilinçli",
   "longPressHint": "Uzun Basma İpucu",
   "instructions": "Talimatlar",
-  "slideToDrawCards": "Kart Çekmek İçin Kaydırın"
+  "slideToDrawCards": "Kart Çekmek İçin Kaydırın",
 
+  "tapCardForDetails": "Detaylar için karta dokunun",
+  "@tapCardForDetails": {
+    "description": "Çekilen kartlar özet sayfasındaki talimat metni"
+  },
+  "interpretation": "Yorumlama",
+  "@interpretation": {
+    "description": "Belirli bir başlık bulunamadığında yorum bölümü için genel başlık"
+  },
+  "interpretationSection": "Yorum Bölümü",
+  "@interpretationSection": {
+    "description": "Yorumun bir bölümü için yedek başlık"
+  },
+  "myTarotReading": "Benim Tarot Falım",
+  "@myTarotReading": {
+    "description": "Falı paylaşmak için varsayılan metin"
+  },
+  "readingResult": "Fal Sonucu",
+  "@readingResult": {
+    "description": "Fal sonucu ekranının AppBar başlığı"
+  },
+  "noReadingData": "Fal verisi bulunamadı.",
+  "@noReadingData": {
+    "description": "Fal sonucu durumu beklenen veriyi içermediğinde gösterilen mesaj"
+  },
+
+  "checkingResources": "Kaynaklar kontrol ediliyor...",
+  "obstacleAdvice": "Engel / Tavsiye",
+
+  "purchaseConfirmation": "{title} ürününü {price} karşılığında satın almak istiyor musunuz?",
+  "@purchaseConfirmation": {
+    "description": "Bir ürünü satın almadan önceki onay mesajı",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "50 Mistik Jeton"
+      },
+      "price": {
+        "type": "String",
+        "example": "₺19,99"
+      }
+    }
+  },
+
+  "creditsAdded": "{count} kredi başarıyla eklendi!",
+  "@creditsAdded": {
+    "description": "Krediler başarıyla eklendikten sonra gösterilen mesaj",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "50"
+      }
+    }
+  },
+
+  "premiumActivated": "Premium abonelik etkinleştirildi!",
+  "@premiumActivated": {
+    "description": "Premium abonelik etkinleştirildiğinde gösterilen mesaj"
+  },
+
+  "purchaseFailed": "Satın alma başarısız: {error}",
+  "@purchaseFailed": {
+    "description": "Satın alma başarısız olduğunda gösterilen mesaj",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Ağ hatası"
+      }
+    }
+  },
+
+  "purchasePending": "Satın alma bekleniyor...",
+  "@purchasePending": {
+    "description": "Satın alma işlemi beklemedeyken gösterilen mesaj"
+  },
+
+  "failedToLoadProducts": "Ürünler yüklenemedi.",
+  "@failedToLoadProducts": {
+    "description": "Mağazadan ürünler yüklenemediğinde gösterilen hata mesajı"
+  },
+
+  "noProductsAvailable": "Şu anda mevcut ürün bulunmamaktadır.",
+  "@noProductsAvailable": {
+    "description": "Mağazadan hiç ürün dönmediğinde gösterilen mesaj"
+  },
+
+  "couponCannotBeEmpty": "Kupon kodu boş olamaz.",
+  "@couponCannotBeEmpty": {
+    "description": "Kullanıcı boş bir kupon kodu kullanmaya çalıştığında gösterilen hata mesajı"
+  },
+
+  "errorLoadingCardDetails": "Kart detayları yüklenirken hata oluştu.",
+  "@errorLoadingCardDetails": { "description": "Tam kart detayları getirilemediğinde gösterilen hata mesajı" },
+
+
+  "cards": "Kartlar",
+  "@cards": { "description": "Açılım kartları görünümü sekmesinin başlığı" },
+
+  "noCardsInSpread": "Bu açılımda kart bulunamadı.",
+  "@noCardsInSpread": { "description": "Kartlar sekmesinde açılım verisi boşsa gösterilen mesaj" },
+
+  "questionsToAsk": "Sorulacak Sorular",
+  "@questionsToAsk": { "description": "Kart detaylarındaki 'Sorulacak Sorular' bölümünün başlığı" },
+
+  "overview": "Genel Bakış",
+  "@overview": { "description": "Markdown başlığı yoksa yorumun ilk bölümü için varsayılan başlık"},
+
+  "details": "Detaylar",
+  "@details": { "description": "Markdown başlığı yoksa kalan yorum metni için varsayılan başlık"},
+
+  "shareTitle": "{spreadType} Okuması - {dateStr}",
+  "@shareTitle": {
+    "description": "Bir okumayı paylaşmak için başlık, açılım türünü ve tarihi içerir",
+    "placeholders": {
+      "spreadType": {
+        "type": "String",
+        "example": "Kelt Haçı"
+      },
+      "dateStr": {
+        "type": "String",
+        "example": "21.04.2025, 17:39"
+      }
+    }
+  },
+  "invalidPage": "Geçersiz Sayfa"
 
 }

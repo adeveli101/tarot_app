@@ -1642,6 +1642,150 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Kart Çekmek İçin Kaydırın'**
   String get slideToDrawCards;
+
+  /// Instruction text on the drawn cards summary page
+  ///
+  /// In en, this message translates to:
+  /// **'Tap card for details'**
+  String get tapCardForDetails;
+
+  /// Generic title for an interpretation section when specific title isn't found
+  ///
+  /// In en, this message translates to:
+  /// **'Interpretation'**
+  String get interpretation;
+
+  /// Fallback title for a section of the interpretation
+  ///
+  /// In en, this message translates to:
+  /// **'Interpretation Section'**
+  String get interpretationSection;
+
+  /// Default text for sharing the reading
+  ///
+  /// In en, this message translates to:
+  /// **'My Tarot Reading'**
+  String get myTarotReading;
+
+  /// AppBar title for the reading result screen
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Result'**
+  String get readingResult;
+
+  /// Message shown when the reading result state doesn't contain expected data
+  ///
+  /// In en, this message translates to:
+  /// **'No reading data available.'**
+  String get noReadingData;
+
+  /// No description provided for @checkingResources.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking resources...'**
+  String get checkingResources;
+
+  /// No description provided for @obstacleAdvice.
+  ///
+  /// In en, this message translates to:
+  /// **'Obstacle / Advice'**
+  String get obstacleAdvice;
+
+  /// Confirmation message before buying a product
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to buy {title} for {price}?'**
+  String purchaseConfirmation(String title, String price);
+
+  /// Message shown after successfully adding credits
+  ///
+  /// In en, this message translates to:
+  /// **'{count} credits added successfully!'**
+  String creditsAdded(String count);
+
+  /// Message shown when premium subscription is activated
+  ///
+  /// In en, this message translates to:
+  /// **'Premium subscription activated!'**
+  String get premiumActivated;
+
+  /// Message shown when a purchase fails
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase failed: {error}'**
+  String purchaseFailed(String error);
+
+  /// Message shown while a purchase is pending
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase pending...'**
+  String get purchasePending;
+
+  /// Error message when products cannot be loaded from the store
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load products.'**
+  String get failedToLoadProducts;
+
+  /// Message shown when no products are returned from the store
+  ///
+  /// In en, this message translates to:
+  /// **'No products available at the moment.'**
+  String get noProductsAvailable;
+
+  /// Error message when the user tries to redeem an empty coupon code
+  ///
+  /// In en, this message translates to:
+  /// **'Coupon code cannot be empty.'**
+  String get couponCannotBeEmpty;
+
+  /// Error message when full card details cannot be fetched
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading card details.'**
+  String get errorLoadingCardDetails;
+
+  /// Tab title for the spread cards view
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get cards;
+
+  /// Message shown in the cards tab if spread data is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No cards found in this spread.'**
+  String get noCardsInSpread;
+
+  /// Title for the 'Questions to Ask' section in card details
+  ///
+  /// In en, this message translates to:
+  /// **'Questions to Ask'**
+  String get questionsToAsk;
+
+  /// Default title for the first section of interpretation if no markdown title exists
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get overview;
+
+  /// Default title for remaining interpretation text if no markdown title exists
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// Title for sharing a reading, includes spread type and date
+  ///
+  /// In en, this message translates to:
+  /// **'{spreadType} Reading - {dateStr}'**
+  String shareTitle(String spreadType, String dateStr);
+
+  /// No description provided for @invalidPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Page'**
+  String get invalidPage;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

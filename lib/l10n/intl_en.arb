@@ -338,6 +338,134 @@
   "celticCrossConscious": "Kelt Haçı Bilinçli",
   "longPressHint": "Uzun Basma İpucu",
   "instructions": "Talimatlar",
-  "slideToDrawCards": "Kart Çekmek İçin Kaydırın"
+  "slideToDrawCards": "Kart Çekmek İçin Kaydırın",
 
+
+  "tapCardForDetails": "Tap card for details",
+  "@tapCardForDetails": {
+    "description": "Instruction text on the drawn cards summary page"
+  },
+  "interpretation": "Interpretation",
+  "@interpretation": {
+    "description": "Generic title for an interpretation section when specific title isn't found"
+  },
+  "interpretationSection": "Interpretation Section",
+  "@interpretationSection": {
+    "description": "Fallback title for a section of the interpretation"
+  },
+  "myTarotReading": "My Tarot Reading",
+  "@myTarotReading": {
+    "description": "Default text for sharing the reading"
+  },
+  "readingResult": "Reading Result",
+  "@readingResult": {
+    "description": "AppBar title for the reading result screen"
+  },
+  "noReadingData": "No reading data available.",
+  "@noReadingData": {
+    "description": "Message shown when the reading result state doesn't contain expected data"
+  },
+  "checkingResources": "Checking resources...",
+
+  "obstacleAdvice": "Obstacle / Advice",
+
+
+  "purchaseConfirmation": "Do you want to buy {title} for {price}?",
+  "@purchaseConfirmation": {
+    "description": "Confirmation message before buying a product",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "50 Mystical Tokens"
+      },
+      "price": {
+        "type": "String",
+        "example": "$0.99"
+      }
+    }
+  },
+
+  "creditsAdded": "{count} credits added successfully!",
+  "@creditsAdded": {
+    "description": "Message shown after successfully adding credits",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "example": "50"
+      }
+    }
+  },
+
+  "premiumActivated": "Premium subscription activated!",
+  "@premiumActivated": {
+    "description": "Message shown when premium subscription is activated"
+  },
+
+  "purchaseFailed": "Purchase failed: {error}",
+  "@purchaseFailed": {
+    "description": "Message shown when a purchase fails",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Network error"
+      }
+    }
+  },
+
+  "purchasePending": "Purchase pending...",
+  "@purchasePending": {
+    "description": "Message shown while a purchase is pending"
+  },
+
+  "failedToLoadProducts": "Failed to load products.",
+  "@failedToLoadProducts": {
+    "description": "Error message when products cannot be loaded from the store"
+  },
+
+  "noProductsAvailable": "No products available at the moment.",
+  "@noProductsAvailable": {
+    "description": "Message shown when no products are returned from the store"
+  },
+
+  "couponCannotBeEmpty": "Coupon code cannot be empty.",
+  "@couponCannotBeEmpty": {
+    "description": "Error message when the user tries to redeem an empty coupon code"
+  },
+
+
+
+  "errorLoadingCardDetails": "Error loading card details.",
+  "@errorLoadingCardDetails": { "description": "Error message when full card details cannot be fetched" },
+
+
+  "cards": "Cards",
+  "@cards": { "description": "Tab title for the spread cards view" },
+
+  "noCardsInSpread": "No cards found in this spread.",
+  "@noCardsInSpread": { "description": "Message shown in the cards tab if spread data is empty" },
+
+  "questionsToAsk": "Questions to Ask",
+  "@questionsToAsk": { "description": "Title for the 'Questions to Ask' section in card details" },
+
+  "overview": "Overview",
+  "@overview": { "description": "Default title for the first section of interpretation if no markdown title exists"},
+
+  "details": "Details",
+  "@details": { "description": "Default title for remaining interpretation text if no markdown title exists"},
+
+  "shareTitle": "{spreadType} Reading - {dateStr}",
+  "@shareTitle": {
+    "description": "Title for sharing a reading, includes spread type and date",
+    "placeholders": {
+      "spreadType": {
+        "type": "String",
+        "example": "Celtic Cross"
+      },
+      "dateStr": {
+        "type": "String",
+        "example": "4/21/2025, 5:39 PM"
+      }
+    }
+  },
+  "invalidPage": "Invalid Page"
 }

@@ -47,47 +47,57 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m11(credits) => "${credits} credits for more readings";
 
-  static String m12(error) => "Dream Interpretation reading error: \$${error}";
+  static String m12(count) => "${count} credits added successfully!";
 
-  static String m13(message) => "Error: ${message}";
+  static String m13(error) => "Dream Interpretation reading error: \$${error}";
 
-  static String m14(error) =>
+  static String m14(message) => "Error: ${message}";
+
+  static String m15(error) =>
       "An error occurred while performing a five-card path spread: ${error}";
 
-  static String m15(category, spreadType) =>
+  static String m16(category, spreadType) =>
       "This Tarot Reading - reading provides deep insight into ${category} using the ${spreadType} spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.";
 
-  static String m16(error) => "Full Moon Spread reading error: \$${error}";
+  static String m17(error) => "Full Moon Spread reading error: \$${error}";
 
-  static String m17(error) => "Horseshoe Spread reading error: \$${error}";
+  static String m18(error) => "Horseshoe Spread reading error: \$${error}";
 
-  static String m18(required) =>
+  static String m19(required) =>
       "You need ${required} credits to continue. Purchase more credits below.";
 
-  static String m19(error) => "Mind-Body-Spirit reading error: \$${error}";
+  static String m20(error) => "Mind-Body-Spirit reading error: \$${error}";
 
-  static String m20(hours) =>
+  static String m21(hours) =>
       "Your next free reading will be available in ${hours} hours.";
 
-  static String m21(error) =>
+  static String m22(error) =>
       "An error occurred while performing a past-present-future spread: ${error}";
 
-  static String m22(error) =>
+  static String m23(error) =>
       "An error occurred while performing a problem-solution spread: ${error}";
 
-  static String m23(error) =>
+  static String m24(title, price) =>
+      "Do you want to buy ${title} for ${price}?";
+
+  static String m25(error) => "Purchase failed: ${error}";
+
+  static String m26(error) =>
       "An error occurred while performing a relationship spread: ${error}";
 
-  static String m24(error) =>
+  static String m27(spreadType, dateStr) =>
+      "${spreadType} Reading - ${dateStr}";
+
+  static String m28(error) =>
       "An error occurred while performing a single card reading: ${error}";
 
-  static String m25(category, spreadType) =>
+  static String m29(category, spreadType) =>
       "This reading provides personal and deep insights into ${category} using the ${spreadType} spread. Prepare to dive into the depths of your soul and uncover the unique messages of the cards!";
 
-  static String m26(category) =>
+  static String m30(category) =>
       "The combination of these cards marks a significant turning point in your ${category} journey. The unified energy of the cards reveals messages from the depths of your soul.";
 
-  static String m27(error) =>
+  static String m31(error) =>
       "An error occurred while performing a yearly spread: ${error}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -137,6 +147,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "cardSelectionInstructions": MessageLookupByLibrary.simpleMessage(
       "The number of cards will be displayed face down. Please tap to reveal them one by one, long press to see a brief description, or use the \'Flip All Cards\' option.",
     ),
+    "cards": MessageLookupByLibrary.simpleMessage("Cards"),
     "cardsCombinedAssessment": MessageLookupByLibrary.simpleMessage(
       "Combined Assessment of the Cards",
     ),
@@ -217,6 +228,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "celticCrossSubconscious": MessageLookupByLibrary.simpleMessage(
       "Subconscious",
     ),
+    "checkingResources": MessageLookupByLibrary.simpleMessage(
+      "Checking resources...",
+    ),
     "chooseSpread": MessageLookupByLibrary.simpleMessage(
       "Choose how the cards will be drawn",
     ),
@@ -229,10 +243,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "couponAlreadyUsed": MessageLookupByLibrary.simpleMessage(
       "This coupon has already been used.",
     ),
+    "couponCannotBeEmpty": MessageLookupByLibrary.simpleMessage(
+      "Coupon code cannot be empty.",
+    ),
     "couponHint": MessageLookupByLibrary.simpleMessage("Enter coupon code"),
     "couponInvalid": m9,
     "couponRedeemed": m10,
     "creditDescription": m11,
+    "creditsAdded": m12,
     "customPromptHint": MessageLookupByLibrary.simpleMessage(
       "Type your custom prompt here...",
     ),
@@ -251,6 +269,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "detailedGeneralCommentary": MessageLookupByLibrary.simpleMessage(
       "In-Depth General Commentary",
     ),
+    "details": MessageLookupByLibrary.simpleMessage("Details"),
     "differentInterpretation": MessageLookupByLibrary.simpleMessage(
       "A different interpretation awaits each choice",
     ),
@@ -272,14 +291,20 @@ class MessageLookup extends MessageLookupByLibrary {
         MessageLookupByLibrary.simpleMessage(
           "Decode the messages in your dreams with a spiritual perspective.",
         ),
-    "dreamInterpretationError": m12,
+    "dreamInterpretationError": m13,
     "dreamPast": MessageLookupByLibrary.simpleMessage("Dream Past"),
     "dreamPresent": MessageLookupByLibrary.simpleMessage("Dream Present"),
     "english": MessageLookupByLibrary.simpleMessage("English"),
+    "errorLoadingCardDetails": MessageLookupByLibrary.simpleMessage(
+      "Error loading card details.",
+    ),
     "errorLoadingReadings": MessageLookupByLibrary.simpleMessage(
       "Error loading readings",
     ),
-    "errorMessage": m13,
+    "errorMessage": m14,
+    "failedToLoadProducts": MessageLookupByLibrary.simpleMessage(
+      "Failed to load products.",
+    ),
     "fiftyTokens": MessageLookupByLibrary.simpleMessage("50 Tokens"),
     "fiveCardPath": MessageLookupByLibrary.simpleMessage("Five Card Path"),
     "fiveCardPathChallenge": MessageLookupByLibrary.simpleMessage("Challenge"),
@@ -290,10 +315,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "fiveCardPathOutcome": MessageLookupByLibrary.simpleMessage("Outcome"),
     "fiveCardPathPast": MessageLookupByLibrary.simpleMessage("Past"),
     "fiveCardPathPresent": MessageLookupByLibrary.simpleMessage("Present"),
-    "fiveCardPathReadingError": m14,
+    "fiveCardPathReadingError": m15,
     "flipAllCards": MessageLookupByLibrary.simpleMessage("Flip All Cards"),
     "forText": MessageLookupByLibrary.simpleMessage("for"),
-    "fortuneInsight": m15,
+    "fortuneInsight": m16,
     "fortuneTelling": MessageLookupByLibrary.simpleMessage("Fortune Telling:"),
     "fullMoonChallenge": MessageLookupByLibrary.simpleMessage(
       "Full Moon Challenge",
@@ -316,7 +341,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "fullMoonSpreadDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
       "Gain spiritual clarity with lunar energy.",
     ),
-    "fullMoonSpreadError": m16,
+    "fullMoonSpreadError": m17,
     "futureSuggestions": MessageLookupByLibrary.simpleMessage(
       "For your near future, consider these suggestions: [NEAR_FUTURE_SUGGESTIONS]",
     ),
@@ -351,7 +376,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "horseshoeSpreadDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Gain a broad perspective on your finances.",
     ),
-    "horseshoeSpreadError": m17,
+    "horseshoeSpreadError": m18,
     "horseshoeStrengths": MessageLookupByLibrary.simpleMessage("Strengths"),
     "hundredTokens": MessageLookupByLibrary.simpleMessage("100 Tokens"),
     "instructions": MessageLookupByLibrary.simpleMessage("Talimatlar"),
@@ -373,7 +398,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "insufficientCreditsAndLimit": MessageLookupByLibrary.simpleMessage(
       "You have reached your daily free reading limit and don\'t have enough credits.",
     ),
-    "insufficientCreditsMessage": m18,
+    "insufficientCreditsMessage": m19,
+    "interpretation": MessageLookupByLibrary.simpleMessage("Interpretation"),
+    "interpretationSection": MessageLookupByLibrary.simpleMessage(
+      "Interpretation Section",
+    ),
+    "invalidPage": MessageLookupByLibrary.simpleMessage("Invalid Page"),
     "keywords": MessageLookupByLibrary.simpleMessage("Keywords:"),
     "language": MessageLookupByLibrary.simpleMessage("Language"),
     "languageChangedToEnglish": MessageLookupByLibrary.simpleMessage(
@@ -406,25 +436,37 @@ class MessageLookup extends MessageLookupByLibrary {
     "mindBodySpiritDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
       "Harmonize your inner self with mind, body, and spirit.",
     ),
-    "mindBodySpiritError": m19,
+    "mindBodySpiritError": m20,
     "mindSpirit": MessageLookupByLibrary.simpleMessage("Mind-Spirit"),
     "money": MessageLookupByLibrary.simpleMessage("Money"),
     "moneyDescription": MessageLookupByLibrary.simpleMessage(
       "Gain insights into financial matters",
     ),
+    "myTarotReading": MessageLookupByLibrary.simpleMessage("My Tarot Reading"),
     "mysticJourney": MessageLookupByLibrary.simpleMessage("Mystic Journey"),
     "mysticMeaning": MessageLookupByLibrary.simpleMessage(
       "Mystical Interpretation",
     ),
     "mysticalTokens": MessageLookupByLibrary.simpleMessage("Mystical Tokens"),
-    "nextFreeReadingInfo": m20,
+    "nextFreeReadingInfo": m21,
+    "noCardsInSpread": MessageLookupByLibrary.simpleMessage(
+      "No cards found in this spread.",
+    ),
     "noInterpretation": MessageLookupByLibrary.simpleMessage(
       "No interpretation available",
+    ),
+    "noProductsAvailable": MessageLookupByLibrary.simpleMessage(
+      "No products available at the moment.",
+    ),
+    "noReadingData": MessageLookupByLibrary.simpleMessage(
+      "No reading data available.",
     ),
     "noReadings": MessageLookupByLibrary.simpleMessage("No readings found"),
     "noSelectionYet": MessageLookupByLibrary.simpleMessage(
       "No selection has been made yet",
     ),
+    "obstacleAdvice": MessageLookupByLibrary.simpleMessage("Obstacle / Advice"),
+    "overview": MessageLookupByLibrary.simpleMessage("Overview"),
     "pastPresentFuture": MessageLookupByLibrary.simpleMessage(
       " Past-Present-Future Spread",
     ),
@@ -440,7 +482,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "pastPresentFutureDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Explore your financial past, present, and future.",
     ),
-    "pastPresentFutureReadingError": m21,
+    "pastPresentFutureReadingError": m22,
     "paymentSuccessful": MessageLookupByLibrary.simpleMessage("Ödeme Başarılı"),
     "pleaseWait": MessageLookupByLibrary.simpleMessage("Please wait."),
     "pointsToWatch": MessageLookupByLibrary.simpleMessage(
@@ -451,6 +493,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Potential pitfalls to watch out for: [POTENTIAL_PITFALLS]",
     ),
     "premium": MessageLookupByLibrary.simpleMessage("Premium"),
+    "premiumActivated": MessageLookupByLibrary.simpleMessage(
+      "Premium subscription activated!",
+    ),
     "premiumDescription": MessageLookupByLibrary.simpleMessage(
       "Unlimited readings and exclusive content",
     ),
@@ -468,12 +513,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "problemSolutionDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Get guidance to address financial challenges.",
     ),
-    "problemSolutionReadingError": m22,
+    "problemSolutionReadingError": m23,
     "profile": MessageLookupByLibrary.simpleMessage("Profile"),
     "promptEmptyError": MessageLookupByLibrary.simpleMessage(
       "Please enter a prompt.",
     ),
+    "purchaseConfirmation": m24,
     "purchaseCredits": MessageLookupByLibrary.simpleMessage("Purchase Credits"),
+    "purchaseFailed": m25,
+    "purchasePending": MessageLookupByLibrary.simpleMessage(
+      "Purchase pending...",
+    ),
+    "questionsToAsk": MessageLookupByLibrary.simpleMessage("Questions to Ask"),
+    "readingResult": MessageLookupByLibrary.simpleMessage("Reading Result"),
     "readingSaved": MessageLookupByLibrary.simpleMessage(
       "Reading saved successfully",
     ),
@@ -492,7 +544,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "relationshipSpreadDescription": MessageLookupByLibrary.simpleMessage(
       "Detailed analysis of your relationship",
     ),
-    "relationshipSpreadReadingError": m23,
+    "relationshipSpreadReadingError": m26,
     "relationshipStrengths": MessageLookupByLibrary.simpleMessage("Strengths"),
     "reshuffleCards": MessageLookupByLibrary.simpleMessage("Reshuffle Cards"),
     "returnToHome": MessageLookupByLibrary.simpleMessage("Return to Home"),
@@ -507,13 +559,14 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "shadowMeaning": MessageLookupByLibrary.simpleMessage("Shadow (Negative):"),
     "share": MessageLookupByLibrary.simpleMessage("Share"),
+    "shareTitle": m27,
     "singleCard": MessageLookupByLibrary.simpleMessage(
       "Perform Single Card Reading",
     ),
     "singleCardDescription": MessageLookupByLibrary.simpleMessage(
       "Ideal for quick answers",
     ),
-    "singleCardReadingError": m24,
+    "singleCardReadingError": m28,
     "slideToDrawCards": MessageLookupByLibrary.simpleMessage(
       "Kart Çekmek İçin Kaydırın",
     ),
@@ -538,8 +591,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "swipeToSeePages": MessageLookupByLibrary.simpleMessage(
       "Swipe to see pages",
     ),
+    "tapCardForDetails": MessageLookupByLibrary.simpleMessage(
+      "Tap card for details",
+    ),
     "tarotFortune": MessageLookupByLibrary.simpleMessage("Astral Tarot"),
-    "tarotFortuneDescription": m25,
+    "tarotFortuneDescription": m29,
     "tarotFortuneGuide": MessageLookupByLibrary.simpleMessage(
       "Guide to Mystical Paths",
     ),
@@ -561,7 +617,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tryAgain": MessageLookupByLibrary.simpleMessage("Try Again"),
     "turkish": MessageLookupByLibrary.simpleMessage("Turkish"),
-    "unifiedDestinyMessage": m26,
+    "unifiedDestinyMessage": m30,
     "unifiedDestinyReflection": MessageLookupByLibrary.simpleMessage(
       "Unified Reflection of Destiny",
     ),
@@ -583,6 +639,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearlySpreadReading": MessageLookupByLibrary.simpleMessage(
       "Yearly Spread",
     ),
-    "yearlySpreadReadingError": m27,
+    "yearlySpreadReadingError": m31,
   };
 }

@@ -7,7 +7,7 @@ class AssetsRes {
   AssetsRes._();
 
   static const String PROJECT_NAME = 'tarot_fal';
-  static const String PROJECT_VERSION = '1.0.0+3';
+  static const String PROJECT_VERSION = '1.0.0+4';
   static const String IMAGE_FX_A = 'assets/image_fx_a.jpg';
   static const String IMAGE_FX_C = 'assets/image_fx_c.jpg';
   static const String CARD_BACK = 'assets/tarot_card_images/card_back.png';

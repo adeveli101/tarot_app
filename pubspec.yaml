@@ -2,8 +2,8 @@ name: tarot_fal
 description: "Tarot falı uygulaması."
 publish_to: 'none'
 
-# app bundle version "3"
-version: 1.0.0+3
+# app bundle version "4"
+version: 1.0.0+4
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -98,16 +98,40 @@ flutter_launcher_icons:
   image_path: "assets/image_fx_c.jpg"
 
 flutter_native_splash:
-  color: "6A1B9A"
-  image: assets/tarot_card_silhouette.jpg
+  # Arka plan rengi (görselden bir ton seçilebilir veya tema renginiz olabilir)
+  # image_fx_c.jpg'den koyu mor/mavi bir ton deneyelim:
+  color: "#2c1f4a" # Koyu mor/mavi tonu (tırnak içinde)
+
+  # Ana splash görseli olarak diğer asset'i kullanalım
+  image: assets/image_fx_c.jpg
+
   android: true
   ios: true
-  fullscreen: true
+  fullscreen: true # Tam ekran modu aktif kalsın
 
-  # Görselin tüm ekrana yayılması için:
-  android_gravity: fill          # Android'de resmi ekrana yayar
-  ios_content_mode: scaleAspectFill # iOS'ta resmi ekrana yayar
+  # Görseli Android < 12'de ekrana yaymaya çalışalım ('fill' esnetebilir!)
+  android_gravity: fill
+  # Görseli iOS'te en boy oranını koruyarak ekrana yayalım (kırpılabilir)
+  ios_content_mode: scaleAspectFill
 
+  # --- Android 12 ve Sonrası Ayarları ---
+  # BU BÖLÜM ZORUNLUDUR ve ORTADA BİR İKON GÖSTERİR.
+  # Arka plan görselini tam ekran yapmaz.
   android_12:
-    image: assets/tarot_card_silhouette.jpg
-    icon_background_color: "#6A1B9AFF"
+    # BURAYA MUTLAKA UYGULAMANIZIN GERÇEK İKON DOSYASININ YOLUNU GİRİN!
+    # Örnek: assets/icons/app_icon.png
+    # 'image_fx_c.jpg' veya 'tarot_card_silhouette.jpg' KULLANMAYIN!
+    image: assets/image_fx_c.jpg # <-- KENDİ İKON DOSYA YOLUNUZU YAZIN
+
+    # Android 12'de ikonun arkasındaki alanın rengi
+    icon_background_color: "#2c1f4a" # Ana renk ile aynı olabilir
+
+    # İsteğe Bağlı: Koyu tema için farklı ayarlar
+    # color_dark: "#1a112a"
+    # image_dark: assets/icons/app_icon_dark.png
+    # icon_background_color_dark: "#1a112a"
+
+    # İsteğe Bağlı: İkonun altına marka logosu ekleyebilirsiniz
+    # branding: assets/images/branding_logo.png
+    # branding_dark: assets/images/branding_logo_dark.png
+    # branding_mode: bottom # veya center
