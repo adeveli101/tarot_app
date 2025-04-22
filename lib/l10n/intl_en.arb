@@ -467,5 +467,93 @@
       }
     }
   },
-  "invalidPage": "Invalid Page"
+  "invalidPage": "Invalid Page",
+
+
+  "yearlySpreadSummary": "Yearly Summary",
+  "cardLabel": "Card {index}",
+  "@cardLabel": {
+    "description": "Label for a card in a generic spread, showing its number",
+    "placeholders": {
+      "index": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "mindBodySpiritMind": "Mind",
+  "mindBodySpiritBody": "Body",
+  "mindBodySpiritSpirit": "Spirit",
+  "astroLogicalCrossIdentity": "Identity / Self",
+  "astroLogicalCrossEmotional": "Emotional State",
+  "astroLogicalCrossExternal": "External Influences",
+  "astroLogicalCrossChallenge": "Challenge / Lesson",
+  "astroLogicalCrossDestiny": "Destiny / Outcome",
+  "dreamInterpretationPast": "Dream - Past Link",
+  "dreamInterpretationPresent": "Dream - Present Emotion",
+  "dreamInterpretationFuture": "Dream - Future Guidance",
+  "horseshoeUserAttitude": "Your Attitude",
+  "horseshoeExternalInfluence": "External Influence",
+  "careerPathCurrent": "Current Situation",
+  "careerPathObstacles": "Obstacles",
+  "careerPathOpportunities": "Opportunities",
+  "careerPathStrengths": "Strengths",
+  "careerPathOutcome": "Potential Outcome",
+  "fullMoonCulmination": "Culmination",
+  "fullMoonRevealed": "What is Revealed",
+  "fullMoonRelease": "What to Release",
+  "fullMoonObstacles": "Obstacles to Release",
+  "fullMoonAction": "Action / Integration",
+  "fullMoonResultingEnergy": "Resulting Energy",
+
+
+
+  "claimDailyRewardTooltip": "Claim your daily credits!",
+  "@claimDailyRewardTooltip": {
+    "description": "Tooltip text shown when hovering over the daily claim button/icon"
+  },
+  "nextReward": "Next:",
+  "@nextReward": {
+    "description": "Prefix text shown before the countdown timer for the next daily reward"
+  },
+  "nextRewardTooltip": "Next daily reward available in {time}",
+  "@nextRewardTooltip": {
+    "description": "Tooltip text shown when hovering over the countdown timer for the next daily reward",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08:15:32"
+      }
+    }
+  },
+  "claimYourDailyTokens": "Claim Your Daily {count} Credits!",
+  "@claimYourDailyTokens": {
+    "description": "Text for the main claim button (now compact icon, text not directly visible but key is used)",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "20"
+      }
+    }
+  },
+
+  "dailyRewardInfo": "This timer shows when your next free daily credits will be available.",
+  "@dailyRewardInfo": {
+    "description": "Information text displayed in a dialog when the user taps on the daily reward countdown timer."
+  },
+  "@paymentSuccessful": {
+    "description": "Snackbar message shown after a successful purchase."
+  },
+  "@close": {
+    "description": "Text for the close button in dialogs."
+  },
+  "creditInfoTooltip": "Tap to buy credits",
+  "@creditInfoTooltip": {
+    "description": "Tooltip shown when hovering over the credit display area in the top bar."
+  },
+  "redeemCouponTooltip": "Redeem Coupon",
+  "@redeemCouponTooltip": {
+    "description": "Tooltip shown for the redeem coupon button/icon."
+  }
+
 }

@@ -915,4 +915,109 @@ class STr extends S {
 
   @override
   String get invalidPage => 'Geçersiz Sayfa';
+
+  @override
+  String get yearlySpreadSummary => 'Yılın Özeti';
+
+  @override
+  String cardLabel(int index) {
+    return 'Kart $index';
+  }
+
+  @override
+  String get mindBodySpiritMind => 'Zihin';
+
+  @override
+  String get mindBodySpiritBody => 'Beden';
+
+  @override
+  String get mindBodySpiritSpirit => 'Ruh';
+
+  @override
+  String get astroLogicalCrossIdentity => 'Kimlik / Benlik';
+
+  @override
+  String get astroLogicalCrossEmotional => 'Duygusal Durum';
+
+  @override
+  String get astroLogicalCrossExternal => 'Dış Etkenler';
+
+  @override
+  String get astroLogicalCrossChallenge => 'Zorluk / Ders';
+
+  @override
+  String get astroLogicalCrossDestiny => 'Kader / Sonuç';
+
+  @override
+  String get dreamInterpretationPast => 'Rüya - Geçmiş Bağlantısı';
+
+  @override
+  String get dreamInterpretationPresent => 'Rüya - Mevcut Duygu';
+
+  @override
+  String get dreamInterpretationFuture => 'Rüya - Gelecek Rehberliği';
+
+  @override
+  String get horseshoeUserAttitude => 'Yaklaşımınız';
+
+  @override
+  String get horseshoeExternalInfluence => 'Dış Etkenler';
+
+  @override
+  String get careerPathCurrent => 'Mevcut Durum';
+
+  @override
+  String get careerPathObstacles => 'Engeller';
+
+  @override
+  String get careerPathOpportunities => 'Fırsatlar';
+
+  @override
+  String get careerPathStrengths => 'Güçlü Yönler';
+
+  @override
+  String get careerPathOutcome => 'Olası Sonuç';
+
+  @override
+  String get fullMoonCulmination => 'Tamamlanma';
+
+  @override
+  String get fullMoonRevealed => 'Ortaya Çıkan';
+
+  @override
+  String get fullMoonRelease => 'Bırakılması Gereken';
+
+  @override
+  String get fullMoonObstacles => 'Bırakma Engelleri';
+
+  @override
+  String get fullMoonAction => 'Eylem / Bütünleşme';
+
+  @override
+  String get fullMoonResultingEnergy => 'Sonuç Enerjisi';
+
+  @override
+  String get claimDailyRewardTooltip => 'Günlük kredini al!';
+
+  @override
+  String get nextReward => 'Sonraki:';
+
+  @override
+  String nextRewardTooltip(String time) {
+    return 'Sonraki günlük ödül $time sonra alınabilir';
+  }
+
+  @override
+  String claimYourDailyTokens(int count) {
+    return 'Günlük $count Kredini Al!';
+  }
+
+  @override
+  String get dailyRewardInfo => 'Bu sayaç, bir sonraki ücretsiz günlük kredinizin ne zaman alınabileceğini gösterir.';
+
+  @override
+  String get creditInfoTooltip => 'Kredi satın almak için dokunun';
+
+  @override
+  String get redeemCouponTooltip => 'Kupon Kullan';
 }

@@ -3,7 +3,6 @@ import 'package:equatable/equatable.dart';
 import 'package:tarot_fal/models/tarot_card.dart';
 
 // ================== EVENTS ==================
-// (Event sınıflarında değişiklik yok, aynı kalabilirler)
 abstract class TarotEvent extends Equatable {
   @override
   List<Object?> get props => [];
@@ -35,6 +34,11 @@ class UpdateUserInfo extends TarotEvent {
   List<Object?> get props => [name, age, gender];
 }
 
+// YENİ EVENT: Günlük token talep etmek için
+class ClaimDailyToken extends TarotEvent {}
+
+
+// --- Okuma (Draw) Eventleri ---
 class DrawSingleCard extends TarotEvent {
   final String? customPrompt;
   DrawSingleCard({this.customPrompt});
@@ -142,79 +146,92 @@ class DrawCategoryReading extends TarotEvent {
   List<Object?> get props => [category, cardCount, customPrompt];
 }
 
+
 // ================== STATES ==================
 abstract class TarotState extends Equatable {
   final double userTokens;
-  // final int dailyFreeFalCount; // <--- KALDIRILDI
   final String? lastSelectedCategory;
   final String? userName;
   final int? userAge;
   final String? userGender;
   final bool userInfoCollected;
+  // YENİ STATE ALANLARI (Null olmayan default değerlerle):
+  final bool isDailyTokenAvailable;
+  final DateTime? nextDailyTokenTime;
 
   const TarotState({
     required this.userTokens,
-    // required this.dailyFreeFalCount, // <--- KALDIRILDI
     this.lastSelectedCategory,
     this.userName,
     this.userAge,
     this.userGender,
     this.userInfoCollected = false,
+    // YENİ PARAMETRELER (required değil, default değerleri var):
+    this.isDailyTokenAvailable = false, // Default false
+    this.nextDailyTokenTime,         // Default null
   });
 
   @override
   List<Object?> get props => [
     userTokens,
-    // dailyFreeFalCount, // <--- KALDIRILDI
     lastSelectedCategory,
     userName,
     userAge,
     userGender,
     userInfoCollected,
+    // YENİ PROPS:
+    isDailyTokenAvailable,
+    nextDailyTokenTime,
   ];
 
-  // copyWith metodunu tanımla (türetilmiş sınıflar bunu implemente edecek)
+  // copyWith metodu (türetilmiş sınıflar implemente edecek)
+  // Parametreler nullable, atama yapılırken ?? ile mevcut değer korunur.
   TarotState copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   });
 }
 
 // --- Initial State ---
 class TarotInitial extends TarotState {
   const TarotInitial({
-    super.userTokens = 0.0, // Başlangıç token'ı 0 olsun, yüklenince güncellenir
-    // super.dailyFreeFalCount = 0, // <--- KALDIRILDI
+    super.userTokens = 0.0,
     super.lastSelectedCategory,
     super.userName,
     super.userAge,
     super.userGender,
     super.userInfoCollected = false,
+    // YENİ ALANLARIN DEFAULT DEĞERLERİ TarotState'ten gelir
+     super.isDailyTokenAvailable = false,
+     super.nextDailyTokenTime,
   });
 
   @override
   TarotInitial copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
     return TarotInitial(
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable, // null değilse yeni değeri ata
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,       // null değilse yeni değeri ata
     );
   }
 }
@@ -223,35 +240,39 @@ class TarotInitial extends TarotState {
 class TarotLoading extends TarotState {
   const TarotLoading({
     required super.userTokens,
-    // required super.dailyFreeFalCount, // <--- KALDIRILDI
     super.lastSelectedCategory,
     super.userName,
     super.userAge,
     super.userGender,
     super.userInfoCollected,
+    // YENİ ALANLAR Loading state'i oluşturulurken önceki state'ten alınmalı
+    required super.isDailyTokenAvailable,
+    super.nextDailyTokenTime,
   });
 
   @override
   TarotLoading copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
-    // Loading state'i kopyalarken genellikle yeni değerler atanmaz,
-    // mevcut state'in yükleniyor versiyonu oluşturulur.
-    // Eğer yükleme sırasında bazı değerler güncelleniyorsa burası değiştirilebilir.
+    // Loading state'i kopyalamak yerine genellikle yeni bir Loading state oluşturulur
+    // ve mevcut state'in değerleri kullanılır. copyWith burada anlamsız olabilir.
+    // Yine de ekleyelim:
     return TarotLoading(
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
@@ -262,38 +283,41 @@ class TarotError extends TarotState {
   const TarotError(
       this.message, {
         required super.userTokens,
-        // required super.dailyFreeFalCount, // <--- KALDIRILDI
         super.lastSelectedCategory,
         super.userName,
         super.userAge,
         super.userGender,
         super.userInfoCollected,
+        // YENİ ALANLAR hata anındaki durumu korumalı
+        required super.isDailyTokenAvailable,
+        super.nextDailyTokenTime,
       });
 
   @override
-  List<Object?> get props => [message, ...super.props]; // Hata mesajını da ekle
+  List<Object?> get props => [message, ...super.props];
 
   @override
   TarotError copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
-    // Hata mesajı genellikle kopyalanmaz, yeni hata için yeni state oluşturulur.
-    // String? message,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
+    // String? message, // Hata mesajı genellikle değiştirilmez
   }) {
     return TarotError(
-      message, // Mevcut hata mesajını koru
+      message, // Mevcut mesajı koru
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
@@ -304,53 +328,59 @@ class TarotCardsLoaded extends TarotState {
   const TarotCardsLoaded(
       this.cards, {
         required super.userTokens,
-        // required super.dailyFreeFalCount, // <--- KALDIRILDI
         super.lastSelectedCategory,
         super.userName,
         super.userAge,
         super.userGender,
         super.userInfoCollected,
+        // YENİ ALANLAR
+        required super.isDailyTokenAvailable,
+        super.nextDailyTokenTime,
       });
 
   @override
-  List<Object?> get props => [cards, ...super.props]; // Kart listesini ekle
+  List<Object?> get props => [cards, ...super.props];
 
   @override
   TarotCardsLoaded copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
-    List<TarotCard>? cards, // Kart listesi de kopyalanabilir (opsiyonel)
+    List<TarotCard>? cards,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
     return TarotCardsLoaded(
-      cards ?? this.cards, // Yeni kart listesi varsa onu kullan, yoksa mevcutu koru
+      cards ?? this.cards,
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
 
 // --- Coupon Redeemed State ---
 class CouponRedeemed extends TarotState {
-  final String message; // Başarı mesajı
+  final String message;
   const CouponRedeemed(
       this.message, {
-        required super.userTokens, // Kupon sonrası güncel token
-        // required super.dailyFreeFalCount, // <--- KALDIRILDI
+        required super.userTokens,
         super.lastSelectedCategory,
         super.userName,
         super.userAge,
         super.userGender,
         super.userInfoCollected,
+        // YENİ ALANLAR
+        required super.isDailyTokenAvailable,
+        super.nextDailyTokenTime,
       });
 
   @override
@@ -359,39 +389,43 @@ class CouponRedeemed extends TarotState {
   @override
   CouponRedeemed copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
-    String? message, // Mesaj da kopyalanabilir
+    String? message,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
     return CouponRedeemed(
       message ?? this.message,
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
 
 // --- Coupon Invalid State ---
 class CouponInvalid extends TarotState {
-  final String message; // Hata/Geçersizlik mesajı
+  final String message;
   const CouponInvalid(
       this.message, {
-        required super.userTokens, // Kupon denemesi öncesi token durumu
-        // required super.dailyFreeFalCount, // <--- KALDIRILDI
+        required super.userTokens,
         super.lastSelectedCategory,
         super.userName,
         super.userAge,
         super.userGender,
         super.userInfoCollected,
+        // YENİ ALANLAR
+        required super.isDailyTokenAvailable,
+        super.nextDailyTokenTime,
       });
 
   @override
@@ -400,40 +434,43 @@ class CouponInvalid extends TarotState {
   @override
   CouponInvalid copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
     String? message,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
     return CouponInvalid(
       message ?? this.message,
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
 
-// --- Single Card Drawn State (Artık kullanılmıyor olabilir, yorum alınca FalYorumuLoaded'a geçiliyor) ---
-// Eğer kart seçimi sonrası hemen bir state göstermek isterseniz kullanılabilir.
+// --- Single Card Drawn State (Kullanılmıyor olabilir) ---
 class SingleCardDrawn extends TarotState {
   final TarotCard card;
   const SingleCardDrawn(
       this.card, {
         required super.userTokens,
-        // required super.dailyFreeFalCount, // <--- KALDIRILDI
         super.lastSelectedCategory,
         super.userName,
         super.userAge,
         super.userGender,
         super.userInfoCollected,
+        // YENİ ALANLAR
+        required super.isDailyTokenAvailable,
+        super.nextDailyTokenTime,
       });
 
   @override
@@ -442,40 +479,43 @@ class SingleCardDrawn extends TarotState {
   @override
   SingleCardDrawn copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
     TarotCard? card,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
     return SingleCardDrawn(
       card ?? this.card,
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
 
-// --- Spread Drawn State (Artık kullanılmıyor olabilir, yorum alınca FalYorumuLoaded'a geçiliyor) ---
-// Eğer kart seçimi sonrası hemen bir state göstermek isterseniz kullanılabilir.
+// --- Spread Drawn State (Kullanılmıyor olabilir) ---
 class SpreadDrawn extends TarotState {
   final Map<String, TarotCard> spread;
   const SpreadDrawn(
       this.spread, {
         required super.userTokens,
-        // required super.dailyFreeFalCount, // <--- KALDIRILDI
         super.lastSelectedCategory,
         super.userName,
         super.userAge,
         super.userGender,
         super.userInfoCollected,
+        // YENİ ALANLAR
+        required super.isDailyTokenAvailable,
+        super.nextDailyTokenTime,
       });
 
   @override
@@ -484,46 +524,50 @@ class SpreadDrawn extends TarotState {
   @override
   SpreadDrawn copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
     Map<String, TarotCard>? spread,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
     return SpreadDrawn(
       spread ?? this.spread,
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
 
 // --- Reading Result Loaded State ---
 class FalYorumuLoaded extends TarotState {
-  final String yorum; // Gemini yorumu
-  final int tokenCount; // Yorum için harcanan (tahmini) token
-  final double cost; // Okumanın kredi maliyeti
-  final Map<String, TarotCard> spread; // Okumadaki kartlar
+  final String yorum;
+  final int tokenCount;
+  final double cost;
+  final Map<String, TarotCard> spread;
 
   const FalYorumuLoaded(
       this.yorum, {
         required this.tokenCount,
         required this.cost,
         required this.spread,
-        required super.userTokens, // Yorum sonrası güncel token
-        // required super.dailyFreeFalCount, // <--- KALDIRILDI
+        required super.userTokens,
         super.lastSelectedCategory,
         super.userName,
         super.userAge,
         super.userGender,
         super.userInfoCollected,
+        // YENİ ALANLAR
+        required super.isDailyTokenAvailable,
+        super.nextDailyTokenTime,
       });
 
   @override
@@ -532,7 +576,6 @@ class FalYorumuLoaded extends TarotState {
   @override
   FalYorumuLoaded copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
@@ -542,6 +585,8 @@ class FalYorumuLoaded extends TarotState {
     int? tokenCount,
     double? cost,
     Map<String, TarotCard>? spread,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
     return FalYorumuLoaded(
       yorum ?? this.yorum,
@@ -549,28 +594,31 @@ class FalYorumuLoaded extends TarotState {
       cost: cost ?? this.cost,
       spread: spread ?? this.spread,
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
 
 // --- Insufficient Resources State ---
 class InsufficientResources extends TarotState {
-  final double requiredTokens; // Gerekli token miktarı
+  final double requiredTokens;
   const InsufficientResources(
       this.requiredTokens, {
-        required super.userTokens, // Mevcut token durumu
-        // required super.dailyFreeFalCount, // <--- KALDIRILDI
+        required super.userTokens,
         super.lastSelectedCategory,
         super.userName,
         super.userAge,
         super.userGender,
         super.userInfoCollected,
+        // YENİ ALANLAR
+        required super.isDailyTokenAvailable,
+        super.nextDailyTokenTime,
       });
 
   @override
@@ -579,30 +627,32 @@ class InsufficientResources extends TarotState {
   @override
   InsufficientResources copyWith({
     double? userTokens,
-    // int? dailyFreeFalCount, // <--- KALDIRILDI
     String? lastSelectedCategory,
     String? userName,
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
     double? requiredTokens,
+    bool? isDailyTokenAvailable,
+    DateTime? nextDailyTokenTime,
   }) {
     return InsufficientResources(
       requiredTokens ?? this.requiredTokens,
       userTokens: userTokens ?? this.userTokens,
-      // dailyFreeFalCount: dailyFreeFalCount ?? this.dailyFreeFalCount, // <--- KALDIRILDI
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
 
 
 // ================== SPREAD TYPE ENUM ==================
-// (Burada değişiklik yok, aynı kalabilir)
+// Enum tanımı aynı kalabilir. fullMoonSpread kart sayısı kontrol edildi.
 enum SpreadType {
   singleCard(1, 600, 2000, 10, 'single_card_purchase', 300),
   pastPresentFuture(3, 1200, 2000, 20, 'past_present_future_purchase', 600),
@@ -617,23 +667,18 @@ enum SpreadType {
   dreamInterpretation(3, 1200, 2000, 20, 'dream_interpretation_purchase', 800),
   horseshoeSpread(7, 2500, 3000, 40.0, 'horseshoe_spread_purchase', 1200),
   careerPathSpread(5, 1800, 3000, 30, 'career_path_purchase', 900),
-  fullMoonSpread(5, 1800, 3000, 30, 'full_moon_purchase', 900),
-  // categoryReading için kart sayısı ve maliyet dinamik olabilir,
-  // buradaki değerler varsayılan veya temsilidir.
-  categoryReading(5, 1800, 3000, 30, 'category_reading_purchase', 900);
+  fullMoonSpread(6, 1800, 3000, 30, 'full_moon_purchase', 900), // Kart sayısı 6 olarak düzeltildi (Repo'ya göre)
+  categoryReading(5, 1800, 3000, 30, 'category_reading_purchase', 900); // Varsayılan
 
   final int cardCount;
-  final int freeTokenLimit; // Premium olmadığı için bu limitler anlamsız olabilir
-  final int premiumTokenLimit; // Premium olmadığı için bu limitler anlamsız olabilir
-  final double costInCredits; // Okumanın token maliyeti
-  final String productId; // İlişkili satın alma ürün ID'si (opsiyonel)
-  final int maxPromptLength; // Prompt uzunluk limiti (opsiyonel)
+  final int freeTokenLimit;
+  final int premiumTokenLimit;
+  final double costInCredits;
+  final String productId;
+  final int maxPromptLength;
 
   static List<String> get allProductIds => SpreadType.values.map((type) => type.productId).toList();
 
   const SpreadType(this.cardCount, this.freeTokenLimit, this.premiumTokenLimit,
       this.costInCredits, this.productId, this.maxPromptLength);
-
-  // Premium özelliği kaldırıldığı için bu metot da gereksiz olabilir:
-  // static int calculateTokenLimit(int cardCount, bool isPremium) { ... }
 }

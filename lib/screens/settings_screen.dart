@@ -1,11 +1,13 @@
 // lib/screens/settings_screen.dart
 
-import 'dart:ui';
+import 'dart:ui'; // BackdropFilter için
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart'; // Lottie importu eklendi (arka plan için)
+import 'package:lottie/lottie.dart'; // Lottie eklendi
+import 'package:in_app_purchase/in_app_purchase.dart'; // ProductDetails için eklendi
+
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/generated/l10n.dart'; // Yerelleştirme
 import 'package:tarot_fal/data/payment_manager.dart'; // PaymentManager importu
@@ -27,35 +29,44 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class SettingsScreenState extends State<SettingsScreen> {
+  // PaymentManager'ı state içinde yönet
+  late PaymentManager _paymentManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _paymentManager = PaymentManager();
+    _paymentManager.initialize(); // Satın alma akışını dinlemeye başla
+  }
+
+  @override
+  void dispose() {
+    _paymentManager.dispose(); // Kaynakları serbest bırak
+    super.dispose();
+  }
+
   // Arka plan widget'ı (diğer ekranlarla tutarlı)
   Widget _buildBackground() {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Arka plan resmi
-        Image.asset(
-          'assets/image_fx_c.jpg', // Arka plan resminizin yolu
-          fit: BoxFit.cover,
-          gaplessPlayback: true, // Resim yüklenirken boşluk olmasın
-        ),
-        // Lottie animasyonu (isteğe bağlı, performansa dikkat)
+        Image.asset( 'assets/image_fx_c.jpg', fit: BoxFit.cover, gaplessPlayback: true,),
         Lottie.asset(
-          'assets/animations/tarot_shuffle.json', // Animasyon dosyanızın yolu
+          'assets/animations/tarot_shuffle.json',
           fit: BoxFit.cover,
-          frameRate: FrameRate(24), // Daha düşük frame rate performans artırabilir
+          frameRate: FrameRate(24),
           repeat: true,
         ),
-        // Gradient katmanı (görünürlüğü artırmak için)
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.deepPurple[900]!.withOpacity(0.6), // Daha az opaklık
-                Colors.black.withOpacity(0.85), // Daha fazla opaklık
+                Colors.deepPurple[900]!.withOpacity(0.6),
+                Colors.black.withOpacity(0.85),
               ],
-              stops: const [0.0, 0.8], // Gradient durakları
+              stops: const [0.0, 0.8],
             ),
           ),
         ),
@@ -64,43 +75,34 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   // Özel AppBar widget'ı
-  Widget _buildAppBar(BuildContext context, S loc) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Geri Butonu (isteğe bağlı, genellikle Navigator.pop kullanılır)
-          // IconButton(
-          //   icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white70),
-          //   onPressed: () => Navigator.pop(context),
-          // ),
-          // Başlık
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0), // Sol boşluk
-            child: Text(
-              loc.settings, // Yerelleştirilmiş başlık
-              style: GoogleFonts.cinzelDecorative( // Özel font
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [ // Gölge efekti
-                  Shadow(
-                    color: Colors.purpleAccent.withOpacity(0.5),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Kapatma Butonu
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white70, size: 24),
-            tooltip: loc.close, // Yerelleştirilmiş tooltip
-            onPressed: () => Navigator.pop(context), // Geri git
-          ),
-        ],
+  PreferredSizeWidget _buildAppBar(BuildContext context, S loc) {
+    return AppBar(
+      backgroundColor: Colors.transparent, // Şeffaf arka plan
+      elevation: 0, // Gölge yok
+      automaticallyImplyLeading: false, // Otomatik geri butonunu kaldır
+      centerTitle: true, // Başlığı ortala
+      title: Text(
+        loc.settings,
+        style: GoogleFonts.cinzelDecorative(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          letterSpacing: 1.2,
+        ),
+      ),
+      actions: [ // Kapatma butonu sağda
+        IconButton(
+          icon: const Icon(Icons.close, color: Colors.white70, size: 24),
+          tooltip: loc.close,
+          onPressed: () => Navigator.pop(context),
+        ),
+        const SizedBox(width: 8), // Sağ kenar boşluğu
+      ],
+      flexibleSpace: ClipRect( // AppBar arkasına blur efekti
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(color: Colors.black.withOpacity(0.1)),
+        ),
       ),
     );
   }
@@ -109,11 +111,16 @@ class SettingsScreenState extends State<SettingsScreen> {
   Widget _buildUserInfoSection(BuildContext context, S loc) {
     return BlocBuilder<TarotBloc, TarotState>(
       builder: (context, state) {
+        // Ondalık kısmı sadece 0'dan farklıysa göster
+        final String tokenText = state.userTokens.truncateToDouble() == state.userTokens
+            ? state.userTokens.toInt().toString()
+            : state.userTokens.toStringAsFixed(1);
+
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-          margin: const EdgeInsets.symmetric(vertical: 10.0), // Üst ve alt boşluk
+          margin: const EdgeInsets.only(bottom: 25.0), // Bölümler arası boşluk
           decoration: BoxDecoration(
-            gradient: LinearGradient( // Arka plan gradient'i
+            gradient: LinearGradient(
               colors: [
                 Colors.purple[800]!.withOpacity(0.7),
                 Colors.indigo[900]!.withOpacity(0.8),
@@ -121,9 +128,9 @@ class SettingsScreenState extends State<SettingsScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(15), // Yuvarlak kenarlar
-            border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)), // Çerçeve
-            boxShadow: [ // Gölge
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)),
+            boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
                 blurRadius: 8,
@@ -132,15 +139,15 @@ class SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // İki yana yasla
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row( // İkon ve metin grubu
+              Row(
                 children: [
-                  Icon(Icons.stars_rounded, color: Colors.yellowAccent[100], size: 24), // İkon
+                  Icon(Icons.stars_rounded, color: Colors.yellowAccent[100], size: 24),
                   const SizedBox(width: 12),
                   Text(
-                    loc.mysticalTokens, // Yerelleştirilmiş metin
-                    style: GoogleFonts.cinzel( // Font
+                    loc.mysticalTokens,
+                    style: GoogleFonts.cinzel(
                       fontSize: 16,
                       color: Colors.white.withOpacity(0.9),
                       fontWeight: FontWeight.w600,
@@ -148,14 +155,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
-              // Kredi miktarı
               Text(
-                state.userTokens.toStringAsFixed(1), // Ondalıklı gösterim
-                style: GoogleFonts.orbitron( // Özel font
+                tokenText,
+                style: GoogleFonts.orbitron(
                     fontSize: 18,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    shadows: [ // Hafif parlama efekti
+                    shadows: [
                       Shadow(color: Colors.yellowAccent.withOpacity(0.5), blurRadius: 5)
                     ]
                 ),
@@ -169,78 +175,96 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   // Dil Seçimi Bölümü
   Widget _buildLanguageSection(BuildContext context, S loc) {
-    return _buildSectionContainer( // Ortak container yapısı
-      title: loc.language, // Bölüm başlığı
-      icon: Icons.language, // Bölüm ikonu
+    return _buildSectionContainer(
+      title: loc.language,
+      icon: Icons.language,
       children: [
-        // İngilizce Dil Kartı
         LanguageCard(
-          language: loc.english, // Dil adı
-          locale: const Locale('en'), // Dil kodu
-          isSelected: widget.currentLocale.languageCode == 'en', // Seçili mi?
-          onTap: () { // Tıklama olayı
-            widget.onLocaleChange(const Locale('en'), context);
-            // Kullanıcıya geri bildirim (isteğe bağlı)
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(content: Text(loc.languageChangedToEnglish)),
-            // );
-          },
+          language: loc.english,
+          locale: const Locale('en'),
+          isSelected: widget.currentLocale.languageCode == 'en',
+          onTap: () => widget.onLocaleChange(const Locale('en'), context),
         ),
-        const SizedBox(height: 12), // Kartlar arası boşluk
-        // Türkçe Dil Kartı
+        const SizedBox(height: 12),
         LanguageCard(
           language: loc.turkish,
           locale: const Locale('tr'),
           isSelected: widget.currentLocale.languageCode == 'tr',
-          onTap: () {
-            widget.onLocaleChange(const Locale('tr'), context);
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(content: Text(loc.languageChangedToTurkish)),
-            // );
-          },
+          onTap: () => widget.onLocaleChange(const Locale('tr'), context),
         ),
       ],
     );
   }
 
-  // Kredi Satın Alma Bölümü
+  // --- Geliştirilmiş Kredi Satın Alma Bölümü ---
   Widget _buildPurchaseSection(BuildContext context, S loc) {
-    return _buildSectionContainer( // Ortak container yapısı
-      title: loc.purchaseCredits, // Bölüm başlığı
-      icon: Icons.add_shopping_cart, // Bölüm ikonu
+    return _buildSectionContainer(
+      title: loc.purchaseCredits,
+      icon: Icons.add_shopping_cart,
       children: [
-        // Kredi Satın Alma Kartları (Örnekler - Kendi ürün ID'lerinize göre ayarlayın)
-        _buildPurchaseCard(
-          context: context,
-          title: loc.tenTokens, // TODO: Yerelleştirme anahtarı ekleyin (örn: 25 Kredi)
-          icon: Icons.star_outline, // İkon
-          onTap: () => PaymentManager.showPaymentDialog(context), // Ödeme dialogunu aç
+        // Ürünleri dinamik olarak yükle ve göster
+        FutureBuilder<List<ProductDetails>>(
+          // PaymentManager'dan ürünleri yükle
+          future: _paymentManager.loadProducts(),
+          builder: (context, snapshot) {
+            // Yükleniyor durumu
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: CircularProgressIndicator(color: Colors.purpleAccent),
+                ),
+              );
+            }
+            // Hata durumu
+            if (snapshot.hasError || !snapshot.hasData) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10),
+                  child: Text(
+                    loc.failedToLoadProducts, // Yerelleştirilmiş hata mesajı
+                    style: GoogleFonts.lato(color: Colors.redAccent[100], fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
+            // Ürün yok durumu
+            final products = snapshot.data!;
+            if (products.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10),
+                  child: Text(
+                    loc.noProductsAvailable, // Yerelleştirilmiş mesaj
+                    style: GoogleFonts.lato(color: Colors.white60, fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
+
+            // Ürünleri listele
+            return ListView.separated(
+              shrinkWrap: true, // Column içinde boyutunu ayarla
+              physics: const NeverScrollableScrollPhysics(), // Column kendi kaydırıyor
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                // Her ürün için bir kart oluştur
+                return _buildPurchaseCard(
+                  context: context,
+                  product: products[index], // ProductDetails nesnesini geçir
+                );
+              },
+              separatorBuilder: (context, index) => const SizedBox(height: 12), // Kartlar arası boşluk
+            );
+          },
         ),
-        const SizedBox(height: 12),
-        _buildPurchaseCard(
-          context: context,
-          title: loc.fiftyTokens, // TODO: Yerelleştirme anahtarı ekleyin (örn: 50 Kredi)
-          icon: Icons.star_half_outlined,
-          onTap: () => PaymentManager.showPaymentDialog(context),
-        ),
-        const SizedBox(height: 12),
-        _buildPurchaseCard(
-          context: context,
-          title: loc.hundredTokens, // TODO: Yerelleştirme anahtarı ekleyin (örn: 150 Kredi)
-          icon: Icons.star,
-          onTap: () => PaymentManager.showPaymentDialog(context),
-        ),
-        // --- PREMIUM KARTI KALDIRILDI ---
-        // const SizedBox(height: 12),
-        // _buildPurchaseCard(
-        //   context: context,
-        //   title: loc.premiumSubscription, // KALDIRILDI
-        //   icon: Icons.workspace_premium_outlined,
-        //   onTap: () => PaymentManager.showPaymentDialog(context),
-        // ),
       ],
     );
   }
+  // --- Bitti: Geliştirilmiş Kredi Satın Alma Bölümü ---
+
 
   // Ortak Bölüm Container Widget'ı (Başlık ve Çocuklar için)
   Widget _buildSectionContainer({
@@ -249,24 +273,23 @@ class SettingsScreenState extends State<SettingsScreen> {
     required List<Widget> children,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 25.0), // Bölümler arası boşluk
+      margin: const EdgeInsets.only(bottom: 25.0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.2), // Hafif transparan arka plan
+          color: Colors.black.withOpacity(0.2),
           borderRadius: BorderRadius.circular(15),
           border: Border.all(color: Colors.purpleAccent.withOpacity(0.2))
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Bölüm Başlığı
           Row(
             children: [
-              Icon(icon, color: Colors.purpleAccent[100], size: 22), // Başlık ikonu
+              Icon(icon, color: Colors.purpleAccent[100], size: 22),
               const SizedBox(width: 10),
               Text(
                 title,
-                style: GoogleFonts.cinzel( // Font
+                style: GoogleFonts.cinzel(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -275,27 +298,29 @@ class SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
           ),
-          Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 25, thickness: 1), // Ayırıcı
-          // Bölüm İçeriği (Kartlar vb.)
-          ...children,
+          Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 25, thickness: 1),
+          ...children, // Kartlar vb. bu bölüme eklenir
         ],
       ),
     );
   }
 
-  // Tek bir satın alma seçeneği kartını oluşturan yardımcı widget
+  // --- Geliştirilmiş Satın Alma Kartı Widget'ı ---
   Widget _buildPurchaseCard({
     required BuildContext context,
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
+    required ProductDetails product, // Artık ProductDetails alıyor
   }) {
-    return TapAnimatedScale( // Tıklama animasyonu
-      onTap: onTap,
+    return TapAnimatedScale(
+      onTap: () async {
+        // Satın alma işlemini doğrudan PaymentManager üzerinden başlat
+        // Dialog göstermeye gerek yok, ConfirmationDialog zaten buyProduct içinde var
+        await _paymentManager.buyProduct(product, context);
+        // Satın alma sonucu PaymentManager içindeki stream listener tarafından işlenecek
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration( // Stil
-          gradient: LinearGradient( // Gradient arka plan
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
             colors: [
               Colors.deepPurple[900]!.withOpacity(0.7),
               Colors.purple[800]!.withOpacity(0.6),
@@ -303,9 +328,9 @@ class SettingsScreenState extends State<SettingsScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(12), // Yuvarlak kenarlar
-          border: Border.all(color: Colors.purple.shade400.withOpacity(0.4)), // Çerçeve
-          boxShadow: [ // Gölge
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.purple.shade400.withOpacity(0.4)),
+          boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
               blurRadius: 5,
@@ -313,65 +338,86 @@ class SettingsScreenState extends State<SettingsScreen> {
             ),
           ],
         ),
-        child: Row( // İkon, Metin, Ok
+        child: Row(
           children: [
-            Icon(icon, color: Colors.yellowAccent.shade100, size: 20), // İkon
+            // İkon (Belki ürün ID'sine göre farklı ikonlar?)
+            Icon(Icons.star_rounded, color: Colors.yellowAccent.shade100, size: 20),
             const SizedBox(width: 12),
-            Expanded( // Metnin taşmasını engelle
-              child: Text(
-                title,
-                style: GoogleFonts.lato( // Font
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500
-                ),
+            // Ürün Adı ve Açıklaması (varsa)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.title, // Ürün başlığı
+                    style: GoogleFonts.lato(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500
+                    ),
+                  ),
+                  if (product.description.isNotEmpty) // Açıklama varsa göster
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2.0),
+                      child: Text(
+                        product.description,
+                        style: GoogleFonts.lato(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(width: 10),
-            Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16), // İleri oku
+            // Fiyat
+            Text(
+              product.price, // Ürün fiyatı
+              style: GoogleFonts.orbitron(
+                fontSize: 14,
+                color: Colors.yellowAccent.shade200,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 5), // Fiyat ile ok arası boşluk
+            Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 16),
           ],
         ),
       ),
     );
   }
+  // --- Bitti: Geliştirilmiş Satın Alma Kartı Widget'ı ---
+
 
   @override
   Widget build(BuildContext context) {
-    final loc = S.of(context); // Yerelleştirme nesnesi
+    final loc = S.of(context);
 
     return Scaffold(
-      // Scaffold arka planını şeffaf yapıp Stack içindeki arka planı kullan
-      backgroundColor: Colors.black, // Veya transparan yapabilirsiniz
-      extendBodyBehindAppBar: true, // AppBar arkasına içeriği uzat
-      appBar: AppBar( // Basit, transparan AppBar
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false, // Otomatik geri butonunu kaldır
-        flexibleSpace: ClipRect( // Arka plan blur efekti için
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-            child: Container(color: Colors.black.withOpacity(0.1)),
-          ),
-        ),
-        title: _buildAppBar(context, loc!), // Özel AppBar içeriği
-        toolbarHeight: 70, // AppBar yüksekliği
-      ),
-      body: Stack( // Arka plan ve içerik için Stack
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
+      // Özel AppBar'ı kullan
+      appBar: _buildAppBar(context, loc!),
+      body: Stack(
         children: [
           _buildBackground(), // Arka planı çiz
-          SafeArea( // İçeriği güvenli alana yerleştir
-            child: SingleChildScrollView( // Kaydırılabilir içerik
-              physics: const BouncingScrollPhysics(), // Güzel kaydırma efekti
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0), // İç boşluklar
+                padding: const EdgeInsets.symmetric(horizontal: 16.0)
+                    .copyWith(top: 20.0, bottom: 40.0), // Üst ve Alt boşluk
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch, // Çocukları yatayda genişlet
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildUserInfoSection(context, loc), // Kullanıcı bilgisi bölümü
-                    _buildLanguageSection(context, loc), // Dil seçimi bölümü
-                    _buildPurchaseSection(context, loc), // Satın alma bölümü
-                    // TODO: İsteğe bağlı olarak buraya başka ayar bölümleri eklenebilir
-                    // (örn: Gizlilik Politikası, Hakkında, Uygulamayı Değerlendir)
+                    _buildUserInfoSection(context, loc),
+                    _buildLanguageSection(context, loc),
+                    _buildPurchaseSection(context, loc), // Dinamik satın alma bölümü
+                    // İsteğe bağlı: Diğer ayarlar eklenebilir
+                    // _buildOtherSettingsSection(context, loc),
                   ],
                 ),
               ),
@@ -384,7 +430,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 }
 
 // ---- LanguageCard Widget ----
-// (Dil seçimi için kullanılan kart widget'ı - önceki koddan alındı, stil iyileştirilebilir)
+// (Dil seçimi için kullanılan kart widget'ı - Stil biraz iyileştirildi)
 class LanguageCard extends StatelessWidget {
   final String language;
   final Locale locale;
@@ -401,25 +447,25 @@ class LanguageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TapAnimatedScale( // Tıklama animasyonu
+    return TapAnimatedScale(
       onTap: onTap,
-      child: AnimatedContainer( // Seçim durumuna göre animasyonlu geçiş
+      child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          gradient: LinearGradient( // Arka plan gradient'i
-            colors: isSelected // Seçiliyse farklı renkler
+          gradient: LinearGradient(
+            colors: isSelected
                 ? [Colors.green.shade700.withOpacity(0.8), Colors.green.shade900.withOpacity(0.9)]
                 : [Colors.deepPurple[900]!.withOpacity(0.7), Colors.purple[800]!.withOpacity(0.6)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(12), // Yuvarlak kenarlar
-          border: Border.all( // Çerçeve (seçiliyse daha belirgin)
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
             color: isSelected ? Colors.lightGreenAccent.shade100 : Colors.purple.shade400.withOpacity(0.4),
-            width: isSelected ? 2.5 : 1.5, // Seçiliyse daha kalın çerçeve
+            width: isSelected ? 2.0 : 1.0, // Seçiliyse çerçeve daha belirgin
           ),
-          boxShadow: [ // Gölge
+          boxShadow: [
             BoxShadow(
               color: isSelected ? Colors.green.withOpacity(0.3) : Colors.black.withOpacity(0.2),
               blurRadius: 5,
@@ -428,36 +474,26 @@ class LanguageCard extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, // İki yana yasla
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Dil Adı
-            Row(
-              children: [
-                // Bayrak ikonu (isteğe bağlı)
-                // Image.asset('assets/flags/${locale.languageCode}.png', width: 24, height: 24),
-                // const SizedBox(width: 12),
-                Text(
-                  language,
-                  style: GoogleFonts.lato( // Font
-                    color: Colors.white.withOpacity(0.95),
-                    fontSize: 16, // Biraz daha büyük font
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+            Text(
+              language,
+              style: GoogleFonts.lato(
+                color: Colors.white.withOpacity(0.95),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-
-            // Seçili ise onay ikonu
             if (isSelected)
               Icon(
-                Icons.check_circle, // Onay ikonu
-                color: Colors.lightGreenAccent.shade100, // İkon rengi
-                size: 24, // İkon boyutu
-                shadows: [ // İkona hafif parlama
+                Icons.check_circle,
+                color: Colors.lightGreenAccent.shade100,
+                size: 24,
+                shadows: [
                   Shadow(color: Colors.white.withOpacity(0.5), blurRadius: 4)
                 ],
               )
-            else // Seçili değilse boş ikon (yer tutucu)
+            else
               const Icon(Icons.circle_outlined, color: Colors.white30, size: 24),
           ],
         ),

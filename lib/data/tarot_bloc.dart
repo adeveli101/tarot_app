@@ -12,6 +12,7 @@ import 'package:tarot_fal/data/tarot_repository.dart';
 import 'package:tarot_fal/gemini_service.dart'; // GeminiService importunu kontrol edin
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/data/user_data_manager.dart';
+// Güncellenmiş State/Event dosyasını import ediyoruz
 import 'package:tarot_fal/data/tarot_event_state.dart';
 
 class TarotBloc extends Bloc<TarotEvent, TarotState> {
@@ -37,15 +38,25 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     required this.repository,
     required this.geminiService,
     required this.locale,
-  }) : super(const TarotInitial(userTokens: 0.0)) {
+  }) : super(const TarotInitial( // Başlangıç state'i güncellendi
+    userTokens: 0.0,
+    isDailyTokenAvailable: false,
+    nextDailyTokenTime: null,
+  )) {
+    // Kullanıcı ve verileri yükle (ilk açılışta)
     _initializeUserAndLoadData();
 
-    // Event Handlers
+    // --- Event Handlers Kayıtları ---
     on<LoadTarotCards>(_onLoadTarotCards);
     on<ShuffleDeck>(_onShuffleDeck);
     on<RedeemCoupon>(_onRedeemCoupon);
     on<UpdateLastCategory>(_onUpdateLastCategory);
     on<UpdateUserInfo>(_onUpdateUserInfo);
+
+    // YENİ: Günlük Token Talep Event Handler
+    on<ClaimDailyToken>(_onClaimDailyToken);
+
+    // Okuma (Draw) Event Handlers
     on<DrawSingleCard>(_onDrawSingleCard);
     on<DrawPastPresentFuture>(_onDrawPastPresentFuture);
     on<DrawProblemSolution>(_onDrawProblemSolution);
@@ -63,44 +74,49 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     on<DrawCategoryReading>(_onDrawCategoryReading);
   }
 
-  // --- Kullanıcı Başlatma, Veri Yükleme ve Bonus/Günlük Token ---
+  // ===========================================================================
+  // --- Kullanıcı Başlatma, Veri Yükleme ve Bonus/Günlük Token Durumu Belirleme ---
+  // ===========================================================================
+
   Future<void> _initializeUserAndLoadData() async {
     try {
       User? currentUser = _auth.currentUser;
-      bool isNewUser = false;
-
       if (currentUser == null) {
+        if (kDebugMode) { print("TarotBloc: Oturum açmış kullanıcı yok, anonim oturum deneniyor..."); }
         final prefs = await SharedPreferences.getInstance();
-        // --- HATA DÜZELTME: initialTokensKey yerine public tokensKey kullanıldı ---
         final bool hasExistingData = prefs.containsKey(UserDataManager.tokensKey);
 
         await repository.signInAnonymously();
         currentUser = _auth.currentUser;
 
-        if (!hasExistingData) {
-          isNewUser = true;
-          if (kDebugMode) { print("TarotBloc: Yeni anonim kullanıcı oluşturuldu ve başlangıç verileri ayarlanacak: ${currentUser?.uid}"); }
+        if (!hasExistingData && currentUser != null) {
+          if (kDebugMode) { print("TarotBloc: Yeni anonim kullanıcı oluşturuldu: ${currentUser.uid}. Başlangıç verileri ayarlanıyor..."); }
           await _setInitialUserData();
-        } else {
-          if (kDebugMode) { print("TarotBloc: Anonim oturum açıldı (muhtemelen eski kullanıcı): ${currentUser?.uid}"); }
+        } else if (currentUser != null) {
+          if (kDebugMode) { print("TarotBloc: Anonim oturum açıldı (muhtemelen eski kullanıcı): ${currentUser.uid}"); }
         }
-
       } else {
-        if (kDebugMode) { print("TarotBloc: Mevcut kullanıcı: ${currentUser.uid}"); }
+        if (kDebugMode) { print("TarotBloc: Mevcut kullanıcı oturumu: ${currentUser.uid}"); }
       }
 
       if (currentUser != null) {
+        // Verileri yükle ve GÜNLÜK TOKEN DURUMUNU BELİRLE (token verme!)
         await _loadUserDataAndCheckRewards();
       } else {
         throw Exception("Kullanıcı oturumu başlatılamadı.");
       }
-
     } catch (e) {
       if (kDebugMode) { print("TarotBloc: Kullanıcı başlatma/yükleme hatası: $e"); }
+      // Hata durumunda state'i güncelle (yeni alanları da ekleyerek)
       emit(TarotError(
         "Kullanıcı başlatılamadı: ${e.toString()}",
         userTokens: state.userTokens,
-        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+        isDailyTokenAvailable: false, // Hata durumunda false
+        nextDailyTokenTime: state.nextDailyTokenTime,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
@@ -111,45 +127,58 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       await _userDataManager.savePremiumStatus(false);
       await _userDataManager.saveLastReset(0);
       await _userDataManager.saveUserInfoCollected(false);
-      // Bonus verildi bayrağı başlangıçta false olmalı (veya null kontrolü)
-      // await _userDataManager.markFirstTimeBonusAsGiven(); // Bu yanlış, bonus verildiğinde işaretlenmeli
-      if (kDebugMode) { print("TarotBloc: Yeni kullanıcı için başlangıç verileri (token, reset vb.) ayarlandı."); }
+      // Bonus verildi bayrağı başlangıçta false olmalı
+      // (hasReceivedFirstTimeBonus default olarak false dönecek)
+      if (kDebugMode) { print("TarotBloc: Yeni kullanıcı için başlangıç verileri ayarlandı (Tokens: $initialTokens)."); }
     } catch (e) {
       if (kDebugMode) { print("TarotBloc: Başlangıç verileri ayarlanırken hata: $e"); }
     }
   }
 
+  /// Kullanıcı verilerini yükler, ilk giriş bonusunu OTOMATİK verir
+  /// ve günlük token'ın ALINABİLİR olup olmadığını belirler (token'ı VERMEZ).
   Future<void> _loadUserDataAndCheckRewards() async {
+    if (kDebugMode) { print("TarotBloc: Kullanıcı verileri ve ödül durumu kontrol ediliyor..."); }
     try {
       final now = DateTime.now();
-      final todayEpochDay = now.millisecondsSinceEpoch ~/ 86400000;
+      // UTC gece yarısına göre gün hesabı
+      final todayEpochDay = DateTime.utc(now.year, now.month, now.day).millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
       final lastResetEpochDay = await _userDataManager.getLastReset();
       double currentTokens = await _userDataManager.getTokens();
-      bool needsTokenSave = false;
+      bool bonusNeedsSave = false; // Sadece bonus verilirse true olacak
 
-      // Günlük Token Kontrolü
+      bool isAvailableToday;
+      DateTime? nextClaimTime;
+
+      // ----- GÜNLÜK TOKEN DURUM KONTROLÜ -----
       if (lastResetEpochDay < todayEpochDay) {
-        currentTokens += dailyLoginTokens;
-        await _userDataManager.saveLastReset(todayEpochDay);
-        needsTokenSave = true;
-        if (kDebugMode) { print("TarotBloc: Günlük $dailyLoginTokens token eklendi."); }
+        // Bugün için token henüz alınmamış.
+        isAvailableToday = true;
+        nextClaimTime = null;
+        if (kDebugMode) { print("TarotBloc: Günlük token BU GÜN İÇİN alınabilir."); }
+        // Token burada otomatik eklenmiyor!
       } else {
-        if (kDebugMode) { print("TarotBloc: Bugün için günlük token zaten verilmiş."); }
+        // Bugün için token zaten alınmış.
+        isAvailableToday = false;
+        final tomorrowLocal = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+        nextClaimTime = tomorrowLocal; // Sonraki gün yerel saatle 00:00
+        if (kDebugMode) { print("TarotBloc: Günlük token bugün zaten alınmış. Sonraki alınabilir zaman: $nextClaimTime (Yerel)"); }
       }
+      // ----- Bitti: Günlük Token Durum Kontrolü -----
 
-      // İlk Kullanım Bonusu Kontrolü
+      // ----- İlk Kullanım Bonusu Kontrolü (Otomatik Verilir) -----
       final bool bonusAlreadyGiven = await _userDataManager.hasReceivedFirstTimeBonus();
       if (!bonusAlreadyGiven) {
         currentTokens += firstTimeBonusTokens;
         await _userDataManager.markFirstTimeBonusAsGiven();
-        needsTokenSave = true;
-        if (kDebugMode) { print("TarotBloc: İlk kullanım bonusu ($firstTimeBonusTokens token) eklendi."); }
+        bonusNeedsSave = true;
+        if (kDebugMode) { print("TarotBloc: İlk kullanım bonusu ($firstTimeBonusTokens token) OTOMATİK eklendi."); }
       }
+      // ----- Bitti: İlk Kullanım Bonusu Kontrolü -----
 
-      // Güncellenmiş Token Miktarını Kaydet (eğer değiştiyse)
-      if (needsTokenSave) {
+      if (bonusNeedsSave) {
         await _userDataManager.saveTokens(currentTokens);
-        if (kDebugMode) { print("TarotBloc: Yeni bakiye kaydedildi: $currentTokens"); }
+        if (kDebugMode) { print("TarotBloc: İlk bonus sonrası bakiye kaydedildi: $currentTokens"); }
       }
 
       // Diğer Kullanıcı Verilerini Yükle
@@ -158,109 +187,246 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final userGender = await _userDataManager.getUserGender();
       final userInfoCollected = await _userDataManager.getUserInfoCollected();
 
-      // Son State'i Emit Et
+      // Son State'i Emit Et (Günlük token durumu ve sonraki zaman dahil)
       emit(state.copyWith(
         userTokens: currentTokens,
         userName: userName,
         userAge: userAge,
         userGender: userGender,
         userInfoCollected: userInfoCollected,
+        isDailyTokenAvailable: isAvailableToday, // Hesaplanan durumu ilet
+        nextDailyTokenTime: nextClaimTime,       // Hesaplanan zamanı ilet
       ));
 
-      if (kDebugMode) { print("TarotBloc: Kullanıcı verileri yüklendi/güncellendi: Tokens=$currentTokens"); }
+      if (kDebugMode) { print("TarotBloc: Kullanıcı verileri yüklendi. Günlük token alınabilir: $isAvailableToday. Tokens=$currentTokens"); }
 
     } catch (e) {
       if (kDebugMode) { print("TarotBloc: Kullanıcı verileri/ödül kontrolü sırasında hata: $e"); }
       emit(TarotError(
         "Kullanıcı verileri yüklenemedi: ${e.toString()}",
         userTokens: state.userTokens,
-        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+        isDailyTokenAvailable: false, // Hata durumunda alınamaz
+        nextDailyTokenTime: state.nextDailyTokenTime, // Önceki değeri koru
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
       ));
     }
   }
-  // --- Bitiş: Kullanıcı Başlatma, Veri Yükleme ve Bonus/Günlük Token ---
 
-  // --- Kaynak Kontrolü ve Yönetimi ---
+  // ===========================================================================
+  // --- Yeni Event Handler: ClaimDailyToken ---
+  // ===========================================================================
+
+  /// Kullanıcının günlük token talep etme event'ini işler.
+  Future<void> _onClaimDailyToken(ClaimDailyToken event, Emitter<TarotState> emit) async {
+    if (kDebugMode) { print("TarotBloc: ClaimDailyToken eventi alındı..."); }
+
+    // 1. Güvenlik Kontrolleri ve Durum Doğrulama
+    if (!state.isDailyTokenAvailable) {
+      if (kDebugMode) { print("TarotBloc: Token talep edilemez (state.isDailyTokenAvailable=false)."); }
+      emit(state.copyWith(isDailyTokenAvailable: false)); // State'i düzelt
+      return;
+    }
+
+    final now = DateTime.now();
+    final todayEpochDay = DateTime.utc(now.year, now.month, now.day).millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
+    final lastResetEpochDay = await _userDataManager.getLastReset();
+
+    if (lastResetEpochDay >= todayEpochDay) {
+      if (kDebugMode) { print("TarotBloc Hata: Token bugün zaten alınmış (double claim engellendi)."); }
+      emit(state.copyWith(isDailyTokenAvailable: false)); // UI'ı düzelt
+      return;
+    }
+
+    // 2. Token Verme ve Kaydetme İşlemi
+    emit(TarotLoading( // Yükleme durumu
+      userTokens: state.userTokens,
+      isDailyTokenAvailable: false, // Talep işlemi başladığı için false yap
+      nextDailyTokenTime: state.nextDailyTokenTime,
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
+    ));
+
+    try {
+      // Mevcut token miktarını BLoC state'inden al
+      // (TarotLoading state'ine de doğru aktarıldığından emin olun)
+      final currentTokens = state.userTokens;
+      final newTokens = currentTokens + dailyLoginTokens;
+
+      await _userDataManager.saveTokens(newTokens);
+      await _userDataManager.saveLastReset(todayEpochDay); // Bugün alındı olarak işaretle
+
+      // 3. Bir Sonraki Alınabilir Zamanı Hesapla
+      final tomorrowLocal = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+      final nextClaimTime = tomorrowLocal;
+
+      // 4. Başarılı State'i Yayınla
+      // state.copyWith kullanarak önceki diğer state bilgilerini koru
+      emit(state.copyWith(
+        userTokens: newTokens,
+        isDailyTokenAvailable: false, // Artık bugün için alınamaz
+        nextDailyTokenTime: nextClaimTime, // Bir sonraki zamanı ayarla
+      ));
+
+      if (kDebugMode) {
+        print("TarotBloc: Günlük token ($dailyLoginTokens) talep edildi. Yeni bakiye: $newTokens. Sonraki alınabilir: $nextClaimTime");
+      }
+
+      // TODO: Bildirim planlama burada tetiklenebilir.
+      // Örneğin: await NotificationService().scheduleDailyNotificationsIfNeeded();
+
+    } catch (e) {
+      if (kDebugMode) { print("TarotBloc: Token talep edilirken/kaydedilirken hata: $e"); }
+      // Hata durumunda state'i emit et
+      emit(TarotError(
+        "Token alınırken bir hata oluştu: ${e.toString()}",
+        userTokens: state.userTokens, // Hata öncesi token miktarı
+        isDailyTokenAvailable: true,   // Tekrar denenebilmesi için true yap
+        nextDailyTokenTime: state.nextDailyTokenTime, // Hata öncesi zamanı koru
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
+      ));
+    }
+  }
+
+  // ===========================================================================
+  // --- Kaynak Kontrolü ve Yönetimi (Mevcut, Geri Eklendi) ---
+  // ===========================================================================
+
+  /// Okuma yapmadan önce kullanıcının yeterli kredisi olup olmadığını kontrol eder.
+  /// Yetersizse `InsufficientResources` state'i yayınlar.
   Future<bool> _checkCreditsAndTokenLimit(Emitter<TarotState> emit, SpreadType spreadType) async {
     final tokens = state.userTokens;
     final cost = spreadType.costInCredits;
+
     if (tokens < cost) {
-      emit(InsufficientResources( cost, userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected, ));
+      if (kDebugMode) { print("TarotBloc: Yetersiz kredi. Gerekli: $cost, Mevcut: $tokens"); }
+      emit(InsufficientResources(
+        cost,
+        userTokens: state.userTokens,
+        // Diğer state alanlarını ve YENİ ALANLARI da aktar
+        isDailyTokenAvailable: state.isDailyTokenAvailable,
+        nextDailyTokenTime: state.nextDailyTokenTime,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName,
+        userAge: state.userAge,
+        userGender: state.userGender,
+        userInfoCollected: state.userInfoCollected,
+      ));
       return false;
     }
     return true;
   }
 
+  /// Belirtilen maliyeti kullanıcının tokenlarından düşer.
   Future<void> _deductTokens(double cost) async {
     if (cost <= 0) return;
-    final currentTokens = state.userTokens;
+
+    final currentTokens = await _userDataManager.getTokens();
+
     if (currentTokens >= cost) {
       final newTokens = currentTokens - cost;
       await _userDataManager.saveTokens(newTokens);
+      if (kDebugMode) { print("TarotBloc: $cost kredi düşüldü. Kalan: $newTokens"); }
     } else {
-      if (kDebugMode) { print("TarotBloc Hata: Token düşülemedi - yetersiz bakiye."); }
-      emit(TarotError( "Token düşme hatası.", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected, ));
+      if (kDebugMode) { print("TarotBloc Hata: Token düşülemedi - yetersiz bakiye (beklenmedik durum)."); }
+      // Hata state'i yayınla
+      emit(TarotError(
+        "Kredi düşme hatası (yetersiz bakiye).",
+        userTokens: currentTokens,
+        isDailyTokenAvailable: state.isDailyTokenAvailable,
+        nextDailyTokenTime: state.nextDailyTokenTime,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+      ));
+      throw Exception("Token düşülemedi."); // _handleReadingProcess'in yakalaması için
     }
   }
-  // --- Bitiş: Kaynak Kontrolü ve Yönetimi ---
 
+  // ===========================================================================
+  // --- Firestore Kayıt İşlemi (Mevcut, Geri Eklendi) ---
+  // ===========================================================================
+
+  /// Okuma sonucunu Firestore'a kaydeder.
   Future<void> _saveReadingToFirestore(String yorum, SpreadType spreadType, Map<String, TarotCard> spread) async {
     final user = _auth.currentUser;
-    // Kullanıcı yoksa veya yorum boşsa kaydetme
     if (user == null || yorum.isEmpty) {
-      if (kDebugMode) {
-        print("TarotBloc Uyarı: Kullanıcı null veya yorum boş olduğu için Firestore'a kaydedilmedi.");
-      }
+      if (kDebugMode) { print("TarotBloc Uyarı: Kullanıcı null veya yorum boş olduğu için Firestore'a kaydedilmedi."); }
       return;
     }
 
     try {
-      // Kaydedilecek spread verisini temizle (sadece isim ve resim yolu)
       final sanitizedSpread = spread.map((key, value) => MapEntry(
           key,
-          {
-            'name': value.name,
-            'img': value.img,
-          }));
+          {'name': value.name, 'img': value.img}));
 
-      // Firestore'a ekleme işlemi (await ile bekleniyor)
-      await _firestore.collection('readings').doc(user.uid).collection('history').add({
+      await _firestore
+          .collection('readings')
+          .doc(user.uid)
+          .collection('history')
+          .add({
         'yorum': yorum,
-        'spreadType': spreadType.name, // Enum ismini string olarak kaydet
+        'spreadType': spreadType.name,
         'spread': sanitizedSpread,
-        'timestamp': FieldValue.serverTimestamp(), // Sunucu zaman damgası
-        'locale': locale, // Okumanın yapıldığı dil
-        'userName': state.userName, // Kullanıcı bilgileri (state'den)
+        'timestamp': FieldValue.serverTimestamp(),
+        'locale': locale,
+        'userName': state.userName,
         'userAge': state.userAge,
         'userGender': state.userGender,
-        'pinned': false, // <-- EKLENDİ: Varsayılan olarak false ata
+        'pinned': false,
       });
 
-      // Başarı logu (artık işlemin bittiğini daha doğru gösteriyor)
-      if (kDebugMode) {
-        print("TarotBloc: Okuma Firestore'a başarıyla kaydedildi.");
-      }
+      if (kDebugMode) { print("TarotBloc: Okuma Firestore'a başarıyla kaydedildi (UID: ${user.uid})."); }
+
     } catch (e) {
-      // Hata logu
-      if (kDebugMode) {
-        print("TarotBloc Hata: Okuma Firestore'a kaydedilemedi: ${e.toString()}");
-      }
-      // Hatayı tekrar fırlat ki _handleReadingProcess içindeki catch bloğu yakalayabilsin
-      // ve kullanıcıya TarotError state'i gösterilebilsin.
+      if (kDebugMode) { print("TarotBloc Hata: Okuma Firestore'a kaydedilemedi: ${e.toString()}"); }
       throw Exception("Firestore kaydetme hatası: $e");
     }
   }
 
-  // --- Diğer Event Handler'lar ---
+  // ===========================================================================
+  // --- Diğer Event Handler'lar (State Kopyalama Güncellemeleri) ---
+  // ===========================================================================
+  // Buradaki handler'lar, state emit ederken yeni eklenen
+  // isDailyTokenAvailable ve nextDailyTokenTime alanlarını da taşımalıdır.
+
   Future<void> _onLoadTarotCards(LoadTarotCards event, Emitter<TarotState> emit) async {
-    emit(TarotLoading(userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected));
+    emit(TarotLoading(
+      userTokens: state.userTokens,
+      isDailyTokenAvailable: state.isDailyTokenAvailable, // Aktar
+      nextDailyTokenTime: state.nextDailyTokenTime,       // Aktar
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+    ));
     try {
       await repository.loadCards();
       final cards = repository.getAllCards();
       if (cards.isEmpty) throw Exception("Kart destesi yüklenemedi veya boş.");
-      emit(TarotCardsLoaded( cards, userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected, ));
+      emit(TarotCardsLoaded(
+        cards,
+        userTokens: state.userTokens,
+        isDailyTokenAvailable: state.isDailyTokenAvailable, // Aktar
+        nextDailyTokenTime: state.nextDailyTokenTime,       // Aktar
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+      ));
     } catch (e) {
-      emit(TarotError( "Kartlar yüklenirken hata: ${e.toString()}", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected, ));
+      emit(TarotError(
+        "Kartlar yüklenirken hata: ${e.toString()}",
+        userTokens: state.userTokens,
+        isDailyTokenAvailable: state.isDailyTokenAvailable, // Aktar
+        nextDailyTokenTime: state.nextDailyTokenTime,       // Aktar
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+      ));
     }
   }
 
@@ -269,11 +435,19 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       repository.shuffleDeck();
       if (kDebugMode) { print("TarotBloc: Deste karıştırıldı."); }
     } catch (e) {
-      emit(TarotError( "Deste karıştırılamadı: ${e.toString()}", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected, ));
+      emit(TarotError(
+        "Deste karıştırılamadı: ${e.toString()}",
+        userTokens: state.userTokens,
+        isDailyTokenAvailable: state.isDailyTokenAvailable, // Aktar
+        nextDailyTokenTime: state.nextDailyTokenTime,       // Aktar
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+      ));
     }
   }
 
   void _onUpdateLastCategory(UpdateLastCategory event, Emitter<TarotState> emit) {
+    // copyWith zaten diğer alanları korur
     emit(state.copyWith(lastSelectedCategory: event.category));
     if (kDebugMode) { print("TarotBloc: Son kategori güncellendi: ${event.category}"); }
   }
@@ -284,22 +458,48 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       await _userDataManager.saveUserAge(event.age);
       await _userDataManager.saveUserGender(event.gender);
       await _userDataManager.saveUserInfoCollected(true);
-      emit(state.copyWith( userName: event.name, userAge: event.age, userGender: event.gender, userInfoCollected: true, ));
+      // copyWith zaten diğer alanları korur
+      emit(state.copyWith(
+        userName: event.name,
+        userAge: event.age,
+        userGender: event.gender,
+        userInfoCollected: true,
+      ));
       if (kDebugMode) { print("TarotBloc: Kullanıcı bilgileri güncellendi."); }
     } catch (e) {
-      emit(TarotError( "Kullanıcı bilgileri kaydedilemedi: ${e.toString()}", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected, ));
+      emit(TarotError(
+        "Kullanıcı bilgileri kaydedilemedi: ${e.toString()}",
+        userTokens: state.userTokens,
+        isDailyTokenAvailable: state.isDailyTokenAvailable, // Aktar
+        nextDailyTokenTime: state.nextDailyTokenTime,       // Aktar
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+      ));
     }
   }
 
   Future<void> _onRedeemCoupon(RedeemCoupon event, Emitter<TarotState> emit) async {
-    emit(TarotLoading(userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected));
+    emit(TarotLoading(
+      userTokens: state.userTokens,
+      isDailyTokenAvailable: state.isDailyTokenAvailable, // Aktar
+      nextDailyTokenTime: state.nextDailyTokenTime,       // Aktar
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+    ));
     try {
       final couponCode = event.couponCode.trim().toUpperCase();
-      if (couponCode.isEmpty) { emit(CouponInvalid("Kupon kodu boş olamaz.", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected)); return; }
+      if (couponCode.isEmpty) {
+        emit(CouponInvalid("Kupon kodu boş olamaz.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,)); return;
+      }
       final alreadyUsed = await _userDataManager.isCouponUsed(couponCode);
-      if (alreadyUsed) { emit(CouponInvalid("Bu kupon kodu zaten kullanılmış.", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected)); return; }
+      if (alreadyUsed) {
+        emit(CouponInvalid("Bu kupon kodu zaten kullanılmış.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,)); return;
+      }
+      // TODO: validCoupons map'ini dışarıdan al
       final Map<String, Map<String, dynamic>> validCoupons = { 'CREDITS': {'type': 'credits', 'value': 100.0}, 'FREE_READING': {'type': 'credits', 'value': 10.0}, 'WELCOME10': {'type': 'credits', 'value': 10.0}, 'TAROT50': {'type': 'credits', 'value': 50.0}, 'FIRSTFREE': {'type': 'credits', 'value': 25.0}, 'LOYALTY100': {'type': 'credits', 'value': 100.0}, };
-      if (!validCoupons.containsKey(couponCode)) { emit(CouponInvalid("Geçersiz kupon kodu.", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected)); return; }
+      if (!validCoupons.containsKey(couponCode)) {
+        emit(CouponInvalid("Geçersiz kupon kodu.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,)); return;
+      }
       final coupon = validCoupons[couponCode]!;
       final couponType = coupon['type'] as String?;
       final couponValue = coupon['value'];
@@ -309,16 +509,29 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         final newTokens = currentTokens + creditsToAdd;
         await _userDataManager.saveTokens(newTokens);
         await _userDataManager.markCouponAsUsed(couponCode);
-        emit(CouponRedeemed("${creditsToAdd.toStringAsFixed(0)} kredi eklendi!", userTokens: newTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected));
+        emit(CouponRedeemed(
+          "${creditsToAdd.toStringAsFixed(0)} kredi eklendi!",
+          userTokens: newTokens,
+          isDailyTokenAvailable: state.isDailyTokenAvailable, // Aktar
+          nextDailyTokenTime: state.nextDailyTokenTime,       // Aktar
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+        ));
         if (kDebugMode) { print("TarotBloc: Kupon '$couponCode' kullanıldı. $creditsToAdd kredi eklendi. Yeni bakiye: $newTokens"); }
-      } else { emit(CouponInvalid("Desteklenmeyen kupon tipi.", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected)); }
+      } else {
+        emit(CouponInvalid("Desteklenmeyen kupon tipi.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,));
+      }
     } catch (e) {
       if (kDebugMode) { print("TarotBloc Kupon işleme hatası: $e"); }
-      emit(CouponInvalid("Kupon kullanılırken bir hata oluştu.", userTokens: state.userTokens, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected));
+      emit(CouponInvalid("Kupon kullanılırken bir hata oluştu.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,));
     }
   }
-  // --- Bitiş: Diğer Event Handler'lar ---
 
+  // ===========================================================================
+  // --- Okuma Süreci Yönetimi (_handleReadingProcess) ---
+  // ===========================================================================
+
+  /// Genel okuma sürecini yöneten merkezi metot.
   Future<void> _handleReadingProcess(
       SpreadType spreadType,
       String category,
@@ -334,127 +547,163 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         String? customPrompt,
       }) async {
     _currentSpreadType = spreadType;
+    if (kDebugMode) { print("TarotBloc: Okuma süreci başlıyor - Spread: ${spreadType.name}, Category: $category"); }
 
-    // Kaynak kontrolü (Kredi yeterli mi?)
-    if (!await _checkCreditsAndTokenLimit(emit, spreadType)) return;
+    // 1. Kaynak Kontrolü
+    if (!await _checkCreditsAndTokenLimit(emit, spreadType)) {
+      if (kDebugMode) { print("TarotBloc: Yetersiz kredi. Okuma iptal edildi."); }
+      return;
+    }
 
-    // Yükleniyor state'ini yayınla
+    // 2. Yükleniyor State'i
     emit(TarotLoading(
       userTokens: state.userTokens,
-      userName: state.userName,
-      userAge: state.userAge,
-      userGender: state.userGender,
-      userInfoCollected: state.userInfoCollected,
+      isDailyTokenAvailable: state.isDailyTokenAvailable, // Durumu koru
+      nextDailyTokenTime: state.nextDailyTokenTime,       // Durumu koru
+      lastSelectedCategory: state.lastSelectedCategory,
+      userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
     ));
 
     try {
-      // Kartları çek
+      // 3. Kartları Çek
       final spread = drawFunction();
       if (spread.isEmpty) throw Exception("Açılım için kart çekilemedi.");
+      if (kDebugMode) { print("TarotBloc: Kartlar çekildi (${spread.length} adet)."); }
 
-      // Gemini için prompt oluştur
-      final prompt = promptGenerator(
-        category: category,
-        spread: spread,
-        customPrompt: customPrompt,
-        locale: locale,
-        currentState: state,
-      );
-      if (kDebugMode) {
-        print("--- Gemini Prompt (${spreadType.name}) ---\n$prompt\n---------------------------------------");
-      }
+      // 4. Gemini için Prompt Oluştur
+      final prompt = promptGenerator( category: category, spread: spread, customPrompt: customPrompt, locale: locale, currentState: state,);
+      if (kDebugMode) { print("--- Gemini Prompt (${spreadType.name}) ---"); /* print(prompt); */ } // Prompt loglamayı açabilirsiniz
 
-      // Gemini'den yorumu al
+      // 5. Gemini'den Yorumu Al
       final yorum = await geminiService.generateContent(prompt);
-      if (yorum.isEmpty) throw Exception("Tarot yorumu alınamadı.");
-      if (kDebugMode) {
-        print("--- Gemini Response ---\n$yorum\n-----------------------");
-      }
+      if (yorum.isEmpty) throw Exception("Tarot yorumu alınamadı (boş cevap).");
+      if (kDebugMode) { print("--- Gemini Response Alındı (${yorum.length} chars) ---"); }
 
-      // Token düşme işlemi
+      // 6. Token Düşme İşlemi
       final cost = spreadType.costInCredits;
-      if (cost > 0) {
-        await _deductTokens(cost); // Token düşmeyi bekle
-        if (kDebugMode) {
-          print("TarotBloc: $cost kredi düşüldü.");
-        }
-      } else {
-        if (kDebugMode) {
-          print("TarotBloc: Okuma maliyetsizdi, kredi düşülmedi.");
-        }
-      }
+      await _deductTokens(cost); // Hata fırlatırsa catch yakalar
 
-      // -------- YENİ: Firestore kaydını bekle --------
-      // Kaydetme işlemi tamamlanana kadar bekler. Hata olursa catch bloğuna düşer.
+      // 7. Firestore'a Kaydet ve Bekle
       await _saveReadingToFirestore(yorum, spreadType, spread);
-      // -------- Bitti: Firestore kaydını bekle --------
 
-      // Başarılı state'i yayınla (Artık kayıt işlemi de başarılıysa buradayız)
-      final updatedTokens = await _userDataManager.getTokens(); // Güncel token'ı tekrar al
+      // 8. Başarılı State'i Yayınla
+      final updatedTokens = await _userDataManager.getTokens();
       emit(FalYorumuLoaded(
         yorum,
-        tokenCount: 0, // Bu değeri uygun bir şekilde hesaplayın veya kaldırın
+        tokenCount: 0, // Bu alan anlamsızsa 0 bırakın veya kaldırın
         cost: cost,
         spread: spread,
-        userTokens: updatedTokens, // Kayıt sonrası güncel token
-        userName: state.userName,
-        userAge: state.userAge,
-        userGender: state.userGender,
-        userInfoCollected: state.userInfoCollected,
+        userTokens: updatedTokens,
+        isDailyTokenAvailable: state.isDailyTokenAvailable, // Durumu koru
+        nextDailyTokenTime: state.nextDailyTokenTime,       // Durumu koru
         lastSelectedCategory: category,
+        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
       ));
+      if (kDebugMode) { print("TarotBloc: Okuma süreci başarıyla tamamlandı."); }
 
-    } catch (e) { // Ana catch bloğu artık kayıt hatalarını da yakalayacak
-      if (kDebugMode) {
-        print("TarotBloc Okuma/Kaydetme Hatası (${spreadType.name}): $e");
-      }
-      // Hata state'ini yayınla
+    } catch (e) {
+      if (kDebugMode) { print("TarotBloc Okuma/Kaydetme Hatası (${spreadType.name}): $e"); }
+      // Hata durumunda güncel token miktarını alarak hata state'i yayınla
+      final errorTokens = await _userDataManager.getTokens();
       emit(TarotError(
-        "Okuma veya kaydetme başarısız oldu: ${e.toString()}", // Daha açıklayıcı hata mesajı
-        userTokens: state.userTokens, // Hata anındaki token durumu
-        userName: state.userName,
-        userAge: state.userAge,
-        userGender: state.userGender,
-        userInfoCollected: state.userInfoCollected,
+        "Okuma veya kaydetme başarısız oldu: ${e.toString()}",
+        userTokens: errorTokens, // Hata sonrası token durumu
+        isDailyTokenAvailable: state.isDailyTokenAvailable, // Hata öncesi durumu koru
+        nextDailyTokenTime: state.nextDailyTokenTime,       // Hata öncesi durumu koru
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
       ));
+    } finally {
+      _currentSpreadType = null; // Okuma bitince temizle
     }
   }
 
-  // --- Okuma (Draw) Event Handler'ları ---
+  // ===========================================================================
+  // --- Okuma (Draw) Event Handler'ları (Çağrılar) ---
+  // ===========================================================================
+  // Önceki cevaptaki düzeltme ile birlikte _onDrawSingleCard handler'ı:
   Future<void> _onDrawSingleCard(DrawSingleCard event, Emitter<TarotState> emit) async {
     await _handleReadingProcess(
-      SpreadType.singleCard, state.lastSelectedCategory ?? 'general',
+      SpreadType.singleCard,
+      state.lastSelectedCategory ?? 'general',
           () => {'Single Card': repository.drawRandomCard()},
-          ({ required String category, required Map<String, TarotCard> spread, String? customPrompt, required String locale, required TarotState currentState}) {
+          ({
+        required String category,
+        required Map<String, TarotCard> spread,
+        String? customPrompt,
+        required String locale,
+        required TarotState currentState
+      }) {
+        // Map'ten tek kartı çıkarıp doğru imzalı fonksiyona ilet
         final card = spread.values.first;
-        return _generatePromptForSingleCard( category: category, card: card, customPrompt: customPrompt, locale: locale, currentState: currentState);
+        return _generatePromptForSingleCard(
+          category: category,
+          card: card, // Artık tek kart gönderiliyor
+          customPrompt: customPrompt,
+          locale: locale,
+          currentState: currentState,
+        );
       },
-      emit, customPrompt: event.customPrompt,
+      emit,
+      customPrompt: event.customPrompt,
     );
   }
+
+  // Diğer Draw Handler'ları (İçerikleri aynı, _handleReadingProcess'i çağırıyorlar)
   Future<void> _onDrawPastPresentFuture(DrawPastPresentFuture event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.pastPresentFuture, state.lastSelectedCategory ?? 'general', repository.pastPresentFutureReading, _generatePromptForPastPresentFuture, emit, customPrompt: event.customPrompt, ); }
   Future<void> _onDrawProblemSolution(DrawProblemSolution event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.problemSolution, state.lastSelectedCategory ?? 'general', repository.problemSolutionReading, _generatePromptForProblemSolution, emit, customPrompt: event.customPrompt, ); }
   Future<void> _onDrawFiveCardPath(DrawFiveCardPath event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.fiveCardPath, state.lastSelectedCategory ?? 'career', repository.fiveCardPathReading, _generatePromptForFiveCardPath, emit, customPrompt: event.customPrompt, ); }
   Future<void> _onDrawRelationshipSpread(DrawRelationshipSpread event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.relationshipSpread, 'love', repository.relationshipReading, _generatePromptForRelationshipSpread, emit, customPrompt: event.customPrompt, ); }
   Future<void> _onDrawCelticCross(DrawCelticCross event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.celticCross, state.lastSelectedCategory ?? 'general', repository.celticCrossReading, _generatePromptForCelticCross, emit, customPrompt: event.customPrompt, ); }
   Future<void> _onDrawYearlySpread(DrawYearlySpread event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.yearlySpread, state.lastSelectedCategory ?? 'general', repository.yearlyReading, _generatePromptForYearlySpread, emit, customPrompt: event.customPrompt, ); }
-  Future<void> _onDrawMindBodySpirit(DrawMindBodySpirit event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.mindBodySpirit, 'spiritual', repository.mindBodySpiritReading, _generatePromptForMindBodySpirit, emit, customPrompt: event.customPrompt, ); }
-  Future<void> _onDrawAstroLogicalCross(DrawAstroLogicalCross event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.astroLogicalCross, 'spiritual', repository.astroLogicalCrossReading, _generatePromptForAstroLogicalCross, emit, customPrompt: event.customPrompt, ); }
+  Future<void> _onDrawMindBodySpirit(DrawMindBodySpirit event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.mindBodySpirit, state.lastSelectedCategory ?? 'spiritual', repository.mindBodySpiritReading, _generatePromptForMindBodySpirit, emit, customPrompt: event.customPrompt, ); }
+  Future<void> _onDrawAstroLogicalCross(DrawAstroLogicalCross event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.astroLogicalCross, state.lastSelectedCategory ?? 'spiritual', repository.astroLogicalCrossReading, _generatePromptForAstroLogicalCross, emit, customPrompt: event.customPrompt, ); }
   Future<void> _onDrawBrokenHeart(DrawBrokenHeart event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.brokenHeart, 'love', repository.brokenHeartReading, _generatePromptForBrokenHeart, emit, customPrompt: event.customPrompt, ); }
-  Future<void> _onDrawDreamInterpretation(DrawDreamInterpretation event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.dreamInterpretation, 'spiritual', repository.dreamInterpretationReading, _generatePromptForDreamInterpretation, emit, customPrompt: event.customPrompt, ); }
+  Future<void> _onDrawDreamInterpretation(DrawDreamInterpretation event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.dreamInterpretation, state.lastSelectedCategory ?? 'spiritual', repository.dreamInterpretationReading, _generatePromptForDreamInterpretation, emit, customPrompt: event.customPrompt, ); }
   Future<void> _onDrawHorseshoeSpread(DrawHorseshoeSpread event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.horseshoeSpread, state.lastSelectedCategory ?? 'general', repository.horseshoeSpread, _generatePromptForHorseshoeSpread, emit, customPrompt: event.customPrompt, ); }
-  Future<void> _onDrawCareerPathSpread(DrawCareerPathSpread event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.careerPathSpread, 'career', repository.careerPathSpread, _generatePromptForCareerPathSpread, emit, customPrompt: event.customPrompt, ); }
-  Future<void> _onDrawFullMoonSpread(DrawFullMoonSpread event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.fullMoonSpread, 'spiritual', repository.fullMoonSpread, _generatePromptForFullMoonSpread, emit, customPrompt: event.customPrompt, ); }
-  Future<void> _onDrawCategoryReading(DrawCategoryReading event, Emitter<TarotState> emit) async { final spreadType = SpreadType.categoryReading; if (event.cardCount <= 0) { emit(TarotError("Kart sayısı geçersiz.", userTokens: state.userTokens)); return; } await _handleReadingProcess( spreadType, event.category, () => repository.categoryReading(event.category, event.cardCount), _generatePromptForCategoryReading, emit, customPrompt: event.customPrompt, ); }
-  // --- Bitiş: Okuma (Draw) Event Handler'ları ---
+  Future<void> _onDrawCareerPathSpread(DrawCareerPathSpread event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.careerPathSpread, state.lastSelectedCategory ?? 'career', repository.careerPathSpread, _generatePromptForCareerPathSpread, emit, customPrompt: event.customPrompt, ); }
+  Future<void> _onDrawFullMoonSpread(DrawFullMoonSpread event, Emitter<TarotState> emit) async { await _handleReadingProcess( SpreadType.fullMoonSpread, state.lastSelectedCategory ?? 'spiritual', repository.fullMoonSpread, _generatePromptForFullMoonSpread, emit, customPrompt: event.customPrompt, ); }
+  Future<void> _onDrawCategoryReading(DrawCategoryReading event, Emitter<TarotState> emit) async { final spreadType = SpreadType.categoryReading; if (event.cardCount <= 0) { emit(TarotError("Kart sayısı geçersiz.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime)); return; } await _handleReadingProcess( spreadType, event.category, () => repository.categoryReading(event.category, event.cardCount), _generatePromptForCategoryReading, emit, customPrompt: event.customPrompt, ); }
 
+
+  // ===========================================================================
   // --- Prompt Oluşturma Metotları ---
+  // ===========================================================================
+  // Bu metotların imzaları güncellendi (`currentState` eklendi), içerikleri aynı.
+
   String _buildBasePrompt({ required String spreadName, required String category, required Map<String, TarotCard> spread, required String locale, required TarotState currentState, String? customPrompt, required String formatInstructions, required String personaDescription, required String analysisFocus, }) {
     final userInfoSection = currentState.userInfoCollected && (currentState.userName != null || currentState.userAge != null || currentState.userGender != null) ? '''User Information:\n${currentState.userName != null ? "- Name: ${currentState.userName}\n" : ""}${currentState.userAge != null ? "- Age: ${currentState.userAge}\n" : ""}${currentState.userGender != null ? "- Gender: ${currentState.userGender}\n" : ""}Personalize the reading based on this information where relevant to the '$category' context.''' : 'User information not provided; provide a general interpretation.';
-    final customPromptSection = customPrompt?.trim().isNotEmpty == true ? 'User\'s custom question/focus: "$customPrompt"\nAddress this specifically in your interpretation.' : 'No specific question provided; focus on the general $category context.'; // Hata düzeltildi
+    final customPromptSection = customPrompt?.trim().isNotEmpty == true ? 'User\'s custom question/focus: "$customPrompt"\nAddress this specifically in your interpretation.' : 'No specific question provided; focus on the general $category context.';
     final cardDetails = StringBuffer();
     spread.forEach((position, card) { final lightMeanings = jsonEncode(card.meanings.light); final shadowMeanings = jsonEncode(card.meanings.shadow); final keywords = jsonEncode(card.keywords); cardDetails.writeln('- Position: "$position"'); cardDetails.writeln('  - Card: "${card.name}"'); cardDetails.writeln('  - Keywords: $keywords'); cardDetails.writeln('  - Light Meanings: $lightMeanings'); cardDetails.writeln('  - Shadow Meanings: $shadowMeanings'); });
-    return '''SYSTEM: $personaDescription\nYou MUST generate the response *only* in the language with code: "$locale".\nAdhere strictly to the specified Markdown format using '###' for main sections.\nDo not include technical placeholders or instructions to yourself in the final output.\nFocus on providing insightful, detailed, creative, and empathetic interpretations related to the user's context.\n\nUSER:\nTarot Reading Request\n---------------------\nSpread Type: $spreadName\nCategory/Focus: $category\nLanguage for Response: $locale\n$userInfoSection\n$customPromptSection\n\nDrawn Cards:\n------------\n$cardDetails\n\nInterpretation Format Required:\n-----------------------------\n$formatInstructions\n\n$analysisFocus\n''';
+    return '''
+SYSTEM: $personaDescription
+You MUST generate the response *only* in the language with code: "$locale".
+Adhere strictly to the specified Markdown format using '###' for main sections.
+Do not include technical placeholders or instructions to yourself in the final output.
+Focus on providing insightful, detailed, creative, and empathetic interpretations related to the user's context.
+
+USER:
+Tarot Reading Request
+---------------------
+Spread Type: $spreadName
+Category/Focus: $category
+Language for Response: $locale
+
+$userInfoSection
+
+$customPromptSection
+
+Drawn Cards:
+------------
+$cardDetails
+
+Interpretation Format Required:
+-----------------------------
+$formatInstructions
+
+$analysisFocus
+''';
   }
 
   String _generatePromptForSingleCard({ required String category, required TarotCard card, String? customPrompt, required String locale, required TarotState currentState}) { final spread = {'Single Card': card}; final spreadName = "Single Card Reading"; final persona = "You are 'Astral Tarot', a compassionate and direct Tarot reader providing concise yet insightful guidance."; final analysisFocus = "Focus on the core message of this single card regarding the user's category/question."; final format = '''### Card's Essence\n[Provide a brief, evocative description of the card's core energy.]\n\n### Interpretation for $category\n[Explain the card's primary meaning in the context of the user's category ($category) and their custom prompt, if provided. Personalize if user info exists.]\n\n### Guidance\n[Offer one clear, actionable piece of advice based on the card's message for the user's situation.]\n'''; return _buildBasePrompt( spreadName: spreadName, category: category, spread: spread, locale: locale, currentState: currentState, customPrompt: customPrompt, formatInstructions: format, personaDescription: persona, analysisFocus: analysisFocus, ); }

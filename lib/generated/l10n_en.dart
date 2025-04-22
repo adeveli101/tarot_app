@@ -915,4 +915,109 @@ class SEn extends S {
 
   @override
   String get invalidPage => 'Invalid Page';
+
+  @override
+  String get yearlySpreadSummary => 'Yearly Summary';
+
+  @override
+  String cardLabel(int index) {
+    return 'Card $index';
+  }
+
+  @override
+  String get mindBodySpiritMind => 'Mind';
+
+  @override
+  String get mindBodySpiritBody => 'Body';
+
+  @override
+  String get mindBodySpiritSpirit => 'Spirit';
+
+  @override
+  String get astroLogicalCrossIdentity => 'Identity / Self';
+
+  @override
+  String get astroLogicalCrossEmotional => 'Emotional State';
+
+  @override
+  String get astroLogicalCrossExternal => 'External Influences';
+
+  @override
+  String get astroLogicalCrossChallenge => 'Challenge / Lesson';
+
+  @override
+  String get astroLogicalCrossDestiny => 'Destiny / Outcome';
+
+  @override
+  String get dreamInterpretationPast => 'Dream - Past Link';
+
+  @override
+  String get dreamInterpretationPresent => 'Dream - Present Emotion';
+
+  @override
+  String get dreamInterpretationFuture => 'Dream - Future Guidance';
+
+  @override
+  String get horseshoeUserAttitude => 'Your Attitude';
+
+  @override
+  String get horseshoeExternalInfluence => 'External Influence';
+
+  @override
+  String get careerPathCurrent => 'Current Situation';
+
+  @override
+  String get careerPathObstacles => 'Obstacles';
+
+  @override
+  String get careerPathOpportunities => 'Opportunities';
+
+  @override
+  String get careerPathStrengths => 'Strengths';
+
+  @override
+  String get careerPathOutcome => 'Potential Outcome';
+
+  @override
+  String get fullMoonCulmination => 'Culmination';
+
+  @override
+  String get fullMoonRevealed => 'What is Revealed';
+
+  @override
+  String get fullMoonRelease => 'What to Release';
+
+  @override
+  String get fullMoonObstacles => 'Obstacles to Release';
+
+  @override
+  String get fullMoonAction => 'Action / Integration';
+
+  @override
+  String get fullMoonResultingEnergy => 'Resulting Energy';
+
+  @override
+  String get claimDailyRewardTooltip => 'Claim your daily credits!';
+
+  @override
+  String get nextReward => 'Next:';
+
+  @override
+  String nextRewardTooltip(String time) {
+    return 'Next daily reward available in $time';
+  }
+
+  @override
+  String claimYourDailyTokens(int count) {
+    return 'Claim Your Daily $count Credits!';
+  }
+
+  @override
+  String get dailyRewardInfo => 'This timer shows when your next free daily credits will be available.';
+
+  @override
+  String get creditInfoTooltip => 'Tap to buy credits';
+
+  @override
+  String get redeemCouponTooltip => 'Redeem Coupon';
 }

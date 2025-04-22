@@ -629,7 +629,7 @@ abstract class S {
   /// **'View Results'**
   String get viewResults;
 
-  /// No description provided for @close.
+  /// Text for the close button in dialogs.
   ///
   /// In en, this message translates to:
   /// **'Close'**
@@ -1601,7 +1601,7 @@ abstract class S {
   /// **'This coupon has already been used.'**
   String get couponAlreadyUsed;
 
-  /// No description provided for @paymentSuccessful.
+  /// Snackbar message shown after a successful purchase.
   ///
   /// In en, this message translates to:
   /// **'Ödeme Başarılı'**
@@ -1786,6 +1786,204 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Invalid Page'**
   String get invalidPage;
+
+  /// No description provided for @yearlySpreadSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly Summary'**
+  String get yearlySpreadSummary;
+
+  /// Label for a card in a generic spread, showing its number
+  ///
+  /// In en, this message translates to:
+  /// **'Card {index}'**
+  String cardLabel(int index);
+
+  /// No description provided for @mindBodySpiritMind.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind'**
+  String get mindBodySpiritMind;
+
+  /// No description provided for @mindBodySpiritBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get mindBodySpiritBody;
+
+  /// No description provided for @mindBodySpiritSpirit.
+  ///
+  /// In en, this message translates to:
+  /// **'Spirit'**
+  String get mindBodySpiritSpirit;
+
+  /// No description provided for @astroLogicalCrossIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity / Self'**
+  String get astroLogicalCrossIdentity;
+
+  /// No description provided for @astroLogicalCrossEmotional.
+  ///
+  /// In en, this message translates to:
+  /// **'Emotional State'**
+  String get astroLogicalCrossEmotional;
+
+  /// No description provided for @astroLogicalCrossExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'External Influences'**
+  String get astroLogicalCrossExternal;
+
+  /// No description provided for @astroLogicalCrossChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Challenge / Lesson'**
+  String get astroLogicalCrossChallenge;
+
+  /// No description provided for @astroLogicalCrossDestiny.
+  ///
+  /// In en, this message translates to:
+  /// **'Destiny / Outcome'**
+  String get astroLogicalCrossDestiny;
+
+  /// No description provided for @dreamInterpretationPast.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream - Past Link'**
+  String get dreamInterpretationPast;
+
+  /// No description provided for @dreamInterpretationPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream - Present Emotion'**
+  String get dreamInterpretationPresent;
+
+  /// No description provided for @dreamInterpretationFuture.
+  ///
+  /// In en, this message translates to:
+  /// **'Dream - Future Guidance'**
+  String get dreamInterpretationFuture;
+
+  /// No description provided for @horseshoeUserAttitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Attitude'**
+  String get horseshoeUserAttitude;
+
+  /// No description provided for @horseshoeExternalInfluence.
+  ///
+  /// In en, this message translates to:
+  /// **'External Influence'**
+  String get horseshoeExternalInfluence;
+
+  /// No description provided for @careerPathCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Situation'**
+  String get careerPathCurrent;
+
+  /// No description provided for @careerPathObstacles.
+  ///
+  /// In en, this message translates to:
+  /// **'Obstacles'**
+  String get careerPathObstacles;
+
+  /// No description provided for @careerPathOpportunities.
+  ///
+  /// In en, this message translates to:
+  /// **'Opportunities'**
+  String get careerPathOpportunities;
+
+  /// No description provided for @careerPathStrengths.
+  ///
+  /// In en, this message translates to:
+  /// **'Strengths'**
+  String get careerPathStrengths;
+
+  /// No description provided for @careerPathOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Potential Outcome'**
+  String get careerPathOutcome;
+
+  /// No description provided for @fullMoonCulmination.
+  ///
+  /// In en, this message translates to:
+  /// **'Culmination'**
+  String get fullMoonCulmination;
+
+  /// No description provided for @fullMoonRevealed.
+  ///
+  /// In en, this message translates to:
+  /// **'What is Revealed'**
+  String get fullMoonRevealed;
+
+  /// No description provided for @fullMoonRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'What to Release'**
+  String get fullMoonRelease;
+
+  /// No description provided for @fullMoonObstacles.
+  ///
+  /// In en, this message translates to:
+  /// **'Obstacles to Release'**
+  String get fullMoonObstacles;
+
+  /// No description provided for @fullMoonAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Action / Integration'**
+  String get fullMoonAction;
+
+  /// No description provided for @fullMoonResultingEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Resulting Energy'**
+  String get fullMoonResultingEnergy;
+
+  /// Tooltip text shown when hovering over the daily claim button/icon
+  ///
+  /// In en, this message translates to:
+  /// **'Claim your daily credits!'**
+  String get claimDailyRewardTooltip;
+
+  /// Prefix text shown before the countdown timer for the next daily reward
+  ///
+  /// In en, this message translates to:
+  /// **'Next:'**
+  String get nextReward;
+
+  /// Tooltip text shown when hovering over the countdown timer for the next daily reward
+  ///
+  /// In en, this message translates to:
+  /// **'Next daily reward available in {time}'**
+  String nextRewardTooltip(String time);
+
+  /// Text for the main claim button (now compact icon, text not directly visible but key is used)
+  ///
+  /// In en, this message translates to:
+  /// **'Claim Your Daily {count} Credits!'**
+  String claimYourDailyTokens(int count);
+
+  /// Information text displayed in a dialog when the user taps on the daily reward countdown timer.
+  ///
+  /// In en, this message translates to:
+  /// **'This timer shows when your next free daily credits will be available.'**
+  String get dailyRewardInfo;
+
+  /// Tooltip shown when hovering over the credit display area in the top bar.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to buy credits'**
+  String get creditInfoTooltip;
+
+  /// Tooltip shown for the redeem coupon button/icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem Coupon'**
+  String get redeemCouponTooltip;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

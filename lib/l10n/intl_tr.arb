@@ -459,6 +459,92 @@
       }
     }
   },
-  "invalidPage": "Geçersiz Sayfa"
+  "invalidPage": "Geçersiz Sayfa",
+
+
+  "yearlySpreadSummary": "Yılın Özeti",
+  "cardLabel": "Kart {index}",
+  "@cardLabel": {
+    "description": "Genel bir açılımdaki kartın etiketini ve numarasını gösterir",
+    "placeholders": {
+      "index": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "mindBodySpiritMind": "Zihin",
+  "mindBodySpiritBody": "Beden",
+  "mindBodySpiritSpirit": "Ruh",
+  "astroLogicalCrossIdentity": "Kimlik / Benlik",
+  "astroLogicalCrossEmotional": "Duygusal Durum",
+  "astroLogicalCrossExternal": "Dış Etkenler",
+  "astroLogicalCrossChallenge": "Zorluk / Ders",
+  "astroLogicalCrossDestiny": "Kader / Sonuç",
+  "dreamInterpretationPast": "Rüya - Geçmiş Bağlantısı",
+  "dreamInterpretationPresent": "Rüya - Mevcut Duygu",
+  "dreamInterpretationFuture": "Rüya - Gelecek Rehberliği",
+  "horseshoeUserAttitude": "Yaklaşımınız",
+  "horseshoeExternalInfluence": "Dış Etkenler",
+  "careerPathCurrent": "Mevcut Durum",
+  "careerPathObstacles": "Engeller",
+  "careerPathOpportunities": "Fırsatlar",
+  "careerPathStrengths": "Güçlü Yönler",
+  "careerPathOutcome": "Olası Sonuç",
+  "fullMoonCulmination": "Tamamlanma",
+  "fullMoonRevealed": "Ortaya Çıkan",
+  "fullMoonRelease": "Bırakılması Gereken",
+  "fullMoonObstacles": "Bırakma Engelleri",
+  "fullMoonAction": "Eylem / Bütünleşme",
+  "fullMoonResultingEnergy": "Sonuç Enerjisi",
+
+
+  "claimDailyRewardTooltip": "Günlük kredini al!",
+  "@claimDailyRewardTooltip": {
+    "description": "Günlük kredi alma butonu/ikonu üzerine gelince gösterilen ipucu metni"
+  },
+  "nextReward": "Sonraki:",
+  "@nextReward": {
+    "description": "Bir sonraki günlük ödül için geri sayım sayacından önce gösterilen metin"
+  },
+  "nextRewardTooltip": "Sonraki günlük ödül {time} sonra alınabilir",
+  "@nextRewardTooltip": {
+    "description": "Bir sonraki günlük ödül için geri sayım sayacının üzerine gelince gösterilen ipucu metni",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "08:15:32"
+      }
+    }
+  },
+  "claimYourDailyTokens": "Günlük {count} Kredini Al!",
+  "@claimYourDailyTokens": {
+    "description": "Ana kredi alma butonu metni (artık kompakt ikon, metin doğrudan görünmüyor ama anahtar kullanılıyor)",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "20"
+      }
+    }
+  },
+
+  "dailyRewardInfo": "Bu sayaç, bir sonraki ücretsiz günlük kredinizin ne zaman alınabileceğini gösterir.",
+  "@dailyRewardInfo": {
+    "description": "Kullanıcı günlük ödül geri sayım sayacına tıkladığında gösterilen bilgi dialog metni."
+  },
+  "@paymentSuccessful": {
+    "description": "Başarılı bir satın alma işleminden sonra gösterilen snackbar mesajı."
+  },
+  "@close": {
+    "description": "Dialoglardaki kapatma butonu metni."
+  },
+  "creditInfoTooltip": "Kredi satın almak için dokunun",
+  "@creditInfoTooltip": {
+    "description": "Üst çubuktaki kredi bilgisi alanı üzerine gelince gösterilen ipucu."
+  },
+  "redeemCouponTooltip": "Kupon Kullan",
+  "@redeemCouponTooltip": {
+    "description": "Kupon kullanma butonu/ikonu için gösterilen ipucu."
+  }
 
 }
