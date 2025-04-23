@@ -8,6 +8,7 @@ abstract class TarotEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+// --- Mevcut Eventler (DEĞİŞİKLİK YOK) ---
 class LoadTarotCards extends TarotEvent {}
 class ShuffleDeck extends TarotEvent {}
 
@@ -34,120 +35,173 @@ class UpdateUserInfo extends TarotEvent {
   List<Object?> get props => [name, age, gender];
 }
 
-// YENİ EVENT: Günlük token talep etmek için
 class ClaimDailyToken extends TarotEvent {}
 
 
-// --- Okuma (Draw) Eventleri ---
+// --- Okuma (Draw) Eventleri (GÜNCELLENDİ) ---
+// <<< DEĞİŞİKLİK: Tüm Draw... eventlerine selectedCards eklendi >>>
+
 class DrawSingleCard extends TarotEvent {
   final String? customPrompt;
-  DrawSingleCard({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawSingleCard({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawPastPresentFuture extends TarotEvent {
   final String? customPrompt;
-  DrawPastPresentFuture({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawPastPresentFuture({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawProblemSolution extends TarotEvent {
   final String? customPrompt;
-  DrawProblemSolution({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawProblemSolution({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawFiveCardPath extends TarotEvent {
   final String? customPrompt;
-  DrawFiveCardPath({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawFiveCardPath({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawRelationshipSpread extends TarotEvent {
   final String? customPrompt;
-  DrawRelationshipSpread({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawRelationshipSpread({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawCelticCross extends TarotEvent {
   final String? customPrompt;
-  DrawCelticCross({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawCelticCross({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawYearlySpread extends TarotEvent {
   final String? customPrompt;
-  DrawYearlySpread({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawYearlySpread({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawMindBodySpirit extends TarotEvent {
   final String? customPrompt;
-  DrawMindBodySpirit({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawMindBodySpirit({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawAstroLogicalCross extends TarotEvent {
   final String? customPrompt;
-  DrawAstroLogicalCross({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawAstroLogicalCross({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawBrokenHeart extends TarotEvent {
   final String? customPrompt;
-  DrawBrokenHeart({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawBrokenHeart({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawDreamInterpretation extends TarotEvent {
   final String? customPrompt;
-  DrawDreamInterpretation({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawDreamInterpretation({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawHorseshoeSpread extends TarotEvent {
   final String? customPrompt;
-  DrawHorseshoeSpread({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawHorseshoeSpread({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawCareerPathSpread extends TarotEvent {
   final String? customPrompt;
-  DrawCareerPathSpread({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawCareerPathSpread({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawFullMoonSpread extends TarotEvent {
   final String? customPrompt;
-  DrawFullMoonSpread({this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawFullMoonSpread({required this.selectedCards, this.customPrompt}); // <-- Güncellendi
+
   @override
-  List<Object?> get props => [customPrompt];
+  List<Object?> get props => [customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 class DrawCategoryReading extends TarotEvent {
   final String category;
   final int cardCount;
   final String? customPrompt;
-  DrawCategoryReading({required this.category, required this.cardCount, this.customPrompt});
+  final List<TarotCard> selectedCards; // <-- Eklendi
+
+  DrawCategoryReading({
+    required this.category,
+    required this.cardCount,
+    required this.selectedCards, // <-- Güncellendi
+    this.customPrompt
+  });
+
   @override
-  List<Object?> get props => [category, cardCount, customPrompt];
+  List<Object?> get props => [category, cardCount, customPrompt, selectedCards]; // <-- Güncellendi
 }
 
 
 // ================== STATES ==================
+// State sınıflarında herhangi bir değişiklik yapılmadı.
+// Önceki kodunuzla aynı kalacaklar.
 abstract class TarotState extends Equatable {
   final double userTokens;
   final String? lastSelectedCategory;
@@ -155,7 +209,6 @@ abstract class TarotState extends Equatable {
   final int? userAge;
   final String? userGender;
   final bool userInfoCollected;
-  // YENİ STATE ALANLARI (Null olmayan default değerlerle):
   final bool isDailyTokenAvailable;
   final DateTime? nextDailyTokenTime;
 
@@ -166,9 +219,8 @@ abstract class TarotState extends Equatable {
     this.userAge,
     this.userGender,
     this.userInfoCollected = false,
-    // YENİ PARAMETRELER (required değil, default değerleri var):
-    this.isDailyTokenAvailable = false, // Default false
-    this.nextDailyTokenTime,         // Default null
+    this.isDailyTokenAvailable = false,
+    this.nextDailyTokenTime,
   });
 
   @override
@@ -179,13 +231,10 @@ abstract class TarotState extends Equatable {
     userAge,
     userGender,
     userInfoCollected,
-    // YENİ PROPS:
     isDailyTokenAvailable,
     nextDailyTokenTime,
   ];
 
-  // copyWith metodu (türetilmiş sınıflar implemente edecek)
-  // Parametreler nullable, atama yapılırken ?? ile mevcut değer korunur.
   TarotState copyWith({
     double? userTokens,
     String? lastSelectedCategory,
@@ -198,7 +247,6 @@ abstract class TarotState extends Equatable {
   });
 }
 
-// --- Initial State ---
 class TarotInitial extends TarotState {
   const TarotInitial({
     super.userTokens = 0.0,
@@ -207,9 +255,8 @@ class TarotInitial extends TarotState {
     super.userAge,
     super.userGender,
     super.userInfoCollected = false,
-    // YENİ ALANLARIN DEFAULT DEĞERLERİ TarotState'ten gelir
-     super.isDailyTokenAvailable = false,
-     super.nextDailyTokenTime,
+    super.isDailyTokenAvailable = false,
+    super.nextDailyTokenTime,
   });
 
   @override
@@ -230,13 +277,12 @@ class TarotInitial extends TarotState {
       userAge: userAge ?? this.userAge,
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
-      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable, // null değilse yeni değeri ata
-      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,       // null değilse yeni değeri ata
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
 }
 
-// --- Loading State ---
 class TarotLoading extends TarotState {
   const TarotLoading({
     required super.userTokens,
@@ -245,7 +291,6 @@ class TarotLoading extends TarotState {
     super.userAge,
     super.userGender,
     super.userInfoCollected,
-    // YENİ ALANLAR Loading state'i oluşturulurken önceki state'ten alınmalı
     required super.isDailyTokenAvailable,
     super.nextDailyTokenTime,
   });
@@ -261,9 +306,6 @@ class TarotLoading extends TarotState {
     bool? isDailyTokenAvailable,
     DateTime? nextDailyTokenTime,
   }) {
-    // Loading state'i kopyalamak yerine genellikle yeni bir Loading state oluşturulur
-    // ve mevcut state'in değerleri kullanılır. copyWith burada anlamsız olabilir.
-    // Yine de ekleyelim:
     return TarotLoading(
       userTokens: userTokens ?? this.userTokens,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
@@ -277,7 +319,6 @@ class TarotLoading extends TarotState {
   }
 }
 
-// --- Error State ---
 class TarotError extends TarotState {
   final String message;
   const TarotError(
@@ -288,7 +329,6 @@ class TarotError extends TarotState {
         super.userAge,
         super.userGender,
         super.userInfoCollected,
-        // YENİ ALANLAR hata anındaki durumu korumalı
         required super.isDailyTokenAvailable,
         super.nextDailyTokenTime,
       });
@@ -306,10 +346,10 @@ class TarotError extends TarotState {
     bool? userInfoCollected,
     bool? isDailyTokenAvailable,
     DateTime? nextDailyTokenTime,
-    // String? message, // Hata mesajı genellikle değiştirilmez
+    // String? message,
   }) {
     return TarotError(
-      message, // Mevcut mesajı koru
+      message,
       userTokens: userTokens ?? this.userTokens,
       lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
       userName: userName ?? this.userName,
@@ -322,7 +362,6 @@ class TarotError extends TarotState {
   }
 }
 
-// --- Cards Loaded State ---
 class TarotCardsLoaded extends TarotState {
   final List<TarotCard> cards;
   const TarotCardsLoaded(
@@ -333,7 +372,6 @@ class TarotCardsLoaded extends TarotState {
         super.userAge,
         super.userGender,
         super.userInfoCollected,
-        // YENİ ALANLAR
         required super.isDailyTokenAvailable,
         super.nextDailyTokenTime,
       });
@@ -367,7 +405,6 @@ class TarotCardsLoaded extends TarotState {
   }
 }
 
-// --- Coupon Redeemed State ---
 class CouponRedeemed extends TarotState {
   final String message;
   const CouponRedeemed(
@@ -378,7 +415,6 @@ class CouponRedeemed extends TarotState {
         super.userAge,
         super.userGender,
         super.userInfoCollected,
-        // YENİ ALANLAR
         required super.isDailyTokenAvailable,
         super.nextDailyTokenTime,
       });
@@ -412,7 +448,6 @@ class CouponRedeemed extends TarotState {
   }
 }
 
-// --- Coupon Invalid State ---
 class CouponInvalid extends TarotState {
   final String message;
   const CouponInvalid(
@@ -423,7 +458,6 @@ class CouponInvalid extends TarotState {
         super.userAge,
         super.userGender,
         super.userInfoCollected,
-        // YENİ ALANLAR
         required super.isDailyTokenAvailable,
         super.nextDailyTokenTime,
       });
@@ -457,7 +491,6 @@ class CouponInvalid extends TarotState {
   }
 }
 
-// --- Single Card Drawn State (Kullanılmıyor olabilir) ---
 class SingleCardDrawn extends TarotState {
   final TarotCard card;
   const SingleCardDrawn(
@@ -468,7 +501,6 @@ class SingleCardDrawn extends TarotState {
         super.userAge,
         super.userGender,
         super.userInfoCollected,
-        // YENİ ALANLAR
         required super.isDailyTokenAvailable,
         super.nextDailyTokenTime,
       });
@@ -502,7 +534,6 @@ class SingleCardDrawn extends TarotState {
   }
 }
 
-// --- Spread Drawn State (Kullanılmıyor olabilir) ---
 class SpreadDrawn extends TarotState {
   final Map<String, TarotCard> spread;
   const SpreadDrawn(
@@ -513,7 +544,6 @@ class SpreadDrawn extends TarotState {
         super.userAge,
         super.userGender,
         super.userInfoCollected,
-        // YENİ ALANLAR
         required super.isDailyTokenAvailable,
         super.nextDailyTokenTime,
       });
@@ -547,7 +577,6 @@ class SpreadDrawn extends TarotState {
   }
 }
 
-// --- Reading Result Loaded State ---
 class FalYorumuLoaded extends TarotState {
   final String yorum;
   final int tokenCount;
@@ -565,7 +594,6 @@ class FalYorumuLoaded extends TarotState {
         super.userAge,
         super.userGender,
         super.userInfoCollected,
-        // YENİ ALANLAR
         required super.isDailyTokenAvailable,
         super.nextDailyTokenTime,
       });
@@ -605,7 +633,6 @@ class FalYorumuLoaded extends TarotState {
   }
 }
 
-// --- Insufficient Resources State ---
 class InsufficientResources extends TarotState {
   final double requiredTokens;
   const InsufficientResources(
@@ -616,7 +643,6 @@ class InsufficientResources extends TarotState {
         super.userAge,
         super.userGender,
         super.userInfoCollected,
-        // YENİ ALANLAR
         required super.isDailyTokenAvailable,
         super.nextDailyTokenTime,
       });
@@ -659,13 +685,10 @@ class DailyTokenClaimSuccess extends TarotState {
     super.userAge,
     super.userGender,
     super.userInfoCollected,
-    // Günlük token alındıktan sonra artık alınamaz (false)
     super.isDailyTokenAvailable = false,
-    // Bir sonraki alınabilir zaman bu state için gereklidir
     required super.nextDailyTokenTime,
   });
 
-  // Tutarlılık için copyWith ekleyelim (zorunlu olmasa da)
   @override
   DailyTokenClaimSuccess copyWith({
     double? userTokens,
@@ -674,7 +697,7 @@ class DailyTokenClaimSuccess extends TarotState {
     int? userAge,
     String? userGender,
     bool? userInfoCollected,
-    bool? isDailyTokenAvailable, // Genellikle bu state için false'tur
+    bool? isDailyTokenAvailable,
     DateTime? nextDailyTokenTime,
   }) {
     return DailyTokenClaimSuccess(
@@ -685,7 +708,6 @@ class DailyTokenClaimSuccess extends TarotState {
       userGender: userGender ?? this.userGender,
       userInfoCollected: userInfoCollected ?? this.userInfoCollected,
       isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
-      // nextDailyTokenTime bu state için önemlidir
       nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
     );
   }
@@ -693,7 +715,7 @@ class DailyTokenClaimSuccess extends TarotState {
 
 
 // ================== SPREAD TYPE ENUM ==================
-// Enum tanımı aynı kalabilir. fullMoonSpread kart sayısı kontrol edildi.
+// Enum tanımı aynı kalabilir.
 enum SpreadType {
   singleCard(1, 600, 2000, 10, 'single_card_purchase', 300),
   pastPresentFuture(3, 1200, 2000, 20, 'past_present_future_purchase', 600),
@@ -701,15 +723,15 @@ enum SpreadType {
   fiveCardPath(5, 1800, 3000, 30.0, 'five_card_path_purchase', 900),
   relationshipSpread(7, 2500, 4000, 40, 'relationship_spread_purchase', 1200),
   celticCross(10, 3000, 4000, 50, 'celtic_cross_purchase', 1500),
-  yearlySpread(12, 3000, 4000, 60, 'yearly_spread_purchase', 1800),
+  yearlySpread(12, 3000, 4000, 60, 'yearly_spread_purchase', 1800), // Yıllık 12 kart varsayımı
   mindBodySpirit(3, 1200, 3000, 20, 'mind_body_spirit_purchase', 600),
   astroLogicalCross(5, 1800, 3000, 30, 'astrological_cross_purchase', 900),
   brokenHeart(5, 1800, 3000, 30.0, 'broken_heart_purchase', 900),
   dreamInterpretation(3, 1200, 2000, 20, 'dream_interpretation_purchase', 800),
   horseshoeSpread(7, 2500, 3000, 40.0, 'horseshoe_spread_purchase', 1200),
   careerPathSpread(5, 1800, 3000, 30, 'career_path_purchase', 900),
-  fullMoonSpread(6, 1800, 3000, 30, 'full_moon_purchase', 900), // Kart sayısı 6 olarak düzeltildi (Repo'ya göre)
-  categoryReading(5, 1800, 3000, 30, 'category_reading_purchase', 900); // Varsayılan
+  fullMoonSpread(6, 1800, 3000, 30, 'full_moon_purchase', 900),
+  categoryReading(5, 1800, 3000, 30, 'category_reading_purchase', 900); // Varsayılan kart sayısı 5
 
   final int cardCount;
   final int freeTokenLimit;

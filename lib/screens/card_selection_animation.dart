@@ -357,45 +357,44 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     }
   }
 
+// lib/screens/card_selection_animation.dart
+
+
+
   Future<void> _navigateToResults() async {
     final loc = S.of(context)!;
     if (!mounted) return;
 
     if (!cardsDrawn) {
-      // ... (SnackBar gösterimi aynı kalır)
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(loc.drawCards), backgroundColor: Colors.orangeAccent,)
       );
       return;
     }
 
-    // --- Otomatik Kart Çevirme Kısmı ---
+    // --- Otomatik Kart Çevirme (Aynı kalır) ---
     final unrevealedIndices = <int>[];
     for (int i = 0; i < cardCount; i++) {
-      // revealed listesinin geçerli bir index olup olmadığını kontrol et
       if (revealed.length > i && !revealed[i]) {
         unrevealedIndices.add(i);
       } else if (revealed.length <= i) {
-        // Eğer revealed listesi beklenenden kısaysa bir hata logla veya işlemi durdur
         if (kDebugMode) print("Error: revealed list length (${revealed.length}) is less than card index ($i).");
-        // return; // Opsiyonel: Hata durumunda işlemi durdur
+        // Opsiyonel: Hata durumunda işlemi durdur
+        // return;
       }
     }
 
     if (unrevealedIndices.isNotEmpty) {
       setState(() => isFlippingAll = true);
-      // Toplu çevirme sesi için _playSound kullan (ducking otomatik)
       await _playSound('audios/shuffle_cards.mp3');
       HapticFeedback.mediumImpact();
-
       List<Future<void>> flipFutures = [];
       for (int index in unrevealedIndices) {
-        if (mounted && index < _flipControllers.length) { // Controller index kontrolü
+        if (mounted && index < _flipControllers.length) {
           setState(() => revealed[index] = true);
           flipFutures.add(_flipControllers[index].forward(from: _flipControllers[index].value));
           await Future.delayed(const Duration(milliseconds: 80));
         } else {
-          // ignore: avoid_print
           if(mounted && kDebugMode) print("Error: Invalid index ($index) for flip controllers.");
           break;
         }
@@ -407,8 +406,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     }
     // --- Otomatik Kart Çevirme Sonu ---
 
-    // Kredi kontrolü ve navigasyon... (aynı kalır)
-    // Kredi kontrolü ve diğer işlemler (Mevcut kod devam ediyor)
+
     final bloc = context.read<TarotBloc>();
     final currentState = bloc.state;
     final cost = _requiredTokensForSpread;
@@ -424,38 +422,76 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       return;
     }
 
-    // Olay gönderme ve navigasyon (Mevcut kod devam ediyor)
+    // <<< DEĞİŞEN KISIM BAŞLIYOR >>>
     TarotEvent eventToDispatch;
-    // ... (switch case bloğu burada devam ediyor) ...
+    // State'den seçilen kartları al (kopyasını oluşturmak iyi bir pratik olabilir)
+    final List<TarotCard> cardsToPass = List.from(selectedCards);
+
+    // Spread tipine göre doğru event'i seçilen kartlarla birlikte oluştur
     switch (widget.spreadType) {
-      case SpreadType.singleCard: eventToDispatch = DrawSingleCard(); break;
-      case SpreadType.pastPresentFuture: eventToDispatch = DrawPastPresentFuture(); break;
-      case SpreadType.celticCross: eventToDispatch = DrawCelticCross(); break;
-      case SpreadType.yearlySpread: eventToDispatch = DrawYearlySpread(); break;
-      case SpreadType.problemSolution: eventToDispatch = DrawProblemSolution(); break;
-      case SpreadType.fiveCardPath: eventToDispatch = DrawFiveCardPath(); break;
-      case SpreadType.relationshipSpread: eventToDispatch = DrawRelationshipSpread(); break;
-      case SpreadType.mindBodySpirit: eventToDispatch = DrawMindBodySpirit(); break;
-      case SpreadType.astroLogicalCross: eventToDispatch = DrawAstroLogicalCross(); break;
-      case SpreadType.brokenHeart: eventToDispatch = DrawBrokenHeart(); break;
-      case SpreadType.dreamInterpretation: eventToDispatch = DrawDreamInterpretation(); break;
-      case SpreadType.horseshoeSpread: eventToDispatch = DrawHorseshoeSpread(); break;
-      case SpreadType.careerPathSpread: eventToDispatch = DrawCareerPathSpread(); break;
-      case SpreadType.fullMoonSpread: eventToDispatch = DrawFullMoonSpread(); break;
-      case SpreadType.categoryReading:
-        if (kDebugMode) { print("DrawCategoryReading tetikleniyor. Kategori: ${widget.categoryKey}"); }
-        eventToDispatch = DrawCategoryReading( category: widget.categoryKey, cardCount: widget.spreadType.cardCount );
+      case SpreadType.singleCard:
+        eventToDispatch = DrawSingleCard(selectedCards: cardsToPass, customPrompt: null);
         break;
+      case SpreadType.pastPresentFuture:
+        eventToDispatch = DrawPastPresentFuture(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.problemSolution:
+        eventToDispatch = DrawProblemSolution(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.fiveCardPath:
+        eventToDispatch = DrawFiveCardPath(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.relationshipSpread:
+        eventToDispatch = DrawRelationshipSpread(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.celticCross:
+        eventToDispatch = DrawCelticCross(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.yearlySpread:
+        eventToDispatch = DrawYearlySpread(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.mindBodySpirit:
+        eventToDispatch = DrawMindBodySpirit(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.astroLogicalCross:
+        eventToDispatch = DrawAstroLogicalCross(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.brokenHeart:
+        eventToDispatch = DrawBrokenHeart(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.dreamInterpretation:
+        eventToDispatch = DrawDreamInterpretation(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.horseshoeSpread:
+        eventToDispatch = DrawHorseshoeSpread(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.careerPathSpread:
+        eventToDispatch = DrawCareerPathSpread(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.fullMoonSpread:
+        eventToDispatch = DrawFullMoonSpread(selectedCards: cardsToPass, customPrompt: null);
+        break;
+      case SpreadType.categoryReading:
+        eventToDispatch = DrawCategoryReading(
+          category: widget.categoryKey,
+          cardCount: widget.spreadType.cardCount, // cardCount hala gerekli olabilir
+          selectedCards: cardsToPass,             // Seçilen kartları gönder
+          customPrompt: null,
+        );
+        break;
+    // default: // Opsiyonel: Kapsanmayan durum için hata fırlat
+    //   throw Exception("Unsupported SpreadType in _navigateToResults: ${widget.spreadType}");
     }
+    // <<< DEĞİŞEN KISIM BİTİYOR >>>
 
-
-    bloc.add(eventToDispatch);
+    bloc.add(eventToDispatch); // Güncellenmiş event'i gönder
 
     if (mounted) {
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const ReadingResultScreenWithTransition(),
+          // reading_result.dart içindeki widget adını kullanın
+          pageBuilder: (_, __, ___) => const ReadingResultScreen(), // Veya ReadingResultScreenWithTransition() hangisiyse
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -464,7 +500,6 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       );
     }
   }
-
   void _showPaymentDialog(BuildContext context, double requiredTokens) {
     // ... (Bu fonksiyon aynı kalır)
     PaymentManager.showPaymentDialog(
@@ -810,11 +845,24 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
             borderRadius: BorderRadius.circular(15),
             side: BorderSide(color: Colors.purpleAccent.withOpacity(0.5))
         ),
-        title: Row(
+        title:Row(
+          crossAxisAlignment: CrossAxisAlignment.start, // İkon ve metni dikeyde başa hizala
           children: [
-            const Icon(Icons.help_outline, color: Colors.purpleAccent),
+            const Icon(Icons.help_outline, color: Colors.purpleAccent, size: 20), // İkon boyutunu ayarlayabilirsiniz
             const SizedBox(width: 10),
-            Text(loc.cardSelectionInstructions, style: GoogleFonts.cinzel(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Expanded( // Text widget'ını Expanded ile sar
+              child: Text(
+                loc.cardSelectionInstructions,
+                style: GoogleFonts.cinzel(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  height: 1.3, // Satır yüksekliğini ayarlayabilirsiniz (isteğe bağlı)
+                ),
+                // softWrap: true, // Text widget'ı Expanded içindeyse bu genellikle gereksizdir
+                // overflow: TextOverflow.visible, // Expanded ile sarıldığı için bu da gereksizdir
+              ),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -878,8 +926,11 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+// lib/screens/card_selection_animation.dart
+
+// lib/screens/card_selection_animation.dart
+
   Widget _buildCardWidget(int index, String positionLabel) {
-    // ... (Bu fonksiyon aynı kalır)
     if (!cardsDrawn || index < 0 || index >= selectedCards.length || index >= _flipControllers.length || index >= _zoomControllers.length) {
       return const SizedBox(width: 100, height: 150);
     }
@@ -891,9 +942,22 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     return GestureDetector(
       onTap: () => _flipCard(index),
       onLongPress: () => _showDetailedCardInfo(card, index),
+
+      // <<< GÜNCELLEME: Kaydırma ile çevirme >>>
+      onHorizontalDragEnd: (DragEndDetails details) {
+        // Belirli bir hızın üzerindeki kaydırmaları algıla
+        if (details.primaryVelocity != null && details.primaryVelocity!.abs() > 300.0) {
+          // <<< DEĞİŞİKLİK: revealed kontrolü kaldırıldı >>>
+          // Artık kart açık veya kapalıyken de kaydırma çalışacak
+          _flipCard(index);
+        }
+      },
+      // <<< GÜNCELLEME SONU >>>
+
       child: AnimatedBuilder(
         animation: Listenable.merge([flipController, zoomController]),
         builder: (context, child) {
+          // ... (AnimatedBuilder içeriği aynı kalır) ...
           final flipValue = flipController.value;
           final zoomValue = Curves.easeOutExpo.transform(zoomController.value);
           final isVisuallyBack = flipValue < 0.5;
@@ -951,10 +1015,11 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+
   Widget _buildCardFront(TarotCard card) {
     // ... (Bu fonksiyon aynı kalır)
-    const double cardWidth = 100;
-    const double cardHeight = 150;
+    const double cardWidth = 110;
+    const double cardHeight = 170;
 
     return Container(
       width: cardWidth,
@@ -964,7 +1029,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
         color: Colors.grey[300],
         image: DecorationImage(
           image: AssetImage('assets/tarot_card_images/${card.img}'),
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
           onError: (exception, stackTrace) {
             if (kDebugMode) {
               print("Resim yüklenemedi: ${card.img} - Hata: $exception");
@@ -1116,7 +1181,15 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
 
     switch (currentSpreadType) {
       case SpreadType.singleCard:
-        return buildSpreadLayoutWrapper([0], [loc.singleCard]);
+      // `selectedCards` listesinin boş olmadığından ve index 0'ın geçerli olduğundan emin ol
+        if (selectedCards.isNotEmpty) {
+          // Pozisyon listesi olarak `loc.singleCard` yerine `selectedCards[0].name` kullan
+          return buildSpreadLayoutWrapper([0], [selectedCards[0].name]);
+        } else {
+          // Eğer selectedCards boşsa (beklenmedik durum), hata göster veya varsayılanı kullan
+          if (kDebugMode) { print("Hata: Tek kart açılımı için selectedCards boş!"); }
+          return buildSpreadLayoutWrapper([0], [loc.singleCard]); // Varsayılana geri dön
+        }
       case SpreadType.pastPresentFuture:
         return buildSpreadLayoutWrapper(
           [0, 1, 2],

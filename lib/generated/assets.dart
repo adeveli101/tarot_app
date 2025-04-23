@@ -7,9 +7,10 @@ class Assets {
   static const String assetsAudiosClassicAtmospheric = 'assets/audios/classic-atmospheric.mp3';
   static const String assetsAudiosFlipCard = 'assets/audios/flip_card.mp3';
   static const String assetsAudiosRitualistic3 = 'assets/audios/ritualistic3.mp3';
+  static const String assetsAudiosShuffleCards = 'assets/audios/shuffle_cards.mp3';
+  static const String assetsAudiosTransitionalSwipe = 'assets/audios/transitional-swipe.mp3';
   static const String assetsImageFxA = 'assets/image_fx_a.jpg';
   static const String assetsImageFxC = 'assets/image_fx_c.jpg';
-  static const String assetsTarotCardImagesCardBack = 'assets/tarot_card_images/card_back.png';
   static const String assetsTarotCardSilhouette = 'assets/tarot_card_silhouette.jpg';
   static const String assetsTarotCardsEn = 'assets/tarot_cards_en.json';
   static const String assetsTarotCardsTr = 'assets/tarot_cards_tr.json';
@@ -17,6 +18,7 @@ class Assets {
   static const String audiosFlipCard = 'assets/audios/flip_card.mp3';
   static const String audiosRitualistic3 = 'assets/audios/ritualistic3.mp3';
   static const String audiosShuffleCards = 'assets/audios/shuffle_cards.mp3';
+  static const String audiosTransitionalSwipe = 'assets/audios/transitional-swipe.mp3';
   static const String tarotCardImagesC01 = 'assets/tarot_card_images/c01.jpg';
   static const String tarotCardImagesC02 = 'assets/tarot_card_images/c02.jpg';
   static const String tarotCardImagesC03 = 'assets/tarot_card_images/c03.jpg';
@@ -31,7 +33,6 @@ class Assets {
   static const String tarotCardImagesC12 = 'assets/tarot_card_images/c12.jpg';
   static const String tarotCardImagesC13 = 'assets/tarot_card_images/c13.jpg';
   static const String tarotCardImagesC14 = 'assets/tarot_card_images/c14.jpg';
-  static const String tarotCardImagesCardBack = 'assets/tarot_card_images/card_back.png';
   static const String tarotCardImagesM00 = 'assets/tarot_card_images/m00.jpg';
   static const String tarotCardImagesM01 = 'assets/tarot_card_images/m01.jpg';
   static const String tarotCardImagesM02 = 'assets/tarot_card_images/m02.jpg';

@@ -31,42 +31,50 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
   Map<String, TarotCard>? _currentSpread;
   List<String> _interpretationSections = [];
 
+// lib/screens/reading_result.dart
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _pageController.addListener(() {
-      final page = _pageController.page;
-      if (page != null && page == page.roundToDouble()) {
-        if (_currentPage != page.round()) {
-          if (mounted) { // Add mounted check here too
-            setState(() {
-              _currentPage = page.round();
-            });
-          }
-          HapticFeedback.lightImpact();
-        }
-      }
-    });
+
+    // <<< BU KISMI SİLİN VEYA YORUM SATIRI YAPIN >>>
+    // _pageController.addListener(() {
+    //   final page = _pageController.page;
+    //   if (page != null && page == page.roundToDouble()) {
+    //     if (_currentPage != page.round()) {
+    //       if (mounted) {
+    //         setState(() {
+    //           _currentPage = page.round();
+    //         });
+    //       }
+    //       HapticFeedback.lightImpact();
+    //     }
+    //   }
+    // });
+    // <<< SİLİNECEK KISIM SONU >>>
 
     _glowController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
 
-    // Initialize controller FIRST
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-
-    // Initialize animation object immediately AFTER controller initialization
     _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut);
 
-    // Schedule the state check and animation start AFTER the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return; // Ensure widget is still mounted
+      if (!mounted) return;
       final currentState = context.read<TarotBloc>().state;
+      // İlk state yüklemesini burada yapabilirsiniz (opsiyonel)
+      if (currentState is FalYorumuLoaded) {
+        _updatePages(currentState);
+        _fadeController.forward();
+      } else if (currentState is! TarotLoading){
+        _fadeController.forward();
+      }
     });
   }
 
@@ -889,43 +897,29 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
   // --- Main Build Method ---
 
   @override
+  @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
 
     return Scaffold(
-      // Extend body behind AppBar for seamless gradient
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-
-        backgroundColor: Colors.transparent, // Transparent AppBar
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white70),
-          onPressed: () => _navigateToHome(context), // Go home on back press
+          onPressed: () => _navigateToHome(context),
         ),
         actions: [
-          // Optional: Add share button directly to AppBar if preferred
-          /*
-            IconButton(
-              icon: const Icon(Icons.share_outlined, color: Colors.white70),
-              tooltip: loc.share,
-              onPressed: () {
-                final state = context.read<TarotBloc>().state;
-                if (state is FalYorumuLoaded) {
-                  _shareReading(state.yorum);
-                }
-              },
-            ),
-            */
+          // İsteğe bağlı paylaş butonu
         ],
       ),
       body: Container(
-        // Main background gradient
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.deepPurple[900]!, Colors.black], // Consistent background
+            colors: [Colors.deepPurple[900]!, Colors.black],
             stops: const [0.0, 0.8],
           ),
         ),
@@ -938,17 +932,15 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
                   backgroundColor: Colors.redAccent,
                   action: SnackBarAction(
                     label: loc.tryAgain,
-                    onPressed: () => _navigateToHome(context), // Go home on error action
+                    onPressed: () => _navigateToHome(context),
                   ),
                 ),
               );
-              _fadeController.forward(); // Ensure fade-in completes on error
+              _fadeController.forward();
             } else if (state is FalYorumuLoaded) {
-              // Update page data when state changes
               _updatePages(state);
-              _fadeController.forward(); // Start fade-in animation
+              _fadeController.forward();
             } else if (state is! TarotLoading) {
-              // If it's not Loading or FalYorumuLoaded, still fade in
               _fadeController.forward();
             }
           },
@@ -959,7 +951,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
               content = Center(
                 child: Lottie.asset(
                   'assets/animations/tarot_loading.json',
-                  width: 180, // Slightly smaller loading animation
+                  width: 180,
                   height: 180,
                   frameRate: FrameRate(60),
                 ),
@@ -967,7 +959,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
             } else if (state is FalYorumuLoaded) {
               final totalPages = _getTotalPageCount();
               if (totalPages == 0) {
-                // Handle case where interpretation/spread might be empty
                 content = Center(
                   child: Text(
                     loc!.noReadingData,
@@ -980,8 +971,19 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
                   children: [
                     PageView.builder(
                       controller: _pageController,
-                      physics: const BouncingScrollPhysics(), // Nice scroll physics
+                      physics: const BouncingScrollPhysics(),
                       itemCount: totalPages,
+                      // <<< DEĞİŞİKLİK BURADA BAŞLIYOR >>>
+                      onPageChanged: (int page) {
+                        // Sayfa değiştikçe state'i güncelle
+                        if (mounted) { // Widget'ın hala ekranda olduğundan emin ol
+                          setState(() {
+                            _currentPage = page;
+                          });
+                          HapticFeedback.lightImpact(); // Hafif titreşim
+                        }
+                      },
+                      // <<< DEĞİŞİKLİK BURADA BİTİYOR >>>
                       itemBuilder: (context, index) {
                         // Page 0: Drawn Cards Summary
                         if (_currentSpread != null && _currentSpread!.isNotEmpty && index == 0) {
@@ -1047,4 +1049,6 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
       ),
     );
   }
+
+
 }
