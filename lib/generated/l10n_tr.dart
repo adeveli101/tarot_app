@@ -997,7 +997,18 @@ class STr extends S {
   String get fullMoonResultingEnergy => 'Sonuç Enerjisi';
 
   @override
-  String get claim => 'Al!';
+  String get claim => 'Al';
+
+  @override
+  String dailyRewardClaimedMessage(String time) {
+    return 'Günlük ödül alındı! Sonraki ödüle: $time';
+  }
+
+  @override
+  String get dailyRewardNotificationTitle => 'Günlük Ödül Hazır!';
+
+  @override
+  String get dailyRewardNotificationBody => 'Mistik tokenlerin seni bekliyor. Gel ve ödülünü al!';
 
   @override
   String get claimDailyRewardTooltip => 'Günlük kredini al!';

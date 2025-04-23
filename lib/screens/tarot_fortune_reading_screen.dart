@@ -203,45 +203,76 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    final loc = S.of(context)!;
+    final loc = S.of(context)!; // Yerelleştirme için build başında al
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.black,
-      body: Stack(
+      backgroundColor: Colors.black, // Arka plan rengi
+      body: Stack( // Ana layout Stack
         children: [
-          // Ana İçerik Alanı
+          // Ana İçerik Alanı (BlocConsumer ile yönetilir)
           BlocConsumer<TarotBloc, TarotState>(
+            // BlocConsumer state değişikliklerini dinler ve UI'ı günceller
             listener: (context, state) {
-              if (state is CouponRedeemed) {
+              // --- Ödül Alındı Popup Gösterimi ---
+              // Not: Bu kısmın çalışması için BLoC'un DailyTokenClaimSuccess state'i yayınlaması gerekir.
+              if (state is DailyTokenClaimSuccess) { // Varsayımsal state kontrolü
+                // Bir sonraki ödül zamanı null değilse devam et
+                if (state.nextDailyTokenTime != null) {
+                  final remainingDuration = state.nextDailyTokenTime!.difference(DateTime.now());
+                  // Negatif süre kontrolü
+                  final displayDuration = remainingDuration.isNegative ? Duration.zero : remainingDuration;
+                  final formattedTime = formatTimeDuration(displayDuration); // Yardımcı fonksiyonu kullan
+
+                  // l10n dosyasında 'dailyRewardClaimedMessage' anahtarı ve {time} parametresi olmalı.
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(loc.dailyRewardClaimedMessage(formattedTime)), // Yerelleştirilmiş mesaj
+                      duration: const Duration(seconds: 3), // 3 saniye göster
+                      backgroundColor: Colors.green[700], // Başarı rengi
+                      behavior: SnackBarBehavior.floating, // Yukarıda göster
+                      margin: const EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 10.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                  );
+                }
+              }
+              // --- Diğer State'ler için Listener'lar (Kupon, Hata vb.) ---
+              else if (state is CouponRedeemed) {
                 ScaffoldMessenger.of(context).showSnackBar( SnackBar( content: Text(loc.couponRedeemed(state.message)), backgroundColor: Colors.green[700]),);
               } else if (state is CouponInvalid) {
                 ScaffoldMessenger.of(context).showSnackBar( SnackBar( content: Text(loc.couponInvalid(state.message)), backgroundColor: Colors.orange[800]),);
               } else if (state is TarotError) {
-                ScaffoldMessenger.of(context).showSnackBar( SnackBar( content: Text(loc.errorMessage(state.message)), backgroundColor: Colors.redAccent),);
+                // Siyah ekran sorununu çözerken hata mesajını geçici olarak yorumlayabilirsin
+                if (kDebugMode) {
+                  print("TarotError Listener: ${state.message}");
+                } // Konsola yazdır
+                // ScaffoldMessenger.of(context).showSnackBar( SnackBar( content: Text(loc.errorMessage(state.message)), backgroundColor: Colors.redAccent),);
               }
             },
             builder: (context, state) {
-              // Yükleme durumunda arka plan müziğini duraklat (isteğe bağlı)
-              // if (state is TarotLoading && _backgroundMusicPlayer.state == PlayerState.playing) {
-              //   _backgroundMusicPlayer.pause();
-              // } else if (state is! TarotLoading && _backgroundMusicPlayer.state == PlayerState.paused) {
-              //   _backgroundMusicPlayer.resume();
-              // }
-
+              // State'e göre ana içeriği veya yükleme göstergesini oluştur
               if (state is TarotLoading && state is! TarotInitial) {
+                // Yükleme durumunda yükleme widget'ını göster
                 return _buildLoadingWidget();
               }
+              // Diğer durumlarda ana içeriği göster
+              // (Siyah ekran sorunu çözüldüyse, burası artık çalışmalı)
               return _buildMainContent(context, state);
             },
           ),
-          // Üst Bar
+
+          // Üst Bar (Her zaman görünür, Stack'in üzerinde)
           _buildTopBar(context),
+
+
         ],
       ),
     );
   }
-
   // ===========================================================================
   // --- Yardımcı Widget'lar ---
   // ===========================================================================
@@ -668,21 +699,14 @@ class _DailyTokenCountdownTimerCompactState extends State<DailyTokenCountdownTim
     }
   }
 
-  String _formatDuration(Duration duration) {
-    if (duration.isNegative) return "00:00:00";
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final hours = twoDigits(duration.inHours);
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$hours:$minutes:$seconds";
-  }
+
 
   @override
   Widget build(BuildContext context) {
     if (_remainingTime <= Duration.zero) {
       return const SizedBox.shrink();
     }
-    final formattedTime = _formatDuration(_remainingTime);
+    final formattedTime = formatTimeDuration(_remainingTime); // Bununla değiştir.
 
     // <<< Tooltip Eklendi >>>
     return Tooltip(
@@ -713,4 +737,11 @@ class _DailyTokenCountdownTimerCompactState extends State<DailyTokenCountdownTim
     );
   }
 }
-//---------- Bitti: Günlük Token Geri Sayım Sayacı Widget'ı ----------
+String formatTimeDuration(Duration duration) {
+  if (duration.isNegative) return "00:00:00";
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+  final hours = twoDigits(duration.inHours);
+  final minutes = twoDigits(duration.inMinutes.remainder(60));
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
+  return "$hours:$minutes:$seconds";
+}

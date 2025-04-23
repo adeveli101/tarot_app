@@ -3,10 +3,12 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member, use_build_context_synchronously
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:intl/intl.dart';
 // shared_preferences artık doğrudan burada kullanılmıyor
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/data/tarot_event_state.dart';
@@ -29,9 +31,7 @@ class PaymentManager {
     '300_tokens': 300.0,
     '500_tokens': 500.0,
     '1000_tokens': 1000.0,
-    '2500_tokens': 2500.0,
-    // TODO: Premium abonelik ürün ID'sini buraya ekleyin (eğer varsa)
-    // 'premium_subscription': 0.0, // Premium için kredi değeri 0 olabilir
+    // 'premium_subscription': 0.0,
   };
 
   // --- Yerel Kupon Listesi ---
@@ -150,14 +150,14 @@ class PaymentManager {
             const SizedBox(width: 10),
             Text(
               loc!.confirmPurchase, // Yerelleştirilmiş başlık
-              style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold),
+              style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
             ),
           ],
         ),
         content: Text(
           // Yerelleştirilmiş içerik (ürün adı ve fiyatı ile)
           loc.purchaseConfirmation(product.title, product.price),
-          style: GoogleFonts.lato(color: Colors.white70, fontSize: 15), // İçerik fontu
+          style: GoogleFonts.cabin(color: Colors.white70, fontSize: 12), // İçerik fontu
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly, // Butonları hizala
         actions: [
@@ -440,7 +440,7 @@ class PaymentDialogState extends State<PaymentDialog> {
                 padding: const EdgeInsets.only(top: 8.0, left: 20, right: 20),
                 child: Text(
                   loc.insufficientCreditsMessage(widget.requiredTokens.toStringAsFixed(0)), // Yerelleştirme
-                  style: GoogleFonts.lato(color: Colors.orangeAccent[100], fontSize: 14), // Font ve renk
+                  style: GoogleFonts.cabin(color: Colors.orangeAccent[100], fontSize: 14), // Font ve renk
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -457,7 +457,7 @@ class PaymentDialogState extends State<PaymentDialog> {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Text(
                       _errorMessage!,
-                      style: GoogleFonts.lato(color: Colors.redAccent, fontSize: 15), // Hata fontu
+                      style: GoogleFonts.cabin(color: Colors.redAccent, fontSize: 15), // Hata fontu
                       textAlign: TextAlign.center,
                     ),
                   ))
@@ -467,7 +467,7 @@ class PaymentDialogState extends State<PaymentDialog> {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Text(
                       loc.noProductsAvailable, // Yerelleştirme
-                      style: GoogleFonts.lato(color: Colors.white70, fontSize: 15),
+                      style: GoogleFonts.cabin(color: Colors.white70, fontSize: 15),
                       textAlign: TextAlign.center,
                     ),
                   ))
@@ -561,32 +561,59 @@ class PaymentDialogState extends State<PaymentDialog> {
   }
 
   /// Tek bir satın alma seçeneği widget'ını oluşturur.
+  /// Hem para birimi sembolünü hem de kodunu gösterir.
   Widget _buildPurchaseOption(ProductDetails product) {
     final loc = S.of(context); // Yerelleştirme için
-    // Ürün ID'sinden kredi miktarını al
     final credits = widget.manager._creditValues[product.id] ?? 0.0;
+
+    // --- YENİ: Fiyatı MANUEL OLARAK formatla (Sayı + Sembol + Kod) ---
+    String formattedPrice;
+    try {
+      // 1. Adım: Sadece sayıyı Türkçe locale'e göre formatla (örn: 23,99)
+      final numberFormatter = NumberFormat.decimalPattern('tr_TR');
+      final double priceValue = product.rawPrice;
+      final String numberPart = numberFormatter.format(priceValue);
+
+      // 2. Adım: Para birimi sembolünü al (örn: "₺")
+      // ProductDetails'dan gelen sembolü kullan, yoksa boş bırak
+      final String symbolPart = product.currencySymbol.isNotEmpty
+          ? product.currencySymbol
+          : ''; // Sembol yoksa boş string
+
+      // 3. Adım: Para birimi kodunu al (örn: "TRY")
+      final String currencyCodePart = product.currencyCode;
+
+      // 4. Adım: Sayı, boşluk, sembol, boşluk, parantez içinde kodu birleştir
+      // Örnek format: "23,99 ₺ (TRY)"
+      // Eğer sembol yoksa sadece sayı ve kod gösterilir: "10.50 USD"
+      formattedPrice = '$numberPart ${symbolPart.isNotEmpty ? '$symbolPart ' : ''}($currencyCodePart)';
+      // formattedPrice = '$numberPart $symbolPart ($currencyCodePart)'; // Sembolün varlığını garanti ediyorsanız bu daha basit
+
+    } catch (e) {
+      // Hata durumunda orijinal fiyatı göster
+      if (kDebugMode) {
+        print("Fiyat MANUEL formatlama hatası (symbol+code): $e");
+      }
+      // Hata durumunda bile en azından orijinal fiyat string'ini göster
+      formattedPrice = product.price;
+    }
+    // --- MANUEL FORMATLAMA SONU ---
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TapAnimatedScale(
         onTap: () async {
-          // Satın alma işlemi
+          if (!mounted) return;
           final success = await widget.manager.buyProduct(product, context);
-          // Başarılı olursa (ve widget hala bağlıysa) dialogu kapat
-          // Not: Satın alma sonucu _handlePurchaseUpdates tarafından işlenecek.
-          // Bu nedenle burada dialogu hemen kapatmak yerine kullanıcıya bilgi vermek daha iyi olabilir.
           if (success && mounted) {
-            // Sadece işlemin başladığını belirtelim
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(content: Text(loc.purchaseProcessing)), // Yerelleştirme
-            // );
-            // Dialogun kapanması _handlePurchaseUpdates veya onPurchaseSuccess callback'ine bırakılabilir.
-            // Şimdilik burada kapatmıyoruz.
+            if (kDebugMode) { print("Satın alma işlemi başlatıldı: ${product.id}");}
+          } else if (!success && mounted) {
+            if (kDebugMode) { print("Satın alma işlemi başlatılamadı veya iptal edildi: ${product.id}"); }
           }
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), // İç boşluk
-          decoration: BoxDecoration( // Stil
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
                 Colors.purple.shade700.withOpacity(0.8),
@@ -595,34 +622,34 @@ class PaymentDialogState extends State<PaymentDialog> {
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
-            borderRadius: BorderRadius.circular(15), // Yuvarlak kenarlar
-            border: Border.all(color: Colors.purpleAccent.withOpacity(0.2)), // İnce çerçeve
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: Colors.purpleAccent.withOpacity(0.2)),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // İçerikleri iki yana yasla
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Ürün Adı veya Kredi Miktarı
-              Expanded( // Metnin taşmasını engelle
+              Expanded(
                 child: Text(
-                  // product.title, // Ürün başlığı daha açıklayıcı olabilir
-                  '$credits ${loc!.mysticalTokens}', // Veya sadece kredi miktarı
-                  style: GoogleFonts.lato( // Font
+                  // Loc nesnesinin null olmadığından emin olalım
+                  '${credits.toStringAsFixed(0)} ${loc?.mysticalTokens ?? 'Mystical Tokens'}',
+                  style: GoogleFonts.cabin(
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
-                  overflow: TextOverflow.ellipsis, // Taşarsa ...
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 10), // Arada boşluk
-              // Fiyat
+              const SizedBox(width: 10),
+              // Fiyat Gösterimi (Sayı + Sembol + Kod)
               Text(
-                product.price, // Ürün fiyatı
-                style: GoogleFonts.orbitron( // Fiyat için farklı font
-                  fontSize: 15,
-                  color: Colors.yellowAccent.shade100, // Vurgulu renk
+                formattedPrice, // Örn: "23,99 ₺ (TRY)"
+                style: GoogleFonts.cabin( // Veya daha okunabilir bir font? cabin deneyebilirsiniz.
+                  fontSize: 14, // Boyutu biraz ayarlayabiliriz
+                  color: Colors.yellowAccent.shade100,
                   fontWeight: FontWeight.bold,
                 ),
+                textAlign: TextAlign.right, // Sağa yasla
               ),
             ],
           ),
@@ -771,11 +798,11 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
                   ),
                   child: TextField(
                     controller: _couponController,
-                    style: GoogleFonts.lato(color: Colors.white, fontSize: 15), // Giriş metni stili
+                    style: GoogleFonts.cabin(color: Colors.white, fontSize: 15), // Giriş metni stili
                     textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
                       hintText: loc.couponHint, // İpucu metni
-                      hintStyle: GoogleFonts.lato(color: Colors.white54, fontSize: 15),
+                      hintStyle: GoogleFonts.cabin(color: Colors.white54, fontSize: 15),
                       border: InputBorder.none, // Çerçeveyi kaldır
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       counterText: "", // Karakter sayacını gizle
@@ -862,7 +889,7 @@ class CouponSheetState extends State<CouponSheet> with SingleTickerProviderState
                           Expanded( // Mesajın taşmasını engelle
                             child: Text(
                               _resultMessage ?? '', // Boş değilse mesajı göster
-                              style: GoogleFonts.lato( // Mesaj fontu
+                              style: GoogleFonts.cabin( // Mesaj fontu
                                 fontSize: 14,
                                 color: Colors.white.withOpacity(0.9),
                               ),

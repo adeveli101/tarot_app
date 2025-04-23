@@ -997,7 +997,18 @@ class SEn extends S {
   String get fullMoonResultingEnergy => 'Resulting Energy';
 
   @override
-  String get claim => 'Claim!';
+  String get claim => 'Claim';
+
+  @override
+  String dailyRewardClaimedMessage(String time) {
+    return 'Daily reward claimed! Next reward in $time';
+  }
+
+  @override
+  String get dailyRewardNotificationTitle => 'Daily Reward Ready!';
+
+  @override
+  String get dailyRewardNotificationBody => 'Your mystical tokens await. Come back to claim them!';
 
   @override
   String get claimDailyRewardTooltip => 'Claim your daily credits!';

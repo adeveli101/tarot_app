@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:tarot_fal/models/animations/tap_animations_scale.dart'; // Mevcut animasyonlu butonunuz
-import '../../screens/tarot_fortune_reading_screen.dart'; // Ana ekrana yönlendirme için
+import '../screens/tarot_fortune_reading_screen.dart'; // Ana ekrana yönlendirme için
 
 /// Kullanıcının uygulama dilini seçmesini sağlayan ekran.
 ///

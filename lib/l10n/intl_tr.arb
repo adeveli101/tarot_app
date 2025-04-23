@@ -518,7 +518,20 @@
     }
   },
 
-  "claim": "Al!",
+  "claim": "Al",
+  "dailyRewardClaimedMessage": "Günlük ödül alındı! Sonraki ödüle: {time}",
+  "@dailyRewardClaimedMessage": {
+    "description": "Günlük ödül alındıktan sonra gösterilen mesaj",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "10:30:15"
+      }
+    }
+  },
+
+  "dailyRewardNotificationTitle": "Günlük Ödül Hazır!",
+  "dailyRewardNotificationBody": "Mistik tokenlerin seni bekliyor. Gel ve ödülünü al!",
 
   "claimYourDailyTokens": "Günlük {count} Kredini Al!",
   "@claimYourDailyTokens": {

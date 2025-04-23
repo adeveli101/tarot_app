@@ -65,6 +65,8 @@ dependencies:
 
   flutter_native_splash: ^2.4.0
 
+  flutter_local_notifications: ^18.0.1
+  flutter_timezone: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -80,9 +82,10 @@ flutter:
     - assets/
     - assets/animations/
     - assets/audios/classic-atmospheric.mp3
-    - assets/audios/ritualistic.mp3
-    - assets/audios/ritualistic2.mp3
+    - assets/audios/flip_card.mp3
     - assets/audios/ritualistic3.mp3
+    - assets/audios/shuffle_cards.mp3
+    - assets/audios/transitional-swipe.mp3
     - assets/image_fx_a.jpg
     - assets/image_fx_c.jpg
     - assets/tarot_card_images/

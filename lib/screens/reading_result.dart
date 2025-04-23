@@ -223,7 +223,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
                           const SizedBox(height: 20),
 
                           // --- Details Sections ---
-                          // Using Lato for better readability of longer texts
+                          // Using cabin for better readability of longer texts
                           _buildDetailSection(S.of(context)!.arcana, card.arcana),
                           _buildDetailSection(S.of(context)!.suit, card.suit),
                           if (card.elemental != null && card.elemental!.isNotEmpty) _buildDetailSection("Element", card.elemental!),
@@ -343,7 +343,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
           const SizedBox(height: 10), // Increased space
           Text(
             content,
-            style: GoogleFonts.lato( // Content font (more readable)
+            style: GoogleFonts.cabin( // Content font (more readable)
               fontSize: 15, // Standard content size
               color: Colors.white.withOpacity(0.85), // High visibility
               height: 1.5, // Good line spacing
@@ -389,7 +389,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
           const SizedBox(height: 10),
           Text(
             loc.tapCardForDetails, // Instruction text
-            style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
+            style: GoogleFonts.cabin(fontSize: 14, color: Colors.white70),
           ),
           Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 30, thickness: 1),
           const SizedBox(height: 10),
@@ -464,7 +464,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
             /*
              Text(
                card.name,
-               style: GoogleFonts.lato(
+               style: GoogleFonts.cabin(
                  fontSize: 9,
                  color: Colors.white70,
                ),
@@ -582,8 +582,8 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
                   padding: const EdgeInsets.all(20),
                   child: RichText(
                     text: TextSpan(
-                      // Use Lato for better readability of interpretation text
-                      style: GoogleFonts.lato(
+                      // Use cabin for better readability of interpretation text
+                      style: GoogleFonts.cabin(
                         color: Colors.white.withOpacity(0.9),
                         fontSize: 16, // Readable text size
                         height: 1.6, // Good line spacing for reading
@@ -869,7 +869,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
             Flexible( // Allow text to wrap if needed
               child: Text(
                 label,
-                style: GoogleFonts.cinzel(
+                style: GoogleFonts.cabin(
                   fontSize: 13, // Consistent font size
                   color: Colors.white.withOpacity(0.9),
                   fontWeight: FontWeight.w600, // Bold action text

@@ -9,11 +9,13 @@ import 'package:flutter/foundation.dart'; // kDebugMode için
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tarot_fal/data/tarot_repository.dart';
-import 'package:tarot_fal/gemini_service.dart'; // GeminiService importunu kontrol edin
+import 'package:tarot_fal/services/gemini_service.dart'; // GeminiService importunu kontrol edin
 import 'package:tarot_fal/models/tarot_card.dart';
 import 'package:tarot_fal/data/user_data_manager.dart';
 // Güncellenmiş State/Event dosyasını import ediyoruz
 import 'package:tarot_fal/data/tarot_event_state.dart';
+
+import '../services/notification_service.dart';
 
 class TarotBloc extends Bloc<TarotEvent, TarotState> {
   final TarotRepository repository;
@@ -72,11 +74,16 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     on<DrawCareerPathSpread>(_onDrawCareerPathSpread);
     on<DrawFullMoonSpread>(_onDrawFullMoonSpread);
     on<DrawCategoryReading>(_onDrawCategoryReading);
+
+
+
   }
 
   // ===========================================================================
   // --- Kullanıcı Başlatma, Veri Yükleme ve Bonus/Günlük Token Durumu Belirleme ---
   // ===========================================================================
+
+
 
   Future<void> _initializeUserAndLoadData() async {
     try {
@@ -223,13 +230,11 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
   Future<void> _onClaimDailyToken(ClaimDailyToken event, Emitter<TarotState> emit) async {
     if (kDebugMode) { print("TarotBloc: ClaimDailyToken eventi alındı..."); }
 
-    // <<< 1. Yükleme öncesi state'i sakla >>>
     final stateBeforeLoading = state;
 
-    // Güvenlik Kontrolleri (stateBeforeLoading üzerinden)
+    // --- Güvenlik Kontrolleri ---
     if (!stateBeforeLoading.isDailyTokenAvailable) {
       if (kDebugMode) { print("TarotBloc: Token talep edilemez (state.isDailyTokenAvailable=false)."); }
-      // State zaten doğru olmalı, UI'ı düzeltmeye gerek yok genellikle.
       return;
     }
     final now = DateTime.now();
@@ -237,15 +242,14 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     final lastResetEpochDay = await _userDataManager.getLastReset();
     if (lastResetEpochDay >= todayEpochDay) {
       if (kDebugMode) { print("TarotBloc Hata: Token bugün zaten alınmış (double claim engellendi)."); }
-      // State'i düzelt
       emit(stateBeforeLoading.copyWith(isDailyTokenAvailable: false));
       return;
     }
 
-    // <<< 2. Yükleme State'ini Yayınla (stateBeforeLoading'den değerleri alarak) >>>
+    // --- Yükleme State'i ---
     emit(TarotLoading(
       userTokens: stateBeforeLoading.userTokens,
-      isDailyTokenAvailable: false, // Talep işlemi başladığı için false yap
+      isDailyTokenAvailable: false,
       nextDailyTokenTime: stateBeforeLoading.nextDailyTokenTime,
       lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
       userName: stateBeforeLoading.userName,
@@ -254,46 +258,56 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       userInfoCollected: stateBeforeLoading.userInfoCollected,
     ));
 
-    // İsteğe bağlı: Eklediğimiz gecikmeyi kaldırabiliriz.
-    // await Future.delayed(const Duration(milliseconds: 50));
-
     try {
-      // <<< 3. Token işlemleri (stateBeforeLoading'deki token ile hesapla) >>>
-      final currentTokens = stateBeforeLoading.userTokens; // Yükleme öncesi değeri kullan
+      // --- Token İşlemleri ---
+      final currentTokens = stateBeforeLoading.userTokens;
       final newTokens = currentTokens + dailyLoginTokens;
-
       await _userDataManager.saveTokens(newTokens);
       await _userDataManager.saveLastReset(todayEpochDay);
+      final nextClaimTime = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
 
-      final tomorrowLocal = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-      final nextClaimTime = tomorrowLocal;
-
-      // <<< 4. NİHAİ STATE'İ YAYINLA (Yeni instance oluşturarak) >>>
-      // Yükleme öncesi state tipine veya uygun bir genel state'e dön.
-      // Örneğin, TarotInitial kullanarak:
-      emit(TarotInitial( // VEYA stateBeforeLoading'un tipine göre uygun state
-        userTokens: newTokens,                // Yeni değer
-        isDailyTokenAvailable: false,         // Yeni değer
-        nextDailyTokenTime: nextClaimTime,    // Yeni değer
-        // Diğer alanları yükleme öncesi state'ten kopyala:
+      // --- Başarılı State'i Yayınla ---
+      final successState = DailyTokenClaimSuccess(
+        userTokens: newTokens,
+        nextDailyTokenTime: nextClaimTime,
         lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
         userName: stateBeforeLoading.userName,
         userAge: stateBeforeLoading.userAge,
         userGender: stateBeforeLoading.userGender,
         userInfoCollected: stateBeforeLoading.userInfoCollected,
-      ));
+      );
+      emit(successState);
 
       if (kDebugMode) {
         print("TarotBloc: Günlük token ($dailyLoginTokens) talep edildi. Yeni bakiye: $newTokens. Sonraki alınabilir: $nextClaimTime");
       }
 
+      // --- BİLDİRİMİ PLANLA ---
+      try {
+        // NotificationService'e zamanı ve yerelleştirme anahtarlarını gönder.
+        // Not: NotificationService.scheduleDailyRewardNotification metodunu
+        // String anahtarları kabul edecek şekilde güncellemen gerekebilir.
+        await NotificationService().scheduleDailyRewardNotification(
+          scheduledTime: nextClaimTime,
+          // S nesnesi yerine anahtarları gönder:
+          titleKey: 'dailyRewardNotificationTitle', // l10n dosyasındaki anahtar
+          bodyKey: 'dailyRewardNotificationBody',   // l10n dosyasındaki anahtar
+          // VEYA NotificationService içinde varsayılan metinleri kullan.
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          print("Bildirim planlama çağrısı sırasında hata (BLoC): $e");
+        }
+        // Bildirim hatası yüzünden işlemi durdurmaya gerek yok.
+      }
+
     } catch (e) {
       if (kDebugMode) { print("TarotBloc: Token talep edilirken/kaydedilirken hata: $e"); }
-      // Hata durumunda state'i emit et (stateBeforeLoading'den kopyala)
+      // Hata durumunda state'i emit et
       emit(TarotError(
         "Token alınırken bir hata oluştu: ${e.toString()}",
         userTokens: stateBeforeLoading.userTokens,
-        isDailyTokenAvailable: true, // Tekrar denenebilmesi için true yap
+        isDailyTokenAvailable: true,
         nextDailyTokenTime: stateBeforeLoading.nextDailyTokenTime,
         lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
         userName: stateBeforeLoading.userName,
@@ -302,8 +316,7 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         userInfoCollected: stateBeforeLoading.userInfoCollected,
       ));
     }
-  }
-  // ===========================================================================
+  }  // ===========================================================================
   // --- Kaynak Kontrolü ve Yönetimi (Mevcut, Geri Eklendi) ---
   // ===========================================================================
 

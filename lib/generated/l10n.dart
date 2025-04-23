@@ -1946,8 +1946,26 @@ abstract class S {
   /// No description provided for @claim.
   ///
   /// In en, this message translates to:
-  /// **'Claim!'**
+  /// **'Claim'**
   String get claim;
+
+  /// Message shown after claiming the daily reward
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reward claimed! Next reward in {time}'**
+  String dailyRewardClaimedMessage(String time);
+
+  /// No description provided for @dailyRewardNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Reward Ready!'**
+  String get dailyRewardNotificationTitle;
+
+  /// No description provided for @dailyRewardNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your mystical tokens await. Come back to claim them!'**
+  String get dailyRewardNotificationBody;
 
   /// Tooltip text shown when hovering over the daily claim button/icon
   ///

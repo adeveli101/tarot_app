@@ -5,7 +5,8 @@ class Assets {
   static const String animationsTarotLoading = 'assets/animations/tarot_loading.json';
   static const String animationsTarotShuffle = 'assets/animations/tarot_shuffle.json';
   static const String assetsAudiosClassicAtmospheric = 'assets/audios/classic-atmospheric.mp3';
-  static const String assetsAudiosRitualistic = 'assets/audios/ritualistic.mp3';
+  static const String assetsAudiosFlipCard = 'assets/audios/flip_card.mp3';
+  static const String assetsAudiosRitualistic3 = 'assets/audios/ritualistic3.mp3';
   static const String assetsImageFxA = 'assets/image_fx_a.jpg';
   static const String assetsImageFxC = 'assets/image_fx_c.jpg';
   static const String assetsTarotCardImagesCardBack = 'assets/tarot_card_images/card_back.png';
@@ -13,8 +14,9 @@ class Assets {
   static const String assetsTarotCardsEn = 'assets/tarot_cards_en.json';
   static const String assetsTarotCardsTr = 'assets/tarot_cards_tr.json';
   static const String audiosClassicAtmospheric = 'assets/audios/classic-atmospheric.mp3';
-  static const String audiosRitualistic = 'assets/audios/ritualistic.mp3';
-  static const String audiosRitualistic2 = 'assets/audios/ritualistic2.mp3';
+  static const String audiosFlipCard = 'assets/audios/flip_card.mp3';
+  static const String audiosRitualistic3 = 'assets/audios/ritualistic3.mp3';
+  static const String audiosShuffleCards = 'assets/audios/shuffle_cards.mp3';
   static const String tarotCardImagesC01 = 'assets/tarot_card_images/c01.jpg';
   static const String tarotCardImagesC02 = 'assets/tarot_card_images/c02.jpg';
   static const String tarotCardImagesC03 = 'assets/tarot_card_images/c03.jpg';

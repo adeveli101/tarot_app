@@ -78,8 +78,8 @@ class CategorySelectionSheet extends StatelessWidget {
           Container( padding: const EdgeInsets.all(10), decoration: BoxDecoration( color: Colors.purpleAccent.withOpacity(0.15), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: Colors.amber[300], size: 26),), const SizedBox(width: 16),
           Expanded( child: Column( crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text( title, style: GoogleFonts.cinzel( fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white,),), const SizedBox(height: 6),
-              Text( description, style: GoogleFonts.lato( fontSize: 13, color: Colors.white.withOpacity(0.7), height: 1.3), maxLines: 2, overflow: TextOverflow.ellipsis,),
+              Text( title, style: GoogleFonts.cabin( fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white,),), const SizedBox(height: 6),
+              Text( description, style: GoogleFonts.cabin( fontSize: 13, color: Colors.white.withOpacity(0.7), height: 1.3), maxLines: 2, overflow: TextOverflow.ellipsis,),
             ],),), const SizedBox(width: 10),
           Icon(Icons.arrow_forward_ios_rounded, color: Colors.white.withOpacity(0.5), size: 18)
         ],),),);

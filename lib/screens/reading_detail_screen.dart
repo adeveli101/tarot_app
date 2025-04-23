@@ -210,7 +210,7 @@ class _ReadingDetailScreenState extends State<ReadingDetailScreen> with TickerPr
                                 padding: const EdgeInsets.only(top: 10.0),
                                 child: Text(
                                   loadingError ?? S.of(dialogContext)!.errorLoadingCardDetails,
-                                  style: GoogleFonts.lato(color: Colors.orangeAccent),
+                                  style: GoogleFonts.cabin(color: Colors.orangeAccent),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -314,7 +314,7 @@ class _ReadingDetailScreenState extends State<ReadingDetailScreen> with TickerPr
           const SizedBox(height: 10),
           Text(
             content,
-            style: GoogleFonts.lato( fontSize: 15, color: Colors.white.withOpacity(0.85), height: 1.5, fontWeight: FontWeight.w400,),
+            style: GoogleFonts.cabin( fontSize: 15, color: Colors.white.withOpacity(0.85), height: 1.5, fontWeight: FontWeight.w400,),
             textAlign: TextAlign.left,
           ),
           Divider(color: Colors.purpleAccent.withOpacity(0.2), thickness: 1, height: 30),
@@ -592,7 +592,7 @@ class _ReadingDetailScreenState extends State<ReadingDetailScreen> with TickerPr
             child: RichText(
               text: TextSpan(
                 // Varsayılan stil (kalıtım yoluyla uygulanır)
-                style: GoogleFonts.lato( color: Colors.white.withOpacity(0.9), fontSize: 16, height: 1.6, fontWeight: FontWeight.w400,),
+                style: GoogleFonts.cabin( color: Colors.white.withOpacity(0.9), fontSize: 16, height: 1.6, fontWeight: FontWeight.w400,),
                 children: _formatText(content), // Formatlanmış metin parçaları
               ),
               textAlign: TextAlign.justify, // İki yana yaslı metin

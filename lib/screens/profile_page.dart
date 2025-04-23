@@ -72,7 +72,7 @@ class ProfilePage extends StatelessWidget {
         body: Center(
           child: Text(
             loc.errorMessage("User not logged in."), // TODO: Yerelleştir
-            style: GoogleFonts.lato(color: Colors.redAccent),
+            style: GoogleFonts.cabin(color: Colors.redAccent),
           ),
         ),
       );
@@ -103,7 +103,7 @@ class ProfilePage extends StatelessWidget {
                   child: Text(
                     // TODO: Yerelleştir (loc.errorLoadingReadings)
                     "Error loading readings.",
-                    style: GoogleFonts.lato(color: Colors.redAccent[100], fontSize: 16),
+                    style: GoogleFonts.cabin(color: Colors.redAccent[100], fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
                 );
@@ -230,11 +230,11 @@ class ProfilePage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              Text( formattedDate, style: GoogleFonts.lato( color: Colors.white.withOpacity(0.6), fontSize: 12,),),
+              Text( formattedDate, style: GoogleFonts.cabin( color: Colors.white.withOpacity(0.6), fontSize: 12,),),
               Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 20),
               Text(
                 yorum.length > 120 ? "${yorum.substring(0, 120)}..." : yorum,
-                style: GoogleFonts.lato( color: Colors.white.withOpacity(0.85), fontSize: 14, height: 1.4,),
+                style: GoogleFonts.cabin( color: Colors.white.withOpacity(0.85), fontSize: 14, height: 1.4,),
                 maxLines: 3, overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 12),
@@ -250,7 +250,7 @@ class ProfilePage extends StatelessWidget {
                     Text(
                       // TODO: Yerelleştir (loc.cardCount(cardCount))
                       "$cardCount Cards",
-                      style: GoogleFonts.lato( color: Colors.white.withOpacity(0.7), fontSize: 13, fontWeight: FontWeight.w500 ),
+                      style: GoogleFonts.cabin( color: Colors.white.withOpacity(0.7), fontSize: 13, fontWeight: FontWeight.w500 ),
                     ),
                   ],),
                   // --- HATA DÜZELTME: TapAnimatedScale doğru kullanıldı ---
@@ -316,7 +316,7 @@ class ProfilePage extends StatelessWidget {
           content: Text(
             // TODO: Yerelleştir (loc.confirmDeletionMessage)
               "Are you sure you want to delete this reading permanently?",
-              style: GoogleFonts.lato(color: Colors.white70)),
+              style: GoogleFonts.cabin(color: Colors.white70)),
           actions: <Widget>[
             TextButton(
               child: Text(loc.cancel, style: GoogleFonts.cinzel(color: Colors.white70)),

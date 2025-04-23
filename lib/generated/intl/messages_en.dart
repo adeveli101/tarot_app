@@ -53,57 +53,59 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m14(count) => "${count} credits added successfully!";
 
-  static String m15(error) => "Dream Interpretation reading error: \$${error}";
+  static String m15(time) => "Daily reward claimed! Next reward in ${time}";
 
-  static String m16(message) => "Error: ${message}";
+  static String m16(error) => "Dream Interpretation reading error: \$${error}";
 
-  static String m17(error) =>
+  static String m17(message) => "Error: ${message}";
+
+  static String m18(error) =>
       "An error occurred while performing a five-card path spread: ${error}";
 
-  static String m18(category, spreadType) =>
+  static String m19(category, spreadType) =>
       "This Tarot Reading - reading provides deep insight into ${category} using the ${spreadType} spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.";
 
-  static String m19(error) => "Full Moon Spread reading error: \$${error}";
+  static String m20(error) => "Full Moon Spread reading error: \$${error}";
 
-  static String m20(error) => "Horseshoe Spread reading error: \$${error}";
+  static String m21(error) => "Horseshoe Spread reading error: \$${error}";
 
-  static String m21(required) =>
+  static String m22(required) =>
       "You need ${required} credits to continue. Purchase more credits below.";
 
-  static String m22(error) => "Mind-Body-Spirit reading error: \$${error}";
+  static String m23(error) => "Mind-Body-Spirit reading error: \$${error}";
 
-  static String m23(hours) =>
+  static String m24(hours) =>
       "Your next free reading will be available in ${hours} hours.";
 
-  static String m24(time) => "Next daily reward available in ${time}";
-
-  static String m25(error) =>
-      "An error occurred while performing a past-present-future spread: ${error}";
+  static String m25(time) => "Next daily reward available in ${time}";
 
   static String m26(error) =>
+      "An error occurred while performing a past-present-future spread: ${error}";
+
+  static String m27(error) =>
       "An error occurred while performing a problem-solution spread: ${error}";
 
-  static String m27(title, price) =>
+  static String m28(title, price) =>
       "Do you want to buy ${title} for ${price}?";
 
-  static String m28(error) => "Purchase failed: ${error}";
+  static String m29(error) => "Purchase failed: ${error}";
 
-  static String m29(error) =>
+  static String m30(error) =>
       "An error occurred while performing a relationship spread: ${error}";
 
-  static String m30(spreadType, dateStr) =>
+  static String m31(spreadType, dateStr) =>
       "${spreadType} Reading - ${dateStr}";
 
-  static String m31(error) =>
+  static String m32(error) =>
       "An error occurred while performing a single card reading: ${error}";
 
-  static String m32(category, spreadType) =>
+  static String m33(category, spreadType) =>
       "This reading provides personal and deep insights into ${category} using the ${spreadType} spread. Prepare to dive into the depths of your soul and uncover the unique messages of the cards!";
 
-  static String m33(category) =>
+  static String m34(category) =>
       "The combination of these cards marks a significant turning point in your ${category} journey. The unified energy of the cards reveals messages from the depths of your soul.";
 
-  static String m34(error) =>
+  static String m35(error) =>
       "An error occurred while performing a yearly spread: ${error}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -270,7 +272,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chooseTopic": MessageLookupByLibrary.simpleMessage(
       "Choose the topic you want to explore",
     ),
-    "claim": MessageLookupByLibrary.simpleMessage("Claim!"),
+    "claim": MessageLookupByLibrary.simpleMessage("Claim"),
     "claimDailyRewardTooltip": MessageLookupByLibrary.simpleMessage(
       "Claim your daily credits!",
     ),
@@ -305,8 +307,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "dailyLimitReached": MessageLookupByLibrary.simpleMessage(
       "You have reached your daily free reading limit.",
     ),
+    "dailyRewardClaimedMessage": m15,
     "dailyRewardInfo": MessageLookupByLibrary.simpleMessage(
       "This timer shows when your next free daily credits will be available.",
+    ),
+    "dailyRewardNotificationBody": MessageLookupByLibrary.simpleMessage(
+      "Your mystical tokens await. Come back to claim them!",
+    ),
+    "dailyRewardNotificationTitle": MessageLookupByLibrary.simpleMessage(
+      "Daily Reward Ready!",
     ),
     "dateLabel": MessageLookupByLibrary.simpleMessage("Date:"),
     "deck_empty": MessageLookupByLibrary.simpleMessage("Card deck is empty"),
@@ -335,7 +344,7 @@ class MessageLookup extends MessageLookupByLibrary {
         MessageLookupByLibrary.simpleMessage(
           "Decode the messages in your dreams with a spiritual perspective.",
         ),
-    "dreamInterpretationError": m15,
+    "dreamInterpretationError": m16,
     "dreamInterpretationFuture": MessageLookupByLibrary.simpleMessage(
       "Dream - Future Guidance",
     ),
@@ -354,7 +363,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "errorLoadingReadings": MessageLookupByLibrary.simpleMessage(
       "Error loading readings",
     ),
-    "errorMessage": m16,
+    "errorMessage": m17,
     "failedToLoadProducts": MessageLookupByLibrary.simpleMessage(
       "Failed to load products.",
     ),
@@ -368,10 +377,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "fiveCardPathOutcome": MessageLookupByLibrary.simpleMessage("Outcome"),
     "fiveCardPathPast": MessageLookupByLibrary.simpleMessage("Past"),
     "fiveCardPathPresent": MessageLookupByLibrary.simpleMessage("Present"),
-    "fiveCardPathReadingError": m17,
+    "fiveCardPathReadingError": m18,
     "flipAllCards": MessageLookupByLibrary.simpleMessage("Flip All Cards"),
     "forText": MessageLookupByLibrary.simpleMessage("for"),
-    "fortuneInsight": m18,
+    "fortuneInsight": m19,
     "fortuneTelling": MessageLookupByLibrary.simpleMessage("Fortune Telling:"),
     "fullMoonAction": MessageLookupByLibrary.simpleMessage(
       "Action / Integration",
@@ -408,7 +417,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "fullMoonSpreadDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
       "Gain spiritual clarity with lunar energy.",
     ),
-    "fullMoonSpreadError": m19,
+    "fullMoonSpreadError": m20,
     "futureSuggestions": MessageLookupByLibrary.simpleMessage(
       "For your near future, consider these suggestions: [NEAR_FUTURE_SUGGESTIONS]",
     ),
@@ -446,7 +455,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "horseshoeSpreadDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Gain a broad perspective on your finances.",
     ),
-    "horseshoeSpreadError": m20,
+    "horseshoeSpreadError": m21,
     "horseshoeStrengths": MessageLookupByLibrary.simpleMessage("Strengths"),
     "horseshoeUserAttitude": MessageLookupByLibrary.simpleMessage(
       "Your Attitude",
@@ -471,7 +480,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "insufficientCreditsAndLimit": MessageLookupByLibrary.simpleMessage(
       "You have reached your daily free reading limit and don\'t have enough credits.",
     ),
-    "insufficientCreditsMessage": m21,
+    "insufficientCreditsMessage": m22,
     "interpretation": MessageLookupByLibrary.simpleMessage("Interpretation"),
     "interpretationSection": MessageLookupByLibrary.simpleMessage(
       "Interpretation Section",
@@ -510,7 +519,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "mindBodySpiritDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
       "Harmonize your inner self with mind, body, and spirit.",
     ),
-    "mindBodySpiritError": m22,
+    "mindBodySpiritError": m23,
     "mindBodySpiritMind": MessageLookupByLibrary.simpleMessage("Mind"),
     "mindBodySpiritSpirit": MessageLookupByLibrary.simpleMessage("Spirit"),
     "mindSpirit": MessageLookupByLibrary.simpleMessage("Mind-Spirit"),
@@ -524,9 +533,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Mystical Interpretation",
     ),
     "mysticalTokens": MessageLookupByLibrary.simpleMessage("Mystical Tokens"),
-    "nextFreeReadingInfo": m23,
+    "nextFreeReadingInfo": m24,
     "nextReward": MessageLookupByLibrary.simpleMessage("Next:"),
-    "nextRewardTooltip": m24,
+    "nextRewardTooltip": m25,
     "noCardsInSpread": MessageLookupByLibrary.simpleMessage(
       "No cards found in this spread.",
     ),
@@ -560,7 +569,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "pastPresentFutureDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Explore your financial past, present, and future.",
     ),
-    "pastPresentFutureReadingError": m25,
+    "pastPresentFutureReadingError": m26,
     "paymentSuccessful": MessageLookupByLibrary.simpleMessage("Ödeme Başarılı"),
     "pleaseWait": MessageLookupByLibrary.simpleMessage("Please wait."),
     "pointsToWatch": MessageLookupByLibrary.simpleMessage(
@@ -591,14 +600,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "problemSolutionDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Get guidance to address financial challenges.",
     ),
-    "problemSolutionReadingError": m26,
+    "problemSolutionReadingError": m27,
     "profile": MessageLookupByLibrary.simpleMessage("Profile"),
     "promptEmptyError": MessageLookupByLibrary.simpleMessage(
       "Please enter a prompt.",
     ),
-    "purchaseConfirmation": m27,
+    "purchaseConfirmation": m28,
     "purchaseCredits": MessageLookupByLibrary.simpleMessage("Purchase Credits"),
-    "purchaseFailed": m28,
+    "purchaseFailed": m29,
     "purchasePending": MessageLookupByLibrary.simpleMessage(
       "Purchase pending...",
     ),
@@ -625,7 +634,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "relationshipSpreadDescription": MessageLookupByLibrary.simpleMessage(
       "Detailed analysis of your relationship",
     ),
-    "relationshipSpreadReadingError": m29,
+    "relationshipSpreadReadingError": m30,
     "relationshipStrengths": MessageLookupByLibrary.simpleMessage("Strengths"),
     "reshuffleCards": MessageLookupByLibrary.simpleMessage("Reshuffle Cards"),
     "returnToHome": MessageLookupByLibrary.simpleMessage("Return to Home"),
@@ -640,14 +649,14 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "shadowMeaning": MessageLookupByLibrary.simpleMessage("Shadow (Negative):"),
     "share": MessageLookupByLibrary.simpleMessage("Share"),
-    "shareTitle": m30,
+    "shareTitle": m31,
     "singleCard": MessageLookupByLibrary.simpleMessage(
       "Perform Single Card Reading",
     ),
     "singleCardDescription": MessageLookupByLibrary.simpleMessage(
       "Ideal for quick answers",
     ),
-    "singleCardReadingError": m31,
+    "singleCardReadingError": m32,
     "slideToDrawCards": MessageLookupByLibrary.simpleMessage(
       "Kart Çekmek İçin Kaydırın",
     ),
@@ -676,7 +685,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Tap card for details",
     ),
     "tarotFortune": MessageLookupByLibrary.simpleMessage("Astral Tarot"),
-    "tarotFortuneDescription": m32,
+    "tarotFortuneDescription": m33,
     "tarotFortuneGuide": MessageLookupByLibrary.simpleMessage(
       "Guide to Mystical Paths",
     ),
@@ -698,7 +707,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tryAgain": MessageLookupByLibrary.simpleMessage("Try Again"),
     "turkish": MessageLookupByLibrary.simpleMessage("Turkish"),
-    "unifiedDestinyMessage": m33,
+    "unifiedDestinyMessage": m34,
     "unifiedDestinyReflection": MessageLookupByLibrary.simpleMessage(
       "Unified Reflection of Destiny",
     ),
@@ -720,7 +729,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearlySpreadReading": MessageLookupByLibrary.simpleMessage(
       "Yearly Spread",
     ),
-    "yearlySpreadReadingError": m34,
+    "yearlySpreadReadingError": m35,
     "yearlySpreadSummary": MessageLookupByLibrary.simpleMessage(
       "Yearly Summary",
     ),

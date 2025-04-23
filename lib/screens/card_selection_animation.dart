@@ -35,9 +35,20 @@ class CardSelectionAnimationScreen extends StatefulWidget {
   CardSelectionAnimationScreenState createState() => CardSelectionAnimationScreenState();
 }
 
-class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen> with TickerProviderStateMixin {
+// --- WidgetsBindingObserver Eklendi ---
+class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScreen>
+    with TickerProviderStateMixin, WidgetsBindingObserver { // WidgetsBindingObserver eklendi
   final TarotRepository repository = TarotRepository();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  // --- İki Ayrı AudioPlayer Tanımlandı ---
+  final AudioPlayer _effectAudioPlayer = AudioPlayer(); // Ses efektleri için
+  final AudioPlayer _backgroundAudioPlayer = AudioPlayer(); // Arka plan müziği için
+
+  // --- Arka Plan Müziği Ayarları ---
+  final String _backgroundMusicPath = 'audios/ambient_background.mp3'; // ARKA PLAN MÜZİK DOSYANIZIN YOLU
+  static const double _backgroundVolumeNormal = 0.3; // Normal ses seviyesi
+  static const double _backgroundVolumeDucked = 0.05; // Efekt çalarkenki kısık ses seviyesi
+  Timer? _duckingTimer; // Sesi geri yükseltmek için zamanlayıcı
 
   List<AnimationController> _flipControllers = [];
   List<AnimationController> _zoomControllers = [];
@@ -62,6 +73,9 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     readingDate = DateTime.now();
     _requiredTokensForSpread = widget.spreadType.costInCredits;
 
+    // --- WidgetsBinding Observer Kaydı ---
+    WidgetsBinding.instance.addObserver(this);
+
     _flipControllers = List.generate(cardCount, (_) => AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -71,7 +85,8 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       vsync: this,
     ));
 
-    _loadAudioAssets();
+    // --- Sesleri Başlat ---
+    _loadAndPlayBackgroundMusic();
   }
 
   @override
@@ -81,23 +96,90 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     repository.setLocale(locale);
   }
 
+  // --- Uygulama Yaşam Döngüsü Metodu Eklendi ---
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!mounted) return; // Widget dispose edildiyse işlem yapma
+
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
+      // Uygulama arka plana alındığında veya kapandığında müziği duraklat
+      _backgroundAudioPlayer.pause();
+      if (kDebugMode) print("Background music paused due to app state: $state");
+    } else if (state == AppLifecycleState.resumed) {
+      // Uygulama ön plana geldiğinde müziği devam ettir
+      _backgroundAudioPlayer.resume();
+      if (kDebugMode) print("Background music resumed.");
+    }
+  }
+
+
   @override
   void dispose() {
+    // --- Observer Kaldırıldı ---
+    WidgetsBinding.instance.removeObserver(this);
+
     for (var controller in _flipControllers) { controller.dispose(); }
     for (var controller in _zoomControllers) { controller.dispose(); }
-    _audioPlayer.dispose();
+
+    // --- Zamanlayıcı İptal Edildi ve Player'lar Dispose Edildi ---
+    _duckingTimer?.cancel(); // Zamanlayıcıyı iptal et
+    _effectAudioPlayer.dispose();
+    _backgroundAudioPlayer.stop(); // Önce durdur
+    _backgroundAudioPlayer.dispose();
+
     super.dispose();
   }
 
-  Future<void> _loadAudioAssets() async {
-    try { if (kDebugMode) { print("Ses dosyaları için kaynaklar ayarlandı."); } } catch (e) { if (kDebugMode) { print("Ses dosyası kaynağı ayarlanırken hata: $e"); } }
+  // --- Arka Plan Müziğini Yükle ve Oynat ---
+  Future<void> _loadAndPlayBackgroundMusic() async {
+    try {
+      await _backgroundAudioPlayer.setReleaseMode(ReleaseMode.loop); // Döngü modunu ayarla
+      await _backgroundAudioPlayer.setSource(AssetSource(_backgroundMusicPath));
+      await _backgroundAudioPlayer.setVolume(_backgroundVolumeNormal); // Başlangıç ses seviyesi
+      await _backgroundAudioPlayer.resume(); // Müziği başlat/devam ettir
+      if (kDebugMode) print("Background music started: $_backgroundMusicPath");
+    } catch (e) {
+      if (kDebugMode) { print("Arka plan müziği yüklenirken/çalınırken hata: $e"); }
+    }
   }
 
-  Future<void> _playSound(String assetPath) async {
-    try { await _audioPlayer.play(AssetSource(assetPath)); } catch (e) { if (kDebugMode) { print("Ses çalınırken hata ($assetPath): $e"); } }
+
+  // --- _playSound Fonksiyonu Ducking İçin Güncellendi ---
+  Future<void> _playSound(String assetPath, {double volume = 1.0}) async {
+    try {
+      // 1. Arka plan müziğini kıs
+      await _backgroundAudioPlayer.setVolume(_backgroundVolumeDucked);
+      if (kDebugMode) print("Background music ducked.");
+
+      // 2. Mevcut sesi geri yükseltme zamanlayıcısını iptal et (varsa)
+      _duckingTimer?.cancel();
+
+      // 3. Ses efektini çal
+      await _effectAudioPlayer.play(AssetSource(assetPath), volume: volume);
+      if (kDebugMode) print("Playing effect: $assetPath");
+
+      // 4. Belirli bir süre sonra arka plan müziğini eski haline getir
+      // (Efektin uzunluğuna göre ayarlanabilir)
+      _duckingTimer = Timer(const Duration(milliseconds: 1500), () { // 1.5 saniye sonra
+        if(mounted) { // Hala ekrandaysa sesi yükselt
+          _backgroundAudioPlayer.setVolume(_backgroundVolumeNormal).then((_) {
+            if (kDebugMode) print("Background music volume restored.");
+          }).catchError((e){
+            if (kDebugMode) print("Error restoring background music volume: $e");
+          });
+        }
+      });
+
+    } catch (e) {
+      if (kDebugMode) { print("Ses çalınırken veya ducking sırasında hata ($assetPath): $e"); }
+      // Hata durumunda bile sesi geri yükseltmeyi dene (isteğe bağlı)
+      try { await _backgroundAudioPlayer.setVolume(_backgroundVolumeNormal); } catch (_) {}
+    }
   }
+
 
   void _performInitialResourceCheck(TarotState state) {
+    // ... (Bu fonksiyon aynı kalır)
     if (_hasCheckedInitialResources) return;
 
     final currentTokens = state.userTokens;
@@ -134,6 +216,36 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   Future _reshuffleCards() async {
     if (!mounted || isLoading || !_hasSufficientInitialResources) return;
 
+    // --- Mevcut Kapatma Animasyonu ---
+    final revealedIndices = <int>[];
+    for (int i = 0; i < selectedCards.length; i++) {
+      if (revealed.length > i && revealed[i]) {
+        revealedIndices.add(i);
+      }
+    }
+
+    if (revealedIndices.isNotEmpty) {
+      setState(() => isFlippingAll = true);
+      // Kapatma sesi için _playSound kullanılıyor (ducking otomatik)
+      await _playSound('audios/shuffle_cards.mp3'); // Veya farklı bir kapatma sesi
+      HapticFeedback.mediumImpact();
+
+      List<Future<void>> flipFutures = [];
+      for (int index in revealedIndices.reversed) {
+        if (mounted) {
+          setState(() => revealed[index] = false);
+          flipFutures.add(_flipControllers[index].reverse(from: _flipControllers[index].value));
+          await Future.delayed(const Duration(milliseconds: 50));
+        } else { break; }
+      }
+      await Future.wait(flipFutures);
+      if (!mounted) return;
+      setState(() => isFlippingAll = false);
+      await Future.delayed(const Duration(milliseconds: 150));
+    }
+    // --- Kapatma Animasyonu Sonu ---
+
+
     setState(() => isLoading = true);
     try {
       if(repository.getAllCards().isEmpty) {
@@ -144,13 +256,16 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
         setState(() {
           selectedCards = repository.drawRandomCards(cardCount);
           revealed = List.filled(cardCount, false);
+          for (var controller in _flipControllers) { controller.reset(); }
           cardsDrawn = true;
           isLoading = false;
         });
 
-        _playSound('audio/shuffle.mp3');
+        // Yeniden karıştırma sesi için _playSound kullan (ducking otomatik)
+        await _playSound('audios/shuffle_cards.mp3');
         HapticFeedback.mediumImpact();
 
+        // Zoom animasyonları
         for (int i = 0; i < cardCount; i++) {
           if (mounted) {
             _zoomControllers[i].reset();
@@ -158,13 +273,10 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
             if (mounted) {
               _zoomControllers[i].forward(from: 0.0);
             }
-          } else {
-            break;
-          }
+          } else { break; }
         }
         await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) HapticFeedback.heavyImpact();
-
       }
     } catch (e) {
       if (kDebugMode) { print("Kart çekme hatası: $e"); }
@@ -177,10 +289,12 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     }
   }
 
+
   void _flipCard(int index) {
+    // ... (Bu fonksiyondaki _playSound çağrısı otomatik ducking yapar)
     if (!mounted || isFlippingAll || !cardsDrawn || index >= revealed.length || !_hasSufficientInitialResources) return;
 
-    _playSound('audio/card_flip.mp3');
+    _playSound('audios/flip_card.mp3'); // Ducking otomatik
     HapticFeedback.lightImpact();
 
     final controller = _flipControllers[index];
@@ -199,15 +313,17 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Future<void> _flipAllCards() async {
+    // ... (Bu fonksiyondaki _playSound çağrısı otomatik ducking yapar)
     if (!mounted || isFlippingAll || !cardsDrawn || !_hasSufficientInitialResources) return;
 
     setState(() => isFlippingAll = true);
-    _playSound('audio/card_flip.mp3');
+    _playSound('audios/shuffle_cards.mp3'); // Ducking otomatik
     HapticFeedback.heavyImpact();
 
     bool anyRevealed = revealed.any((r) => r);
     bool flipToRevealed = !anyRevealed || revealed.contains(false);
 
+    // Animasyonlar... (aynı kalır)
     if (flipToRevealed) {
       for (int i = 0; i < cardCount; i++) {
         if (mounted && !revealed[i]) {
@@ -246,30 +362,71 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     if (!mounted) return;
 
     if (!cardsDrawn) {
+      // ... (SnackBar gösterimi aynı kalır)
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(loc.drawCards), backgroundColor: Colors.orangeAccent,)
       );
       return;
     }
 
+    // --- Otomatik Kart Çevirme Kısmı ---
+    final unrevealedIndices = <int>[];
+    for (int i = 0; i < cardCount; i++) {
+      // revealed listesinin geçerli bir index olup olmadığını kontrol et
+      if (revealed.length > i && !revealed[i]) {
+        unrevealedIndices.add(i);
+      } else if (revealed.length <= i) {
+        // Eğer revealed listesi beklenenden kısaysa bir hata logla veya işlemi durdur
+        if (kDebugMode) print("Error: revealed list length (${revealed.length}) is less than card index ($i).");
+        // return; // Opsiyonel: Hata durumunda işlemi durdur
+      }
+    }
+
+    if (unrevealedIndices.isNotEmpty) {
+      setState(() => isFlippingAll = true);
+      // Toplu çevirme sesi için _playSound kullan (ducking otomatik)
+      await _playSound('audios/shuffle_cards.mp3');
+      HapticFeedback.mediumImpact();
+
+      List<Future<void>> flipFutures = [];
+      for (int index in unrevealedIndices) {
+        if (mounted && index < _flipControllers.length) { // Controller index kontrolü
+          setState(() => revealed[index] = true);
+          flipFutures.add(_flipControllers[index].forward(from: _flipControllers[index].value));
+          await Future.delayed(const Duration(milliseconds: 80));
+        } else {
+          // ignore: avoid_print
+          if(mounted && kDebugMode) print("Error: Invalid index ($index) for flip controllers.");
+          break;
+        }
+      }
+      await Future.wait(flipFutures);
+      if (!mounted) return;
+      setState(() => isFlippingAll = false);
+      await Future.delayed(const Duration(milliseconds: 200));
+    }
+    // --- Otomatik Kart Çevirme Sonu ---
+
+    // Kredi kontrolü ve navigasyon... (aynı kalır)
+    // Kredi kontrolü ve diğer işlemler (Mevcut kod devam ediyor)
     final bloc = context.read<TarotBloc>();
     final currentState = bloc.state;
     final cost = _requiredTokensForSpread;
     final double currentTokens = currentState.userTokens;
 
     bool sufficientNow = true;
-
     if (cost > 0 && currentTokens < cost) {
       sufficientNow = false;
     }
-
 
     if (!sufficientNow) {
       _showPaymentDialog(context, cost);
       return;
     }
 
+    // Olay gönderme ve navigasyon (Mevcut kod devam ediyor)
     TarotEvent eventToDispatch;
+    // ... (switch case bloğu burada devam ediyor) ...
     switch (widget.spreadType) {
       case SpreadType.singleCard: eventToDispatch = DrawSingleCard(); break;
       case SpreadType.pastPresentFuture: eventToDispatch = DrawPastPresentFuture(); break;
@@ -309,6 +466,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   void _showPaymentDialog(BuildContext context, double requiredTokens) {
+    // ... (Bu fonksiyon aynı kalır)
     PaymentManager.showPaymentDialog(
       context,
       requiredTokens: requiredTokens,
@@ -325,10 +483,11 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   void _showDetailedCardInfo(TarotCard card, int index) {
+    // ... (Bu fonksiyondaki _playSound çağrısı otomatik ducking yapar)
     if (!mounted || !cardsDrawn || index >= revealed.length || !_hasSufficientInitialResources) return;
 
     if (!revealed[index]) {
-      _playSound('audio/card_flip.mp3');
+      _playSound('audios/flip_card.mp3'); // Ducking otomatik
       HapticFeedback.lightImpact();
       setState(() => revealed[index] = true);
       _flipControllers[index].forward(from: 0.0).then((_) {
@@ -340,6 +499,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   void _openCardDetails(TarotCard card) {
+    // ... (Bu fonksiyon aynı kalır, içinde ses çalma yok)
     if (!(ModalRoute.of(context)?.isCurrent ?? false)) return;
 
     showGeneralDialog(
@@ -485,6 +645,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Widget _buildDetailSection(String title, String content) {
+    // ... (Bu fonksiyon aynı kalır)
     if (content.trim().isEmpty) return const SizedBox.shrink();
 
     return Padding(
@@ -504,7 +665,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
           const SizedBox(height: 10),
           Text(
             content,
-            style: GoogleFonts.lato(
+            style: GoogleFonts.cabin(
               fontSize: 15,
               color: Colors.white.withOpacity(0.85),
               height: 1.5,
@@ -519,6 +680,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Widget _buildActionButtons() {
+    // ... (Bu fonksiyon aynı kalır)
     final loc = S.of(context)!;
 
     return BlocBuilder<TarotBloc, TarotState>(
@@ -584,7 +746,6 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
-
   Widget _buildActionButton({
     required String label,
     required VoidCallback onPressed,
@@ -592,6 +753,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     required Color color,
     bool isEnabled = true,
   }) {
+    // ... (Bu fonksiyon aynı kalır)
     return Opacity(
       opacity: isEnabled ? 1.0 : 0.5,
       child: TapAnimatedScale(
@@ -638,6 +800,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   void _showHelpDialog(BuildContext context) {
+    // ... (Bu fonksiyon aynı kalır)
     final loc = S.of(context)!;
     showDialog(
       context: context,
@@ -686,6 +849,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Widget _buildInstructionRow(String title, String description, IconData icon) {
+    // ... (Bu fonksiyon aynı kalır)
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -704,7 +868,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: GoogleFonts.lato(color: Colors.white70, fontSize: 13, height: 1.3),
+                  style: GoogleFonts.cabin(color: Colors.white70, fontSize: 13, height: 1.3),
                 ),
               ],
             ),
@@ -714,8 +878,8 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
-
   Widget _buildCardWidget(int index, String positionLabel) {
+    // ... (Bu fonksiyon aynı kalır)
     if (!cardsDrawn || index < 0 || index >= selectedCards.length || index >= _flipControllers.length || index >= _zoomControllers.length) {
       return const SizedBox(width: 100, height: 150);
     }
@@ -788,6 +952,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Widget _buildCardFront(TarotCard card) {
+    // ... (Bu fonksiyon aynı kalır)
     const double cardWidth = 100;
     const double cardHeight = 150;
 
@@ -819,6 +984,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Widget _buildCardBack() {
+    // ... (Bu fonksiyon aynı kalır)
     const double cardWidth = 100;
     const double cardHeight = 150;
 
@@ -849,8 +1015,11 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
-
+  // --- Layout Fonksiyonları (_buildCardLayout, _buildCelticCrossLayout, vs.) ---
+  // Bu fonksiyonların içeriği aynı kalır, sadece içlerindeki _buildCardWidget
+  // çağrıları artık _playSound üzerinden ducking mekanizmasını tetikler.
   Widget _buildCardLayout(BuildContext context) {
+    // ... (İçerik aynı, sadece _reshuffleCards çağrısı güncellendi)
     final SpreadType currentSpreadType = widget.spreadType;
     final loc = S.of(context)!;
     final int cardCount = widget.spreadType.cardCount;
@@ -873,7 +1042,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
             ),
             const SizedBox(height: 30),
             _hasSufficientInitialResources
-                ? SlideToDrawButton(onDrawComplete: _reshuffleCards)
+                ? SlideToDrawButton(onDrawComplete: _reshuffleCards) // _reshuffleCards çağrısı burada
                 : Padding(
               padding: const EdgeInsets.all(20.0),
               child: Text(
@@ -887,10 +1056,12 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       );
     }
 
+    // buildSpreadLayoutWrapper ve diğer layout fonksiyonları aynı kalır...
     Widget buildSpreadLayoutWrapper(List<int> indices, List<String> positions) {
       if (indices.length != cardCount || positions.length != cardCount) {
         if (kDebugMode) {
-          print("Layout Hatası: indices (${indices.length}) veya positions (${positions.length}) uzunluğu cardCount ($cardCount) ile eşleşmiyor: ${widget.spreadType}");
+          print("Layout Hatası: indices (${indices.length}) veya positions "
+              "(${positions.length}) uzunluğu cardCount ($cardCount) ile eşleşmiyor: ${widget.spreadType}");
         }
         return Center(child: Text("Layout yapılandırma hatası.", style: TextStyle(color: Colors.red)));
       }
@@ -905,23 +1076,20 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
         case SpreadType.relationshipSpread:
           return _buildRelationshipSpreadLayout(indices, positions);
         default:
+        // Özel layout olmayanlar için Wrap kullanarak 3'lü sıra oluştur
           return Center(
-            child: SingleChildScrollView(
+            child: SingleChildScrollView( // Dikey scroll için
               padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 15),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 30),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 15,
-                    runSpacing: 30,
-                    children: List.generate(indices.length, (index) {
-                      return _buildCardWidget(indices[index], positions[index]);
-                    }),
-                  ),
-                ),
+              child: Wrap(
+                alignment: WrapAlignment.center, // Ortala
+                crossAxisAlignment: WrapCrossAlignment.center, // Dikeyde ortala
+                spacing: 15, // Kartlar arası yatay boşluk
+                runSpacing: 30, // Satırlar arası dikey boşluk
+                children: List.generate(indices.length, (index) {
+                  // Kart genişliği + spacing hesabı ile yaklaşık 3 kart sığacak şekilde ayarlanabilir.
+                  // Ancak Wrap bunu genellikle otomatik yapar.
+                  return _buildCardWidget(indices[index], positions[index]);
+                }),
               ),
             ),
           );
@@ -1051,8 +1219,8 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     }
   }
 
-
   Widget _buildCelticCrossLayout(List<int> indices, List<String> positions) {
+    // ... (Aynı kalır)
     if (indices.length < 10 || positions.length < 10) {
       return const Center(
           child: Text("Celtic Cross için yeterli kart/pozisyon yok (10 adet gerekli)",
@@ -1150,36 +1318,34 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Widget _buildFiveCardPathLayout(List<int> indices, List<String> positions) {
+    // ... (Aynı kalır)
     if (indices.length < 5 || positions.length < 5) {
-      return const Center(child: Text("Five Card Path için yeterli kart/pozisyon yok", style: TextStyle(color: Colors.red)));
+      // SpreadType.fiveCardPath 5 kart gerektirir, bu kontrol kalabilir.
+      // Eğer başka kart sayıları ile de bu layout kullanılırsa, kontrol güncellenebilir.
+      return const Center(child: Text("Five Card Path için yeterli kart/pozisyon yok (5 adet gerekli)", style: TextStyle(color: Colors.red)));
     }
 
-    const double cardWidth = 100;
-    const double cardSpacing = 20.0;
-
+    // --- GÜNCELLENMİŞ KISIM BAŞLANGICI ---
+    // Wrap widget'ı kullanarak kartları düzenle
     return Center(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-        child: IntrinsicWidth(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: List.generate(indices.length, (i) {
-              return Padding(
-                padding: EdgeInsets.only(left: i == 0 ? 0 : cardSpacing),
-                child: _buildCardWidget(indices[i], positions[i]),
-              );
-            }),
-          ),
+      child: SingleChildScrollView( // Dikeyde taşma olursa kaydırmak için
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 15),
+        child: Wrap(
+          alignment: WrapAlignment.center, // Kartları satır içinde ve genel olarak ortala
+          crossAxisAlignment: WrapCrossAlignment.center, // Dikeyde de ortalamayı dene
+          spacing: 15.0, // Kartlar arasındaki yatay boşluk
+          runSpacing: 30.0, // Satırlar arasındaki dikey boşluk
+          children: List.generate(indices.length, (i) {
+            // Her bir kart için _buildCardWidget'ı çağır
+            return _buildCardWidget(indices[i], positions[i]);
+          }),
         ),
       ),
     );
   }
 
-
   Widget _buildRelationshipSpreadLayout(List<int> indices, List<String> positions) {
+    // ... (Aynı kalır)
     if (indices.length < 7 || positions.length < 7) {
       return const Center(child: Text("Relationship Spread için yeterli kart/pozisyon yok", style: TextStyle(color: Colors.red)));
     }
@@ -1237,8 +1403,8 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
-
   Widget _buildYearlySpreadLayout(List<int> indices, List<String> positions) {
+    // ... (Aynı kalır)
     if (indices.length < 12 || positions.length < indices.length) {
       return Center(child: Text("Yıllık Açılım için yeterli kart/pozisyon yok (${indices.length})", style: TextStyle(color: Colors.red)));
     }
@@ -1302,12 +1468,14 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     final loc = S.of(context);
 
     return BlocListener<TarotBloc, TarotState>(
       listener: (context, state) {
+        // ... (Listener aynı kalır)
         if (state is TarotError) {
           ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent)
@@ -1317,6 +1485,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
       },
       child: Scaffold(
         appBar: AppBar(
+          // ... (AppBar aynı kalır)
           title: Text(
               widget.spreadType.name.replaceAllMapped(
                   RegExp(r'(?<=[a-z])(?=[A-Z])'), (match) => ' ').capitalizeFirstofEach(),
@@ -1346,6 +1515,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
         ),
         body: BlocBuilder<TarotBloc, TarotState>(
             builder: (context, state) {
+              // ... (Resource check aynı kalır)
               if (!_hasCheckedInitialResources && mounted) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (mounted) {
@@ -1353,7 +1523,7 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
                   }
                 });
               }
-
+              // ... (Body yapısı aynı kalır)
               return Stack(
                 children: [
                   Container(
@@ -1417,8 +1587,4 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     );
   }
 }
-
-
-
-
 

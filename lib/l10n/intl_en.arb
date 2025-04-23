@@ -507,7 +507,20 @@
   "fullMoonResultingEnergy": "Resulting Energy",
 
 
-  "claim": "Claim!",
+  "claim": "Claim",
+  "dailyRewardClaimedMessage": "Daily reward claimed! Next reward in {time}",
+  "@dailyRewardClaimedMessage": {
+    "description": "Message shown after claiming the daily reward",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "10:30:15"
+      }
+    }
+  },
+
+  "dailyRewardNotificationTitle": "Daily Reward Ready!",
+  "dailyRewardNotificationBody": "Your mystical tokens await. Come back to claim them!",
 
   "claimDailyRewardTooltip": "Claim your daily credits!",
   "@claimDailyRewardTooltip": {

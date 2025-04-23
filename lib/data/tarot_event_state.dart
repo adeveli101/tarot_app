@@ -651,6 +651,47 @@ class InsufficientResources extends TarotState {
 }
 
 
+class DailyTokenClaimSuccess extends TarotState {
+  const DailyTokenClaimSuccess({
+    required super.userTokens,
+    super.lastSelectedCategory,
+    super.userName,
+    super.userAge,
+    super.userGender,
+    super.userInfoCollected,
+    // Günlük token alındıktan sonra artık alınamaz (false)
+    super.isDailyTokenAvailable = false,
+    // Bir sonraki alınabilir zaman bu state için gereklidir
+    required super.nextDailyTokenTime,
+  });
+
+  // Tutarlılık için copyWith ekleyelim (zorunlu olmasa da)
+  @override
+  DailyTokenClaimSuccess copyWith({
+    double? userTokens,
+    String? lastSelectedCategory,
+    String? userName,
+    int? userAge,
+    String? userGender,
+    bool? userInfoCollected,
+    bool? isDailyTokenAvailable, // Genellikle bu state için false'tur
+    DateTime? nextDailyTokenTime,
+  }) {
+    return DailyTokenClaimSuccess(
+      userTokens: userTokens ?? this.userTokens,
+      lastSelectedCategory: lastSelectedCategory ?? this.lastSelectedCategory,
+      userName: userName ?? this.userName,
+      userAge: userAge ?? this.userAge,
+      userGender: userGender ?? this.userGender,
+      userInfoCollected: userInfoCollected ?? this.userInfoCollected,
+      isDailyTokenAvailable: isDailyTokenAvailable ?? this.isDailyTokenAvailable,
+      // nextDailyTokenTime bu state için önemlidir
+      nextDailyTokenTime: nextDailyTokenTime ?? this.nextDailyTokenTime,
+    );
+  }
+}
+
+
 // ================== SPREAD TYPE ENUM ==================
 // Enum tanımı aynı kalabilir. fullMoonSpread kart sayısı kontrol edildi.
 enum SpreadType {

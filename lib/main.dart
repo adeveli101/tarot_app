@@ -1,3 +1,6 @@
+// lib/main.dart
+
+// --- Gerekli Import'lar ---
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,31 +16,42 @@ import 'package:tarot_fal/screens/tarot_fortune_reading_screen.dart';
 import 'data/payment_manager.dart';
 import 'data/tarot_event_state.dart';
 import 'firebase_options.dart';
-import 'gemini_service.dart';
-import 'models/animations/language_selections_screen.dart';
-import 'models/animations/splash_screen.dart';
+import 'services/gemini_service.dart';
+import 'services/language_selections_screen.dart';
+import 'services/splash_screen.dart';
 import 'models/animations/tap_animations_scale.dart';
+// --- BİLDİRİM SERVİSİ İÇİN IMPORT EKLE ---
 
+import 'services/notification_service.dart'; // Servis dosyanın yolu doğruysa
+
+// --- Global Navigator Key (Mevcut) ---
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
+  // --- Mevcut Başlatma Kodları ---
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await dotenv.load(fileName: ".env");
 
+  // --- BİLDİRİM SERVİSİNİ BAŞLAT ---
+  // Diğer başlatmalardan sonra veya uygun bir yerde çağır
+  await NotificationService().initialize();
+  // --- -------------------------- ---
+
+  // --- Mevcut Kodun Devamı ---
   final prefs = await SharedPreferences.getInstance();
   final String? savedLanguage = prefs.getString('language');
 
   final tarotBloc = TarotBloc(
     repository: TarotRepository(),
     geminiService: GeminiService(),
-    locale: savedLanguage ?? 'tr',
+    locale: savedLanguage ?? 'tr', // Varsayılan dil 'tr' olarak ayarlı
   );
 
   final paymentManager = PaymentManager();
-  paymentManager.initialize();
+  paymentManager.initialize(); // PaymentManager'ı başlat
 
   runApp(MyApp(
     initialLocale: savedLanguage != null ? Locale(savedLanguage) : const Locale('tr'),
@@ -46,6 +60,7 @@ Future<void> main() async {
   ));
 }
 
+// --- MyApp ve MyAppState Sınıfları (Değişiklik Yok) ---
 class MyApp extends StatefulWidget {
   final Locale? initialLocale;
   final TarotBloc tarotBloc;
@@ -71,6 +86,7 @@ class MyAppState extends State<MyApp> {
     super.initState();
     _locale = widget.initialLocale ?? const Locale('tr');
     _tarotBloc = widget.tarotBloc;
+    // İlk kart yükleme işlemi burada kalabilir
     _tarotBloc.add(LoadTarotCards());
   }
 
@@ -78,12 +94,14 @@ class MyAppState extends State<MyApp> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', newLocale.languageCode);
 
+    // Eski Bloc'u kapatıp yenisini oluşturmak yerine, dil değişikliği için
+    // belki Bloc'a bir event göndermek daha iyi olabilir, ama mevcut yapı bu şekilde:
     await _tarotBloc.close();
     _tarotBloc = TarotBloc(
       repository: TarotRepository(),
       geminiService: GeminiService(),
       locale: newLocale.languageCode,
-    )..add(LoadTarotCards());
+    )..add(LoadTarotCards()); // Yeni Bloc ile kartları yükle
 
     await Future.delayed(const Duration(milliseconds: 500));
 
@@ -91,13 +109,16 @@ class MyAppState extends State<MyApp> {
       setState(() {
         _locale = newLocale;
       });
+      // Ana ekrana geri dönmek yerine belki sadece state'i güncellemek yeterli olur?
+      // Şimdilik mevcut mantığı koruyoruz:
       _navigateToHome(context);
     }
   }
 
   Future<bool> _checkLanguageSelection() async {
     final prefs = await SharedPreferences.getInstance();
-    await Future.delayed(const Duration(seconds: 3)); // Splash ekranı en az 3 saniye görünecek
+    // Splash ekranı süresi burada yönetiliyor
+    await Future.delayed(const Duration(seconds: 3));
     return prefs.getString('language') != null;
   }
 
@@ -135,7 +156,7 @@ class MyAppState extends State<MyApp> {
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 1000), // Daha yavaş geçiş
+        transitionDuration: const Duration(milliseconds: 1000),
       ),
     );
   }
@@ -149,10 +170,11 @@ class MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    // BlocProvider burada değeri aktarıyor
     return BlocProvider.value(
       value: _tarotBloc,
       child: MaterialApp(
-        navigatorKey: navigatorKey,
+        navigatorKey: navigatorKey, // Global key atandı
         title: 'Astral Tarot',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
@@ -161,8 +183,9 @@ class MyAppState extends State<MyApp> {
             brightness: Brightness.dark,
           ),
           scaffoldBackgroundColor: Colors.grey[900],
-          fontFamily: GoogleFonts.cinzel().fontFamily,
+          fontFamily: GoogleFonts.cinzel().fontFamily, // Font ailesi
         ),
+        // Yerelleştirme ayarları
         localizationsDelegates: const [
           S.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -172,19 +195,20 @@ class MyAppState extends State<MyApp> {
         supportedLocales: const [
           Locale('en'),
           Locale('tr'),
-        ],
-        locale: _locale,
+        ],        locale: _locale, // Mevcut dil
+        // Ana sayfa yönlendirmesi
         home: FutureBuilder<bool>(
           future: _checkLanguageSelection(),
           builder: (context, snapshot) {
+            // Splash ekranı yönetimi
             if (snapshot.connectionState == ConnectionState.waiting) {
               return SplashScreen(
                 onFinish: () {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (snapshot.connectionState == ConnectionState.done && mounted) {
-                      Future.delayed(const Duration(milliseconds: 500), () { // Gecikme 500 ms
+                      Future.delayed(const Duration(milliseconds: 100), () { // Kısa gecikme
                         if (snapshot.hasData && snapshot.data!) {
-                          _navigateToHome(context); // Fade ile geçiş
+                          _navigateToHome(context);
                         } else {
                           Navigator.pushReplacement(
                             context,
@@ -199,7 +223,7 @@ class MyAppState extends State<MyApp> {
                                   child: child,
                                 );
                               },
-                              transitionDuration: const Duration(milliseconds: 1000), // Daha yavaş geçiş
+                              transitionDuration: const Duration(milliseconds: 1000),
                             ),
                           );
                         }
@@ -209,6 +233,7 @@ class MyAppState extends State<MyApp> {
                 },
               );
             }
+            // Dil seçilmişse ana ekrana, seçilmemişse dil seçimine yönlendir
             return snapshot.data == true
                 ? TarotReadingScreen(
               onSettingsTap: () => _navigateToSettings(context),

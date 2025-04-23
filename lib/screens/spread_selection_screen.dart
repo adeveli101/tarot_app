@@ -209,7 +209,7 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
             const SizedBox(height: 8),
             Text(
               description,
-              style: GoogleFonts.lato(
+              style: GoogleFonts.cabin(
                 fontSize: 13,
                 color: Colors.white.withOpacity(0.7),
                 height: 1.3,
