@@ -67,7 +67,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     // _soundEffectPlayer.setPlayerId('sound_effects');
 
     // Ses efektleri için durdurma modunu ayarla (tekrar çalmadan önce bitmesini sağla)
-    _soundEffectPlayer.setReleaseMode(ReleaseMode.loop.);
+    _soundEffectPlayer.setReleaseMode(ReleaseMode.loop);
 
     // Arka plan müziğini başlat
     // initState içinde async işlem yapmamak için WidgetsBinding kullan
@@ -531,26 +531,39 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
   }
 
   /// Kompakt günlük ödül alma butonu (ikon). Tooltip kaldırıldı.
+  /// Kompakt günlük ödül alma butonu (YAZI).
   Widget _buildCompactClaimButton(BuildContext context) {
+    final loc = S.of(context)!; // Yerelleştirme için
+
     return TapAnimatedScale(
       onTap: () {
-        _playSound(_clickSoundPath); // <<< Tıklama sesi eklendi
+        // _playSound(_clickSoundPath); // İstersen sesi tekrar aktif edebilirsin
         HapticFeedback.lightImpact();
         context.read<TarotBloc>().add(ClaimDailyToken());
       },
       child: Container(
-        padding: const EdgeInsets.all(7),
+        // Padding'i ayarlayarak yazıya uygun hale getir
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Daha geniş yatay padding
         decoration: BoxDecoration(
-            shape: BoxShape.circle,
+          // shape: BoxShape.circle, // Daire şeklini kaldır
+            borderRadius: BorderRadius.circular(15), // Yuvarlak köşeler ekle
             gradient: LinearGradient( colors: [Colors.amber[500]!, Colors.orange[700]!], begin: Alignment.topLeft, end: Alignment.bottomRight),
             boxShadow: [ BoxShadow( color: Colors.yellow.withOpacity(0.5), blurRadius: 8, spreadRadius: 1)],
             border: Border.all(color: Colors.white.withOpacity(0.7), width: 0.8)
         ),
-        child: const Icon( Icons.star_rounded, color: Colors.white, size: 18),
+        // Icon yerine Text kullan
+        child: Text(
+          loc.claim,
+          style: GoogleFonts.cinzel( // Stili ayarla
+            color: Colors.white,
+            fontSize: 11, // Boyutu ayarla
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
     );
   }
-
   /// Üst bar butonları (Tooltip Geri Eklendi).
   Widget _buildAppBarButton({
     required BuildContext context,

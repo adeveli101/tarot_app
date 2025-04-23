@@ -270,6 +270,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chooseTopic": MessageLookupByLibrary.simpleMessage(
       "Choose the topic you want to explore",
     ),
+    "claim": MessageLookupByLibrary.simpleMessage("Claim!"),
     "claimDailyRewardTooltip": MessageLookupByLibrary.simpleMessage(
       "Claim your daily credits!",
     ),

@@ -79,6 +79,10 @@ flutter:
     - .env
     - assets/
     - assets/animations/
+    - assets/audios/classic-atmospheric.mp3
+    - assets/audios/ritualistic.mp3
+    - assets/audios/ritualistic2.mp3
+    - assets/audios/ritualistic3.mp3
     - assets/image_fx_a.jpg
     - assets/image_fx_c.jpg
     - assets/tarot_card_images/

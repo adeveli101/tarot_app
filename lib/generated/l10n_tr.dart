@@ -997,6 +997,9 @@ class STr extends S {
   String get fullMoonResultingEnergy => 'Sonuç Enerjisi';
 
   @override
+  String get claim => 'Al!';
+
+  @override
   String get claimDailyRewardTooltip => 'Günlük kredini al!';
 
   @override

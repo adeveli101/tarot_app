@@ -997,6 +997,9 @@ class SEn extends S {
   String get fullMoonResultingEnergy => 'Resulting Energy';
 
   @override
+  String get claim => 'Claim!';
+
+  @override
   String get claimDailyRewardTooltip => 'Claim your daily credits!';
 
   @override

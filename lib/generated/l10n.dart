@@ -1943,6 +1943,12 @@ abstract class S {
   /// **'Resulting Energy'**
   String get fullMoonResultingEnergy;
 
+  /// No description provided for @claim.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim!'**
+  String get claim;
+
   /// Tooltip text shown when hovering over the daily claim button/icon
   ///
   /// In en, this message translates to:

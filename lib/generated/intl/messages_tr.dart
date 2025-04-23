@@ -259,6 +259,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "chooseTopic": MessageLookupByLibrary.simpleMessage(
       "Fal baktırmak istediğiniz konuyu seçin",
     ),
+    "claim": MessageLookupByLibrary.simpleMessage("Al!"),
     "claimDailyRewardTooltip": MessageLookupByLibrary.simpleMessage(
       "Günlük kredini al!",
     ),

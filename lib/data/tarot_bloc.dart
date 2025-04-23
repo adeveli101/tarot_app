@@ -223,80 +223,86 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
   Future<void> _onClaimDailyToken(ClaimDailyToken event, Emitter<TarotState> emit) async {
     if (kDebugMode) { print("TarotBloc: ClaimDailyToken eventi alındı..."); }
 
-    // 1. Güvenlik Kontrolleri ve Durum Doğrulama
-    if (!state.isDailyTokenAvailable) {
+    // <<< 1. Yükleme öncesi state'i sakla >>>
+    final stateBeforeLoading = state;
+
+    // Güvenlik Kontrolleri (stateBeforeLoading üzerinden)
+    if (!stateBeforeLoading.isDailyTokenAvailable) {
       if (kDebugMode) { print("TarotBloc: Token talep edilemez (state.isDailyTokenAvailable=false)."); }
-      emit(state.copyWith(isDailyTokenAvailable: false)); // State'i düzelt
+      // State zaten doğru olmalı, UI'ı düzeltmeye gerek yok genellikle.
       return;
     }
-
     final now = DateTime.now();
     final todayEpochDay = DateTime.utc(now.year, now.month, now.day).millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
     final lastResetEpochDay = await _userDataManager.getLastReset();
-
     if (lastResetEpochDay >= todayEpochDay) {
       if (kDebugMode) { print("TarotBloc Hata: Token bugün zaten alınmış (double claim engellendi)."); }
-      emit(state.copyWith(isDailyTokenAvailable: false)); // UI'ı düzelt
+      // State'i düzelt
+      emit(stateBeforeLoading.copyWith(isDailyTokenAvailable: false));
       return;
     }
 
-    // 2. Token Verme ve Kaydetme İşlemi
-    emit(TarotLoading( // Yükleme durumu
-      userTokens: state.userTokens,
+    // <<< 2. Yükleme State'ini Yayınla (stateBeforeLoading'den değerleri alarak) >>>
+    emit(TarotLoading(
+      userTokens: stateBeforeLoading.userTokens,
       isDailyTokenAvailable: false, // Talep işlemi başladığı için false yap
-      nextDailyTokenTime: state.nextDailyTokenTime,
-      lastSelectedCategory: state.lastSelectedCategory,
-      userName: state.userName,
-      userAge: state.userAge,
-      userGender: state.userGender,
-      userInfoCollected: state.userInfoCollected,
+      nextDailyTokenTime: stateBeforeLoading.nextDailyTokenTime,
+      lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
+      userName: stateBeforeLoading.userName,
+      userAge: stateBeforeLoading.userAge,
+      userGender: stateBeforeLoading.userGender,
+      userInfoCollected: stateBeforeLoading.userInfoCollected,
     ));
 
+    // İsteğe bağlı: Eklediğimiz gecikmeyi kaldırabiliriz.
+    // await Future.delayed(const Duration(milliseconds: 50));
+
     try {
-      // Mevcut token miktarını BLoC state'inden al
-      // (TarotLoading state'ine de doğru aktarıldığından emin olun)
-      final currentTokens = state.userTokens;
+      // <<< 3. Token işlemleri (stateBeforeLoading'deki token ile hesapla) >>>
+      final currentTokens = stateBeforeLoading.userTokens; // Yükleme öncesi değeri kullan
       final newTokens = currentTokens + dailyLoginTokens;
 
       await _userDataManager.saveTokens(newTokens);
-      await _userDataManager.saveLastReset(todayEpochDay); // Bugün alındı olarak işaretle
+      await _userDataManager.saveLastReset(todayEpochDay);
 
-      // 3. Bir Sonraki Alınabilir Zamanı Hesapla
       final tomorrowLocal = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
       final nextClaimTime = tomorrowLocal;
 
-      // 4. Başarılı State'i Yayınla
-      // state.copyWith kullanarak önceki diğer state bilgilerini koru
-      emit(state.copyWith(
-        userTokens: newTokens,
-        isDailyTokenAvailable: false, // Artık bugün için alınamaz
-        nextDailyTokenTime: nextClaimTime, // Bir sonraki zamanı ayarla
+      // <<< 4. NİHAİ STATE'İ YAYINLA (Yeni instance oluşturarak) >>>
+      // Yükleme öncesi state tipine veya uygun bir genel state'e dön.
+      // Örneğin, TarotInitial kullanarak:
+      emit(TarotInitial( // VEYA stateBeforeLoading'un tipine göre uygun state
+        userTokens: newTokens,                // Yeni değer
+        isDailyTokenAvailable: false,         // Yeni değer
+        nextDailyTokenTime: nextClaimTime,    // Yeni değer
+        // Diğer alanları yükleme öncesi state'ten kopyala:
+        lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
+        userName: stateBeforeLoading.userName,
+        userAge: stateBeforeLoading.userAge,
+        userGender: stateBeforeLoading.userGender,
+        userInfoCollected: stateBeforeLoading.userInfoCollected,
       ));
 
       if (kDebugMode) {
         print("TarotBloc: Günlük token ($dailyLoginTokens) talep edildi. Yeni bakiye: $newTokens. Sonraki alınabilir: $nextClaimTime");
       }
 
-      // TODO: Bildirim planlama burada tetiklenebilir.
-      // Örneğin: await NotificationService().scheduleDailyNotificationsIfNeeded();
-
     } catch (e) {
       if (kDebugMode) { print("TarotBloc: Token talep edilirken/kaydedilirken hata: $e"); }
-      // Hata durumunda state'i emit et
+      // Hata durumunda state'i emit et (stateBeforeLoading'den kopyala)
       emit(TarotError(
         "Token alınırken bir hata oluştu: ${e.toString()}",
-        userTokens: state.userTokens, // Hata öncesi token miktarı
-        isDailyTokenAvailable: true,   // Tekrar denenebilmesi için true yap
-        nextDailyTokenTime: state.nextDailyTokenTime, // Hata öncesi zamanı koru
-        lastSelectedCategory: state.lastSelectedCategory,
-        userName: state.userName,
-        userAge: state.userAge,
-        userGender: state.userGender,
-        userInfoCollected: state.userInfoCollected,
+        userTokens: stateBeforeLoading.userTokens,
+        isDailyTokenAvailable: true, // Tekrar denenebilmesi için true yap
+        nextDailyTokenTime: stateBeforeLoading.nextDailyTokenTime,
+        lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
+        userName: stateBeforeLoading.userName,
+        userAge: stateBeforeLoading.userAge,
+        userGender: stateBeforeLoading.userGender,
+        userInfoCollected: stateBeforeLoading.userInfoCollected,
       ));
     }
   }
-
   // ===========================================================================
   // --- Kaynak Kontrolü ve Yönetimi (Mevcut, Geri Eklendi) ---
   // ===========================================================================

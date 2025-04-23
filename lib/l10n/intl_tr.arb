@@ -517,6 +517,9 @@
       }
     }
   },
+
+  "claim": "Al!",
+
   "claimYourDailyTokens": "Günlük {count} Kredini Al!",
   "@claimYourDailyTokens": {
     "description": "Ana kredi alma butonu metni (artık kompakt ikon, metin doğrudan görünmüyor ama anahtar kullanılıyor)",

@@ -507,6 +507,7 @@
   "fullMoonResultingEnergy": "Resulting Energy",
 
 
+  "claim": "Claim!",
 
   "claimDailyRewardTooltip": "Claim your daily credits!",
   "@claimDailyRewardTooltip": {
