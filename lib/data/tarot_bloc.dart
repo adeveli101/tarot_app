@@ -240,7 +240,8 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final newTokens = currentTokens + dailyLoginTokens;
       await _userDataManager.saveTokens(newTokens);
       await _userDataManager.saveLastReset(todayEpochDay);
-      final nextClaimTime = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+      final nextClaimTime = DateTime(now.year, now.month, now.day).add(const
+      Duration(hours: 8));
 
       final successState = DailyTokenClaimSuccess(
         userTokens: newTokens,
@@ -259,6 +260,7 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
 
       try {
         await NotificationService().scheduleDailyRewardNotification(
+          
           scheduledTime: nextClaimTime,
           titleKey: 'dailyRewardNotificationTitle',
           bodyKey: 'dailyRewardNotificationBody',
@@ -471,7 +473,13 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       if (alreadyUsed) {
         emit(CouponInvalid("Bu kupon kodu zaten kullanılmış.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,)); return;
       }
-      final Map<String, Map<String, dynamic>> validCoupons = { 'CREDITS': {'type': 'credits', 'value': 100.0}, 'FREE_READING': {'type': 'credits', 'value': 10.0}, 'WELCOME10': {'type': 'credits', 'value': 10.0}, 'TAROT50': {'type': 'credits', 'value': 50.0}, 'FIRSTFREE': {'type': 'credits', 'value': 25.0}, 'LOYALTY100': {'type': 'credits', 'value': 100.0}, };
+      final Map<String, Map<String, dynamic>> validCoupons = { 'CREDITS': {'type': 'credits', 'value': 1000.0},
+        'FREE_READING': {'type': 'credits', 'value': 10.0},
+        'WELCOME10': {'type': 'credits', 'value': 10.0},
+        'TAROT50': {'type': 'credits', 'value': 50.0},
+        'FIRSTFREE': {'type': 'credits', 'value': 25.0},
+        'LOYALTY100': {'type': 'credits', 'value': 1000.0}, };
+
       if (!validCoupons.containsKey(couponCode)) {
         emit(CouponInvalid("Geçersiz kupon kodu.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,)); return;
       }

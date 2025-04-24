@@ -18,7 +18,7 @@ class SEn extends S {
   String get tryAgain => 'Try Again';
 
   @override
-  String get pastPresentFuture => ' Past-Present-Future Spread';
+  String get pastPresentFuture => 'Past-Present-Future Spread';
 
   @override
   String get problemSolution => 'Perform Problem-Solution Spread';
@@ -49,7 +49,7 @@ class SEn extends S {
 
   @override
   String fortuneInsight(Object category, Object spreadType) {
-    return 'This Tarot Reading - reading provides deep insight into $category using the $spreadType spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.';
+    return 'This Tarot Reading provides deep insight into $category using the $spreadType spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.';
   }
 
   @override
@@ -816,25 +816,25 @@ class SEn extends S {
   String get couponAlreadyUsed => 'This coupon has already been used.';
 
   @override
-  String get paymentSuccessful => 'Ödeme Başarılı';
+  String get paymentSuccessful => 'Payment Successful';
 
   @override
-  String get arcana => 'Sır';
+  String get arcana => 'Arcana';
 
   @override
-  String get suit => 'Takım';
+  String get suit => 'Suit';
 
   @override
-  String get celticCrossConscious => 'Kelt Haçı Bilinçli';
+  String get celticCrossConscious => 'Celtic Cross Conscious';
 
   @override
-  String get longPressHint => 'Uzun Basma İpucu';
+  String get longPressHint => 'Long Press Hint';
 
   @override
-  String get instructions => 'Talimatlar';
+  String get instructions => 'Instructions';
 
   @override
-  String get slideToDrawCards => 'Kart Çekmek İçin Kaydırın';
+  String get slideToDrawCards => 'Slide to Draw Cards';
 
   @override
   String get tapCardForDetails => 'Tap card for details';
@@ -1034,4 +1034,71 @@ class SEn extends S {
 
   @override
   String get redeemCouponTooltip => 'Redeem Coupon';
+
+  @override
+  String get notificationPermissionDeniedTitle => 'Notification Permission Required';
+
+  @override
+  String get notificationPermissionDeniedText => 'Notifications are disabled for this app. Please enable them in the app settings to receive important updates.';
+
+  @override
+  String get exactAlarmPermissionDeniedTitle => 'Exact Alarm Permission Required';
+
+  @override
+  String get exactAlarmPermissionDeniedText => 'The \'Alarms & reminders\' permission is denied. To receive timely daily reward notifications, please grant this permission in the app settings.';
+
+  @override
+  String get exactAlarmPermissionTitle => 'Permission Required';
+
+  @override
+  String get exactAlarmPermissionExplanation => 'We need the \'Alarms & reminders\' permission to notify you exactly when your daily reward is ready. If this permission is not granted, notifications might be delayed or not arrive at all.';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get allow => 'Allow';
+
+  @override
+  String greetingNotificationTitle(String userName) {
+    return 'Welcome back, $userName!';
+  }
+
+  @override
+  String rewardNotificationBody(String rewardAmount) {
+    return 'Your reward of $rewardAmount tokens is available!';
+  }
+
+  @override
+  String get loadingMessage1 => 'Reading the threads of fate...';
+
+  @override
+  String get loadingMessage2 => 'Consulting the cosmic energies...';
+
+  @override
+  String get loadingMessage3 => 'Aligning the stars for you...';
+
+  @override
+  String get loadingMessage4 => 'Decoding the symbols...';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get allowNotifications => 'Allow Notifications';
+
+  @override
+  String get notificationsEnabledDesc => 'Notifications are enabled.';
+
+  @override
+  String get notificationsDisabledDesc => 'Tap to enable or manage in settings.';
+
+  @override
+  String get notificationPermissionDeniedTextShort => 'Notification permission denied.';
+
+  @override
+  String get disableNotificationsTitle => 'Disable Notifications';
+
+  @override
+  String get disableNotificationsDesc => 'To disable notifications, please open the app settings.';
 }

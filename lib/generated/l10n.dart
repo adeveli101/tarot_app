@@ -116,7 +116,7 @@ abstract class S {
   /// No description provided for @pastPresentFuture.
   ///
   /// In en, this message translates to:
-  /// **' Past-Present-Future Spread'**
+  /// **'Past-Present-Future Spread'**
   String get pastPresentFuture;
 
   /// No description provided for @problemSolution.
@@ -176,7 +176,7 @@ abstract class S {
   /// No description provided for @fortuneInsight.
   ///
   /// In en, this message translates to:
-  /// **'This Tarot Reading - reading provides deep insight into {category} using the {spreadType} spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.'**
+  /// **'This Tarot Reading provides deep insight into {category} using the {spreadType} spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.'**
   String fortuneInsight(Object category, Object spreadType);
 
   /// No description provided for @divineDance.
@@ -1604,43 +1604,43 @@ abstract class S {
   /// Snackbar message shown after a successful purchase.
   ///
   /// In en, this message translates to:
-  /// **'Ödeme Başarılı'**
+  /// **'Payment Successful'**
   String get paymentSuccessful;
 
   /// No description provided for @arcana.
   ///
   /// In en, this message translates to:
-  /// **'Sır'**
+  /// **'Arcana'**
   String get arcana;
 
   /// No description provided for @suit.
   ///
   /// In en, this message translates to:
-  /// **'Takım'**
+  /// **'Suit'**
   String get suit;
 
   /// No description provided for @celticCrossConscious.
   ///
   /// In en, this message translates to:
-  /// **'Kelt Haçı Bilinçli'**
+  /// **'Celtic Cross Conscious'**
   String get celticCrossConscious;
 
   /// No description provided for @longPressHint.
   ///
   /// In en, this message translates to:
-  /// **'Uzun Basma İpucu'**
+  /// **'Long Press Hint'**
   String get longPressHint;
 
   /// No description provided for @instructions.
   ///
   /// In en, this message translates to:
-  /// **'Talimatlar'**
+  /// **'Instructions'**
   String get instructions;
 
   /// No description provided for @slideToDrawCards.
   ///
   /// In en, this message translates to:
-  /// **'Kart Çekmek İçin Kaydırın'**
+  /// **'Slide to Draw Cards'**
   String get slideToDrawCards;
 
   /// Instruction text on the drawn cards summary page
@@ -2008,6 +2008,132 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Redeem Coupon'**
   String get redeemCouponTooltip;
+
+  /// Dialog title when notification permission is denied
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Permission Required'**
+  String get notificationPermissionDeniedTitle;
+
+  /// Dialog content when notification permission is denied
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are disabled for this app. Please enable them in the app settings to receive important updates.'**
+  String get notificationPermissionDeniedText;
+
+  /// No description provided for @exactAlarmPermissionDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact Alarm Permission Required'**
+  String get exactAlarmPermissionDeniedTitle;
+
+  /// No description provided for @exactAlarmPermissionDeniedText.
+  ///
+  /// In en, this message translates to:
+  /// **'The \'Alarms & reminders\' permission is denied. To receive timely daily reward notifications, please grant this permission in the app settings.'**
+  String get exactAlarmPermissionDeniedText;
+
+  /// No description provided for @exactAlarmPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission Required'**
+  String get exactAlarmPermissionTitle;
+
+  /// No description provided for @exactAlarmPermissionExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'We need the \'Alarms & reminders\' permission to notify you exactly when your daily reward is ready. If this permission is not granted, notifications might be delayed or not arrive at all.'**
+  String get exactAlarmPermissionExplanation;
+
+  /// No description provided for @later.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// No description provided for @allow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get allow;
+
+  /// Notification title welcoming the user back
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back, {userName}!'**
+  String greetingNotificationTitle(String userName);
+
+  /// Notification body informing about the reward amount
+  ///
+  /// In en, this message translates to:
+  /// **'Your reward of {rewardAmount} tokens is available!'**
+  String rewardNotificationBody(String rewardAmount);
+
+  /// Loading message shown during transition 1
+  ///
+  /// In en, this message translates to:
+  /// **'Reading the threads of fate...'**
+  String get loadingMessage1;
+
+  /// Loading message shown during transition 2
+  ///
+  /// In en, this message translates to:
+  /// **'Consulting the cosmic energies...'**
+  String get loadingMessage2;
+
+  /// Loading message shown during transition 3
+  ///
+  /// In en, this message translates to:
+  /// **'Aligning the stars for you...'**
+  String get loadingMessage3;
+
+  /// Loading message shown during transition 4
+  ///
+  /// In en, this message translates to:
+  /// **'Decoding the symbols...'**
+  String get loadingMessage4;
+
+  /// Title for the Notifications settings section
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// Label for the notification toggle switch
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Notifications'**
+  String get allowNotifications;
+
+  /// Subtitle when notifications are on
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are enabled.'**
+  String get notificationsEnabledDesc;
+
+  /// Subtitle when notifications are off
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to enable or manage in settings.'**
+  String get notificationsDisabledDesc;
+
+  /// Snackbar message when notification permission is denied but not permanently
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission denied.'**
+  String get notificationPermissionDeniedTextShort;
+
+  /// Dialog title when user tries to turn off notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Notifications'**
+  String get disableNotificationsTitle;
+
+  /// Dialog content explaining how to disable notifications
+  ///
+  /// In en, this message translates to:
+  /// **'To disable notifications, please open the app settings.'**
+  String get disableNotificationsDesc;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

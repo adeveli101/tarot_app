@@ -421,8 +421,8 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> with TickerPr
 
   // Widget for displaying a single card in the summary
   Widget _buildMiniCard(TarotCard card, String position) {
-    final double cardWidth = MediaQuery.of(context).size.width * 0.28; // Responsive width
-    final double cardHeight = cardWidth * 1.5; // Maintain aspect ratio
+    final double cardWidth = MediaQuery.of(context).size.width * 0.25; // Responsive width
+    final double cardHeight = cardWidth * 1.7; // Maintain aspect ratio
 
     return TapAnimatedScale(
       onTap: () => _showCardDetails(card),

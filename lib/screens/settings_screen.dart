@@ -1,25 +1,22 @@
 // lib/screens/settings_screen.dart
 
 import 'dart:ui'; // BackdropFilter için
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart'; // Lottie
-// ProductDetails importu artık burada gerekmeyebilir
-// import 'package:in_app_purchase/in_app_purchase.dart';
-
+import 'package:permission_handler/permission_handler.dart'; // <<< İzin yönetimi için eklendi
 import 'package:tarot_fal/data/tarot_bloc.dart';
 import 'package:tarot_fal/generated/l10n.dart'; // Yerelleştirme
-import 'package:tarot_fal/data/payment_manager.dart'; // PaymentManager importu
+import 'package:tarot_fal/data/payment_manager.dart';
 import 'package:tarot_fal/data/tarot_event_state.dart'; // TarotState için
-import 'package:tarot_fal/models/animations/tap_animations_scale.dart'; // TapAnimatedScale için
-// Intl importu artık burada gerekmeyebilir
-// import 'package:intl/intl.dart';
+import 'package:tarot_fal/models/animations/tap_animations_scale.dart';
+// NotificationService importu (doğru yolu kullanın)
+import '../services/notification_service.dart'; // <<< Bildirim servisi için eklendi
 
 class SettingsScreen extends StatefulWidget {
-  final Function(Locale, BuildContext) onLocaleChange; // Dil değiştirme callback'i
-  final Locale currentLocale; // Mevcut seçili dil
+  final Function(Locale, BuildContext) onLocaleChange;
+  final Locale currentLocale;
 
   const SettingsScreen({
     super.key,
@@ -31,31 +28,118 @@ class SettingsScreen extends StatefulWidget {
   SettingsScreenState createState() => SettingsScreenState();
 }
 
-class SettingsScreenState extends State<SettingsScreen> {
-  // --- PaymentManager instance'ı BURADAN KALDIRILDI ---
-  // late PaymentManager _paymentManager; // Kaldırıldı
+// <<< WidgetsBindingObserver eklendi (Ayarlardan dönünce izin kontrolü için) >>>
+class SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObserver {
+  // <<< Bildirim izin durumu için state değişkeni >>>
+  PermissionStatus _notificationStatus = PermissionStatus.denied; // Başlangıç değeri
 
   @override
   void initState() {
     super.initState();
-    // --- PaymentManager başlatma BURADAN KALDIRILDI ---
-    // _paymentManager = PaymentManager(); // Kaldırıldı
-    // _paymentManager.initialize(); // Kaldırıldı
+    // <<< Observer kaydı >>>
+    WidgetsBinding.instance.addObserver(this);
+    // <<< Başlangıçta izin durumunu kontrol et >>>
+    _checkNotificationPermission();
   }
 
   @override
   void dispose() {
-    // --- PaymentManager dispose BURADAN KALDIRILDI ---
-    // _paymentManager.dispose(); // Kaldırıldı
+    // <<< Observer kaydını kaldır >>>
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  // Arka plan widget'ı (diğer ekranlarla tutarlı)
+  // <<< Uygulama yaşam döngüsü değişikliğini dinle >>>
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Kullanıcı ayarlardan uygulamaya geri döndüğünde izin durumunu tekrar kontrol et
+    if (state == AppLifecycleState.resumed) {
+      _checkNotificationPermission();
+    }
+  }
+
+  /// Mevcut bildirim izin durumunu kontrol eder ve state'i günceller.
+  Future<void> _checkNotificationPermission() async {
+    final status = await Permission.notification.status;
+    if (mounted) {
+      setState(() {
+        _notificationStatus = status;
+      });
+    }
+  }
+
+  /// Bildirim switch'i değiştirildiğinde çağrılır.
+  Future<void> _handleNotificationToggle(bool newValue) async {
+    final loc = S.of(context); // Yerelleştirme için context gerekli
+
+    if (newValue) {
+      // --- Switch AÇILIYOR ---
+      // İzin iste
+      final status = await Permission.notification.request();
+      if (mounted) {
+        setState(() {
+          _notificationStatus = status;
+        });
+        if (status.isPermanentlyDenied) {
+          // Kalıcı olarak reddedildiyse ayarlara yönlendir
+          _showOpenSettingsDialog(
+            loc!.notificationPermissionDeniedTitle, // Yerelleştirilmiş başlık
+            loc.notificationPermissionDeniedText, // Yerelleştirilmiş içerik
+          );
+        } else if (status.isDenied) {
+          // Sadece reddedildiyse (henüz kalıcı değil) bilgi verilebilir
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(loc!.notificationPermissionDeniedTextShort)), // Kısa mesaj için yeni anahtar
+          );
+        }
+      }
+    } else {
+      // --- Switch KAPATILIYOR ---
+      // Kullanıcıyı uygulama ayarlarına yönlendir, çünkü izni kodla geri alamayız.
+      _showOpenSettingsDialog(
+        loc!.disableNotificationsTitle, // Yeni anahtar
+        loc.disableNotificationsDesc, // Yeni anahtar
+      );
+    }
+  }
+
+  /// Kullanıcıyı uygulama ayarlarına yönlendirmek için diyalog gösterir.
+  Future<void> _showOpenSettingsDialog(String title, String content) async {
+    final loc = S.of(context);
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.grey[900]?.withOpacity(0.95),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Text(title, style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(content, style: GoogleFonts.cabin(color: Colors.white70, fontSize: 15)),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.white70),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(loc!.cancel, style: GoogleFonts.cinzel(fontWeight: FontWeight.w600)), // İptal
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent[100], foregroundColor: Colors.black87, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              openAppSettings(); // Uygulama ayarlarını aç
+            },
+            child: Text(loc.settings, style: GoogleFonts.cinzel(fontWeight: FontWeight.bold)), // Ayarlar
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  // Arka plan widget'ı (Aynı kalır)
   Widget _buildBackground() {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Arka plan gradient ve Lottie animasyonu... (Aynı kalır)
         Image.asset( 'assets/image_fx_c.jpg', fit: BoxFit.cover, gaplessPlayback: true,),
         Lottie.asset(
           'assets/animations/tarot_shuffle.json',
@@ -178,6 +262,66 @@ class SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildPurchaseSection(BuildContext context, S loc) {
+    // Artık _buildSectionContainer kullanmıyoruz.
+    // Doğrudan tıklanabilir butonu döndürüyoruz.
+    // Bölümler arası boşluğu korumak için Margin ekliyoruz.
+    return Container(
+      margin: const EdgeInsets.only(bottom: 25.0), // Diğer bölümlerle aynı alt boşluk
+      child: TapAnimatedScale(
+        onTap: () {
+          // Ödeme dialogunu göster
+          PaymentManager.showPaymentDialog(context);
+        },
+        child: Container(
+          // Butonun görünümü (gradient, border, shadow vb.) aynı kalır
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.deepPurple[900]!.withOpacity(0.7),
+                Colors.purple[800]!.withOpacity(0.6),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.purple.shade400.withOpacity(0.4)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          // Butonun içeriği (ikon, metin, ok) aynı kalır
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.add_shopping_cart, color: Colors.yellowAccent.shade100, size: 22), // İkonu değiştirdik
+                  const SizedBox(width: 12),
+                  Text(
+                    loc.purchaseCredits, // "Kredi Satın Al" metni
+                    style: GoogleFonts.cabin(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500
+                    ),
+                  ),
+                ],
+              ),
+              Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 18),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
   // Dil Seçimi Bölümü (Aynı kalır)
   Widget _buildLanguageSection(BuildContext context, S loc) {
     return _buildSectionContainer(
@@ -201,75 +345,51 @@ class SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // --- DEĞİŞTİRİLDİ: Kredi Satın Alma Bölümü ---
-  Widget _buildPurchaseSection(BuildContext context, S loc) {
+  // <<< YENİ: Bildirim Ayarları Bölümü >>>
+  Widget _buildNotificationSection(BuildContext context, S loc) {
+    // Switch'in değeri mevcut izin durumuna göre belirlenir
+    bool isNotificationEnabled = _notificationStatus.isGranted;
+
     return _buildSectionContainer(
-      title: loc.mysticalTokens,
-      icon: Icons.add_shopping_cart,
+      // Yerelleştirme dosyanıza 'notifications' anahtarını ekleyin
+      title: loc.notifications,
+      icon: Icons.notifications_active_outlined,
       children: [
-        // Ürün listesi yerine tek bir buton/kart göster
-        TapAnimatedScale(
-          onTap: () {
-            // PaymentManager'daki static metodu çağırarak dialogu aç
-            PaymentManager.showPaymentDialog(
-              context,
-              // Gerekirse onSuccess callback'i eklenebilir:
-              // onSuccess: () {
-              //   // Satın alma başarılı olduktan sonra yapılacaklar
-              //   // (Örneğin Bloc state'ini yenilemek)
-              //   BlocProvider.of<TarotBloc>(context).add(FetchUserData()); // Örnek event
-              // }
-            );
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.deepPurple[900]!.withOpacity(0.7),
-                  Colors.purple[800]!.withOpacity(0.6),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.purple.shade400.withOpacity(0.4)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // İkon ve Metin
-                Row(
-                  children: [
-                    Icon(Icons.stars_rounded, color: Colors.yellowAccent.shade100, size: 22),
-                    const SizedBox(width: 12),
-                    Text(
-                      loc.purchaseCredits, // "Kredi Paketlerini Görüntüle" gibi bir metin
-                      style: GoogleFonts.cabin(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500
-                      ),
-                    ),
-                  ],
-                ),
-                // Ok ikonu
-                Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 18),
-              ],
+        SwitchListTile(
+          title: Text(
+            // Yerelleştirme dosyanıza 'allowNotifications' anahtarını ekleyin
+            loc.allowNotifications,
+            style: GoogleFonts.cabin(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 16,
             ),
           ),
+          subtitle: Text(
+            // Yerelleştirme dosyanıza 'notificationStatusDesc' anahtarını ekleyin
+            // Duruma göre farklı açıklama gösterilebilir (opsiyonel)
+            isNotificationEnabled
+                ? (loc.notificationsEnabledDesc)
+                : (loc.notificationsDisabledDesc),
+            style: GoogleFonts.cabin(
+              color: Colors.white.withOpacity(0.6),
+              fontSize: 13,
+            ),
+          ),
+          value: isNotificationEnabled,
+          onChanged: _handleNotificationToggle, // Switch değiştiğinde handle fonksiyonunu çağır
+          activeColor: Colors.greenAccent.shade100, // Açık durum rengi
+          inactiveThumbColor: Colors.grey.shade400,
+          inactiveTrackColor: Colors.grey.shade800.withOpacity(0.5),
+          secondary: Icon(
+            isNotificationEnabled ? Icons.notifications_active : Icons.notifications_off_outlined,
+            color: isNotificationEnabled ? Colors.greenAccent.shade100 : Colors.grey.shade400,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8), // İç padding
         ),
       ],
     );
   }
-  // --- Kredi Satın Alma Bölümü Değişikliği Sonu ---
+
 
   // Ortak Bölüm Container Widget'ı (Aynı kalır)
   Widget _buildSectionContainer({
@@ -310,17 +430,15 @@ class SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // --- _buildPurchaseCard METODU BURADAN KALDIRILDI ---
-  // Bu metoda artık settings_screen içinde ihtiyaç yok.
 
   @override
   Widget build(BuildContext context) {
-    final loc = S.of(context); // Null check kaldırıldı, initState sonrası context garantili
+    final loc = S.of(context);
 
     return Scaffold(
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true,
-      appBar: _buildAppBar(context, loc!), // Null check kaldırıldı
+      appBar: _buildAppBar(context, loc!),
       body: Stack(
         children: [
           _buildBackground(),
@@ -333,9 +451,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildUserInfoSection(context, loc), // Null check kaldırıldı
-                    _buildLanguageSection(context, loc), // Null check kaldırıldı
-                    _buildPurchaseSection(context, loc), // Güncellenmiş bölüm
+                    _buildUserInfoSection(context, loc),
+                    _buildPurchaseSection(context, loc),
+                    _buildLanguageSection(context, loc),
+                    _buildNotificationSection(context, loc), // <<< Yeni bölüm eklendi
                     // İsteğe bağlı: Diğer ayarlar
                   ],
                 ),

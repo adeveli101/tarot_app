@@ -1034,4 +1034,71 @@ class STr extends S {
 
   @override
   String get redeemCouponTooltip => 'Kupon Kullan';
+
+  @override
+  String get notificationPermissionDeniedTitle => 'Bildirim İzni Gerekli';
+
+  @override
+  String get notificationPermissionDeniedText => 'Bu uygulama için bildirimler devre dışı bırakılmış. Önemli güncellemeleri almak için lütfen uygulama ayarlarından bildirimleri etkinleştirin.';
+
+  @override
+  String get exactAlarmPermissionDeniedTitle => 'Tam Zamanlı Alarm İzni Gerekli';
+
+  @override
+  String get exactAlarmPermissionDeniedText => '\'Alarmlar ve hatırlatıcılar\' izni reddedildi. Günlük ödül bildirimlerini zamanında alabilmek için lütfen uygulama ayarlarından bu izni verin.';
+
+  @override
+  String get exactAlarmPermissionTitle => 'İzin Gerekli';
+
+  @override
+  String get exactAlarmPermissionExplanation => 'Günlük ödülünüz hazır olduğunda size tam zamanında bildirim gönderebilmemiz için \'Alarmlar ve hatırlatıcılar\' iznine ihtiyacımız var. Bu izin verilmezse bildirimler gecikebilir veya hiç gelmeyebilir.';
+
+  @override
+  String get later => 'Sonra';
+
+  @override
+  String get allow => 'İzin Ver';
+
+  @override
+  String greetingNotificationTitle(String userName) {
+    return 'Tekrar hoş geldin, $userName!';
+  }
+
+  @override
+  String rewardNotificationBody(String rewardAmount) {
+    return '$rewardAmount jetonluk ödülün hazır!';
+  }
+
+  @override
+  String get loadingMessage1 => 'Kaderin iplikleri okunuyor...';
+
+  @override
+  String get loadingMessage2 => 'Kozmik enerjilere danışılıyor...';
+
+  @override
+  String get loadingMessage3 => 'Yıldızlar sizin için hizalanıyor...';
+
+  @override
+  String get loadingMessage4 => 'Semboller çözülüyor...';
+
+  @override
+  String get notifications => 'Bildirimler';
+
+  @override
+  String get allowNotifications => 'Bildirimlere İzin Ver';
+
+  @override
+  String get notificationsEnabledDesc => 'Bildirimler etkin.';
+
+  @override
+  String get notificationsDisabledDesc => 'Etkinleştirmek veya ayarlardan yönetmek için dokunun.';
+
+  @override
+  String get notificationPermissionDeniedTextShort => 'Bildirim izni verilmedi.';
+
+  @override
+  String get disableNotificationsTitle => 'Bildirimleri Kapat';
+
+  @override
+  String get disableNotificationsDesc => 'Bildirimleri kapatmak için lütfen uygulama ayarlarını açın.';
 }

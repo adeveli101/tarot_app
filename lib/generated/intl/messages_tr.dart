@@ -66,49 +66,57 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m20(error) => "Dolunay açılımı hatası: \$${error}";
 
-  static String m21(error) => "At Nalı açılımı hatası: \$${error}";
+  static String m21(userName) => "Tekrar hoş geldin, ${userName}!";
 
-  static String m22(required) =>
+  static String m22(error) => "At Nalı açılımı hatası: \$${error}";
+
+  static String m23(required) =>
       "Devam etmek için ${required} krediye ihtiyacınız var. Aşağıdan daha fazla kredi satın alın.";
 
-  static String m23(error) => "Zihin-Beden-Ruh açılımı hatası: \$${error}";
+  static String m24(error) => "Zihin-Beden-Ruh açılımı hatası: \$${error}";
 
-  static String m24(hours) =>
+  static String m25(hours) =>
       "Bir sonraki ücretsiz fal hakkınız ${hours} saat içinde kullanılabilir olacak.";
 
-  static String m25(time) => "Sonraki günlük ödül ${time} sonra alınabilir";
-
-  static String m26(error) =>
-      "Geçmiş-Şimdi-Gelecek açılımı alınırken bir hata oluştu: ${error}";
+  static String m26(time) => "Sonraki günlük ödül ${time} sonra alınabilir";
 
   static String m27(error) =>
+      "Geçmiş-Şimdi-Gelecek açılımı alınırken bir hata oluştu: ${error}";
+
+  static String m28(error) =>
       "Problem-Çözüm açılımı alınırken bir hata oluştu: ${error}";
 
-  static String m28(title, price) =>
+  static String m29(title, price) =>
       "${title} ürününü ${price} karşılığında satın almak istiyor musunuz?";
 
-  static String m29(error) => "Satın alma başarısız: ${error}";
+  static String m30(error) => "Satın alma başarısız: ${error}";
 
-  static String m30(error) =>
+  static String m31(error) =>
       "İlişki açılımı alınırken bir hata oluştu: ${error}";
 
-  static String m31(spreadType, dateStr) =>
+  static String m32(rewardAmount) => "${rewardAmount} jetonluk ödülün hazır!";
+
+  static String m33(spreadType, dateStr) =>
       "${spreadType} Okuması - ${dateStr}";
 
-  static String m32(error) =>
+  static String m34(error) =>
       "Tek kart açılımı alınırken bir hata oluştu: ${error}";
 
-  static String m33(category, spreadType) =>
+  static String m35(category, spreadType) =>
       "Bu fal, ${category} konusunda ${spreadType} açılımı ile kişisel ve derin içgörüler sunmaktadır. Ruhunuzun derinliklerine inmeye ve kartların size özel mesajlarını keşfetmeye hazır olun!";
 
-  static String m34(category) =>
+  static String m36(category) =>
       "Bu kartların bir araya gelmesi, ${category} yolculuğunuzda önemli bir dönüm noktasını işaret ediyor. Kartların birleşik enerjisi, ruhunuzun derinliklerindeki mesajları açığa çıkarıyor.";
 
-  static String m35(error) =>
+  static String m37(error) =>
       "Yıllık açılım alınırken bir hata oluştu: ${error}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+    "allow": MessageLookupByLibrary.simpleMessage("İzin Ver"),
+    "allowNotifications": MessageLookupByLibrary.simpleMessage(
+      "Bildirimlere İzin Ver",
+    ),
     "arcana": MessageLookupByLibrary.simpleMessage("Sır"),
     "areYouSure": MessageLookupByLibrary.simpleMessage(
       "Satın almak istediğinizden emin misiniz:",
@@ -317,6 +325,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "differentInterpretation": MessageLookupByLibrary.simpleMessage(
       "Her seçimde farklı bir yorum sizi bekliyor",
     ),
+    "disableNotificationsDesc": MessageLookupByLibrary.simpleMessage(
+      "Bildirimleri kapatmak için lütfen uygulama ayarlarını açın.",
+    ),
+    "disableNotificationsTitle": MessageLookupByLibrary.simpleMessage(
+      "Bildirimleri Kapat",
+    ),
     "divineDance": MessageLookupByLibrary.simpleMessage(
       "Kartların İlahi Dansı",
     ),
@@ -353,6 +367,18 @@ class MessageLookup extends MessageLookupByLibrary {
       "Okumaları yüklerken hata oluştu",
     ),
     "errorMessage": m17,
+    "exactAlarmPermissionDeniedText": MessageLookupByLibrary.simpleMessage(
+      "\'Alarmlar ve hatırlatıcılar\' izni reddedildi. Günlük ödül bildirimlerini zamanında alabilmek için lütfen uygulama ayarlarından bu izni verin.",
+    ),
+    "exactAlarmPermissionDeniedTitle": MessageLookupByLibrary.simpleMessage(
+      "Tam Zamanlı Alarm İzni Gerekli",
+    ),
+    "exactAlarmPermissionExplanation": MessageLookupByLibrary.simpleMessage(
+      "Günlük ödülünüz hazır olduğunda size tam zamanında bildirim gönderebilmemiz için \'Alarmlar ve hatırlatıcılar\' iznine ihtiyacımız var. Bu izin verilmezse bildirimler gecikebilir veya hiç gelmeyebilir.",
+    ),
+    "exactAlarmPermissionTitle": MessageLookupByLibrary.simpleMessage(
+      "İzin Gerekli",
+    ),
     "failedToLoadProducts": MessageLookupByLibrary.simpleMessage(
       "Ürünler yüklenemedi.",
     ),
@@ -414,6 +440,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "generalDetailedComment": MessageLookupByLibrary.simpleMessage(
       "Genel Yorum (Detaylı)",
     ),
+    "greetingNotificationTitle": m21,
     "guidingWhispers": MessageLookupByLibrary.simpleMessage(
       "Yol Gösterici Fısıltılar",
     ),
@@ -442,7 +469,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "horseshoeSpreadDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Mali durumunuzda geniş bir bakış açısı kazanın.",
     ),
-    "horseshoeSpreadError": m21,
+    "horseshoeSpreadError": m22,
     "horseshoeStrengths": MessageLookupByLibrary.simpleMessage("Güçler"),
     "horseshoeUserAttitude": MessageLookupByLibrary.simpleMessage(
       "Yaklaşımınız",
@@ -467,7 +494,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "insufficientCreditsAndLimit": MessageLookupByLibrary.simpleMessage(
       "Günlük ücretsiz fal hakkınız doldu ve yeterli krediniz yok.",
     ),
-    "insufficientCreditsMessage": m22,
+    "insufficientCreditsMessage": m23,
     "interpretation": MessageLookupByLibrary.simpleMessage("Yorumlama"),
     "interpretationSection": MessageLookupByLibrary.simpleMessage(
       "Yorum Bölümü",
@@ -481,10 +508,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "languageChangedToTurkish": MessageLookupByLibrary.simpleMessage(
       "Dil Türkçe olarak değiştirildi",
     ),
+    "later": MessageLookupByLibrary.simpleMessage("Sonra"),
     "lifeDynamicsHighlighted": MessageLookupByLibrary.simpleMessage(
       "Bu kartlar hayatınızdaki önemli dinamikleri vurguluyor.",
     ),
     "lightMeaning": MessageLookupByLibrary.simpleMessage("Işık (Olumlu):"),
+    "loadingMessage1": MessageLookupByLibrary.simpleMessage(
+      "Kaderin iplikleri okunuyor...",
+    ),
+    "loadingMessage2": MessageLookupByLibrary.simpleMessage(
+      "Kozmik enerjilere danışılıyor...",
+    ),
+    "loadingMessage3": MessageLookupByLibrary.simpleMessage(
+      "Yıldızlar sizin için hizalanıyor...",
+    ),
+    "loadingMessage4": MessageLookupByLibrary.simpleMessage(
+      "Semboller çözülüyor...",
+    ),
     "longPressHint": MessageLookupByLibrary.simpleMessage("Uzun Basma İpucu"),
     "loveDescription": MessageLookupByLibrary.simpleMessage(
       "İlişkileriniz hakkında derinlemesine bilgi alın",
@@ -506,7 +546,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "mindBodySpiritDescriptionSpiritual": MessageLookupByLibrary.simpleMessage(
       "İçsel benliğinizi zihin, beden ve ruhla uyumlaştırın.",
     ),
-    "mindBodySpiritError": m23,
+    "mindBodySpiritError": m24,
     "mindBodySpiritMind": MessageLookupByLibrary.simpleMessage("Zihin"),
     "mindBodySpiritSpirit": MessageLookupByLibrary.simpleMessage("Ruh"),
     "mindSpirit": MessageLookupByLibrary.simpleMessage("Zihin-Ruh"),
@@ -518,9 +558,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "mysticJourney": MessageLookupByLibrary.simpleMessage("Mistik Yolculuk"),
     "mysticMeaning": MessageLookupByLibrary.simpleMessage("Mistik Yorum"),
     "mysticalTokens": MessageLookupByLibrary.simpleMessage("Mistik Jetonlar"),
-    "nextFreeReadingInfo": m24,
+    "nextFreeReadingInfo": m25,
     "nextReward": MessageLookupByLibrary.simpleMessage("Sonraki:"),
-    "nextRewardTooltip": m25,
+    "nextRewardTooltip": m26,
     "noCardsInSpread": MessageLookupByLibrary.simpleMessage(
       "Bu açılımda kart bulunamadı.",
     ),
@@ -539,6 +579,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "noSelectionYet": MessageLookupByLibrary.simpleMessage(
       "Henüz bir seçim yapılmadı",
     ),
+    "notificationPermissionDeniedText": MessageLookupByLibrary.simpleMessage(
+      "Bu uygulama için bildirimler devre dışı bırakılmış. Önemli güncellemeleri almak için lütfen uygulama ayarlarından bildirimleri etkinleştirin.",
+    ),
+    "notificationPermissionDeniedTextShort":
+        MessageLookupByLibrary.simpleMessage("Bildirim izni verilmedi."),
+    "notificationPermissionDeniedTitle": MessageLookupByLibrary.simpleMessage(
+      "Bildirim İzni Gerekli",
+    ),
+    "notifications": MessageLookupByLibrary.simpleMessage("Bildirimler"),
+    "notificationsDisabledDesc": MessageLookupByLibrary.simpleMessage(
+      "Etkinleştirmek veya ayarlardan yönetmek için dokunun.",
+    ),
+    "notificationsEnabledDesc": MessageLookupByLibrary.simpleMessage(
+      "Bildirimler etkin.",
+    ),
     "obstacleAdvice": MessageLookupByLibrary.simpleMessage("Engel / Tavsiye"),
     "overview": MessageLookupByLibrary.simpleMessage("Genel Bakış"),
     "pastPresentFuture": MessageLookupByLibrary.simpleMessage(
@@ -556,7 +611,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "pastPresentFutureDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Mali geçmişinizi, şu anınızı ve geleceğinizi keşfedin.",
     ),
-    "pastPresentFutureReadingError": m26,
+    "pastPresentFutureReadingError": m27,
     "paymentSuccessful": MessageLookupByLibrary.simpleMessage("Ödeme Başarılı"),
     "pleaseWait": MessageLookupByLibrary.simpleMessage("Lütfen Bekleyin."),
     "pointsToWatch": MessageLookupByLibrary.simpleMessage(
@@ -587,14 +642,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "problemSolutionDescriptionMoney": MessageLookupByLibrary.simpleMessage(
       "Finansal zorlukları çözmek için rehberlik alın.",
     ),
-    "problemSolutionReadingError": m27,
+    "problemSolutionReadingError": m28,
     "profile": MessageLookupByLibrary.simpleMessage("Profil"),
     "promptEmptyError": MessageLookupByLibrary.simpleMessage(
       "Lütfen bir istek giriniz.",
     ),
-    "purchaseConfirmation": m28,
+    "purchaseConfirmation": m29,
     "purchaseCredits": MessageLookupByLibrary.simpleMessage("Kredi Satın Al"),
-    "purchaseFailed": m29,
+    "purchaseFailed": m30,
     "purchasePending": MessageLookupByLibrary.simpleMessage(
       "Satın alma bekleniyor...",
     ),
@@ -614,7 +669,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "relationshipSpreadDescription": MessageLookupByLibrary.simpleMessage(
       "İlişkinizin detaylı analizi",
     ),
-    "relationshipSpreadReadingError": m30,
+    "relationshipSpreadReadingError": m31,
     "relationshipStrengths": MessageLookupByLibrary.simpleMessage(
       "Güçlü Yönler",
     ),
@@ -622,6 +677,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Kartları Yeniden Karıştır",
     ),
     "returnToHome": MessageLookupByLibrary.simpleMessage("Ana Sayfaya Dön"),
+    "rewardNotificationBody": m32,
     "selectToDraw": MessageLookupByLibrary.simpleMessage(
       "Kaderinizi görmek için kaydırın",
     ),
@@ -631,12 +687,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Dil ayarlarınızı yapın ve mistik tokenlarınızı buradan yönetin.",
     ),
     "shadowMeaning": MessageLookupByLibrary.simpleMessage("Gölge (Olumsuz):"),
-    "shareTitle": m31,
+    "shareTitle": m33,
     "singleCard": MessageLookupByLibrary.simpleMessage("Tek Kart Açılımı Yap"),
     "singleCardDescription": MessageLookupByLibrary.simpleMessage(
       "Hızlı cevap için ideal",
     ),
-    "singleCardReadingError": m32,
+    "singleCardReadingError": m34,
     "slideToDrawCards": MessageLookupByLibrary.simpleMessage(
       "Kart Çekmek İçin Kaydırın",
     ),
@@ -667,7 +723,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Detaylar için karta dokunun",
     ),
     "tarotFortune": MessageLookupByLibrary.simpleMessage("Astral Tarot"),
-    "tarotFortuneDescription": m33,
+    "tarotFortuneDescription": m35,
     "tarotFortuneGuide": MessageLookupByLibrary.simpleMessage(
       "Tarot Falı - Gizemli Yolların Kılavuzu",
     ),
@@ -689,7 +745,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tryAgain": MessageLookupByLibrary.simpleMessage("Tekrar Dene"),
     "turkish": MessageLookupByLibrary.simpleMessage("Türkçe"),
-    "unifiedDestinyMessage": m34,
+    "unifiedDestinyMessage": m36,
     "unifiedDestinyReflection": MessageLookupByLibrary.simpleMessage(
       "Birleşik Kaderin Yansıması",
     ),
@@ -711,7 +767,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearlySpreadReading": MessageLookupByLibrary.simpleMessage(
       "Yıllık Açılım",
     ),
-    "yearlySpreadReadingError": m35,
+    "yearlySpreadReadingError": m37,
     "yearlySpreadSummary": MessageLookupByLibrary.simpleMessage("Yılın Özeti"),
   };
 }

@@ -561,6 +561,71 @@
   "redeemCouponTooltip": "Kupon Kullan",
   "@redeemCouponTooltip": {
     "description": "Kupon kullanma butonu/ikonu için gösterilen ipucu."
-  }
+  },
 
+
+
+  "notificationPermissionDeniedTitle": "Bildirim İzni Gerekli",
+  "notificationPermissionDeniedText": "Bu uygulama için bildirimler devre dışı bırakılmış. Önemli güncellemeleri almak için lütfen uygulama ayarlarından bildirimleri etkinleştirin.",
+  "exactAlarmPermissionDeniedTitle": "Tam Zamanlı Alarm İzni Gerekli",
+  "exactAlarmPermissionDeniedText": "'Alarmlar ve hatırlatıcılar' izni reddedildi. Günlük ödül bildirimlerini zamanında alabilmek için lütfen uygulama ayarlarından bu izni verin.",
+  "exactAlarmPermissionTitle": "İzin Gerekli",
+  "exactAlarmPermissionExplanation": "Günlük ödülünüz hazır olduğunda size tam zamanında bildirim gönderebilmemiz için 'Alarmlar ve hatırlatıcılar' iznine ihtiyacımız var. Bu izin verilmezse bildirimler gecikebilir veya hiç gelmeyebilir.",
+  "later": "Sonra",
+  "allow": "İzin Ver",
+
+  "greetingNotificationTitle": "Tekrar hoş geldin, {userName}!",
+  "@greetingNotificationTitle": {
+    "description": "Kullanıcıyı tekrar karşılayan bildirim başlığı",
+    "placeholders": {
+      "userName": {
+        "type": "String",
+        "example": "Gemini"
+      }
+    }
+  },
+  "rewardNotificationBody": "{rewardAmount} jetonluk ödülün hazır!",
+  "@rewardNotificationBody": {
+    "description": "Ödül miktarını bildiren bildirim içeriği",
+    "placeholders": {
+      "rewardAmount": {
+        "type": "String",
+        "example": "100"
+      }
+    }
+  },
+  "loadingMessage1": "Kaderin iplikleri okunuyor...",
+  "@loadingMessage1": {
+    "description": "Geçiş sırasında gösterilen yükleme mesajı 1"
+  },
+  "loadingMessage2": "Kozmik enerjilere danışılıyor...",
+  "@loadingMessage2": {
+    "description": "Geçiş sırasında gösterilen yükleme mesajı 2"
+  },
+  "loadingMessage3": "Yıldızlar sizin için hizalanıyor...",
+  "@loadingMessage3": {
+    "description": "Geçiş sırasında gösterilen yükleme mesajı 3"
+  },
+  "loadingMessage4": "Semboller çözülüyor...",
+  "@loadingMessage4": {
+    "description": "Geçiş sırasında gösterilen yükleme mesajı 4"
+  },
+
+
+  "notifications": "Bildirimler",
+  "@notifications": { "description": "Bildirimler ayar bölümü başlığı" },
+  "allowNotifications": "Bildirimlere İzin Ver",
+  "@allowNotifications": { "description": "Bildirim açma/kapama anahtarı etiketi" },
+  "notificationsEnabledDesc": "Bildirimler etkin.",
+  "@notificationsEnabledDesc": { "description": "Bildirimler açıkken gösterilen alt başlık" },
+  "notificationsDisabledDesc": "Etkinleştirmek veya ayarlardan yönetmek için dokunun.",
+  "@notificationsDisabledDesc": { "description": "Bildirimler kapalıyken gösterilen alt başlık" },
+  "@notificationPermissionDeniedTitle": { "description": "Bildirim izni reddedildiğinde diyalog başlığı" },
+  "@notificationPermissionDeniedText": { "description": "Bildirim izni reddedildiğinde diyalog içeriği" },
+  "notificationPermissionDeniedTextShort": "Bildirim izni verilmedi.",
+  "@notificationPermissionDeniedTextShort": { "description": "Bildirim izni reddedildiğinde (kalıcı değil) snackbar mesajı" },
+  "disableNotificationsTitle": "Bildirimleri Kapat",
+  "@disableNotificationsTitle": { "description": "Kullanıcı bildirimleri kapatmaya çalıştığında diyalog başlığı" },
+  "disableNotificationsDesc": "Bildirimleri kapatmak için lütfen uygulama ayarlarını açın.",
+  "@disableNotificationsDesc": { "description": "Bildirimlerin nasıl kapatılacağını açıklayan diyalog içeriği" }
 }

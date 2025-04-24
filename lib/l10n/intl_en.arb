@@ -3,7 +3,7 @@
   "tarotFortune": "Astral Tarot",
   "errorMessage": "Error: {message}",
   "tryAgain": "Try Again",
-  "pastPresentFuture": " Past-Present-Future Spread",
+  "pastPresentFuture": "Past-Present-Future Spread",
   "problemSolution": "Perform Problem-Solution Spread",
   "singleCard": "Perform Single Card Reading",
   "loveReading": "Perform Love Reading",
@@ -13,8 +13,7 @@
   "meaning": "Meaning",
   "mysticMeaning": "Mystical Interpretation",
   "tarotFortuneGuide": "Guide to Mystical Paths",
-  "fortuneInsight": "This Tarot Reading - reading provides deep insight into {category} using the {spreadType} spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.",
-  "divineDance": "The Divine Dance of the Cards",
+  "fortuneInsight": "This Tarot Reading provides deep insight into {category} using the {spreadType} spread. As we journey into the depths of your soul, let us interpret the mysterious messages of the cards together.",  "divineDance": "The Divine Dance of the Cards",
   "unifiedDestinyReflection": "Unified Reflection of Destiny",
   "unifiedDestinyMessage": "The combination of these cards marks a significant turning point in your {category} journey. The unified energy of the cards reveals messages from the depths of your soul.",
   "cardsCombinedAssessment": "Combined Assessment of the Cards",
@@ -332,13 +331,14 @@
   "couponAlreadyUsed": "This coupon has already been used.",
 
 
-  "paymentSuccessful": "Ödeme Başarılı",
-  "arcana": "Sır",
-  "suit": "Takım",
-  "celticCrossConscious": "Kelt Haçı Bilinçli",
-  "longPressHint": "Uzun Basma İpucu",
-  "instructions": "Talimatlar",
-  "slideToDrawCards": "Kart Çekmek İçin Kaydırın",
+  "paymentSuccessful": "Payment Successful",
+  "arcana": "Arcana",
+  "suit": "Suit",
+  "celticCrossConscious": "Celtic Cross Conscious",
+  "longPressHint": "Long Press Hint",
+  "instructions": "Instructions",
+  "slideToDrawCards": "Slide to Draw Cards",
+
 
 
   "tapCardForDetails": "Tap card for details",
@@ -568,6 +568,69 @@
   "redeemCouponTooltip": "Redeem Coupon",
   "@redeemCouponTooltip": {
     "description": "Tooltip shown for the redeem coupon button/icon."
-  }
+  },
 
+
+  "notificationPermissionDeniedTitle": "Notification Permission Required",
+  "notificationPermissionDeniedText": "Notifications are disabled for this app. Please enable them in the app settings to receive important updates.",
+  "exactAlarmPermissionDeniedTitle": "Exact Alarm Permission Required",
+  "exactAlarmPermissionDeniedText": "The 'Alarms & reminders' permission is denied. To receive timely daily reward notifications, please grant this permission in the app settings.",
+  "exactAlarmPermissionTitle": "Permission Required",
+  "exactAlarmPermissionExplanation": "We need the 'Alarms & reminders' permission to notify you exactly when your daily reward is ready. If this permission is not granted, notifications might be delayed or not arrive at all.",
+  "later": "Later",
+  "allow": "Allow",
+
+  "greetingNotificationTitle": "Welcome back, {userName}!",
+  "@greetingNotificationTitle": {
+    "description": "Notification title welcoming the user back",
+    "placeholders": {
+      "userName": {
+        "type": "String",
+        "example": "Gemini"
+      }
+    }
+  },
+  "rewardNotificationBody": "Your reward of {rewardAmount} tokens is available!",
+  "@rewardNotificationBody": {
+    "description": "Notification body informing about the reward amount",
+    "placeholders": {
+      "rewardAmount": {
+        "type": "String",
+        "example": "100"
+      }
+    }
+  },
+
+  "loadingMessage1": "Reading the threads of fate...",
+  "@loadingMessage1": {
+    "description": "Loading message shown during transition 1"
+  },
+  "loadingMessage2": "Consulting the cosmic energies...",
+  "@loadingMessage2": {
+    "description": "Loading message shown during transition 2"
+  },
+  "loadingMessage3": "Aligning the stars for you...",
+  "@loadingMessage3": {
+    "description": "Loading message shown during transition 3"
+  },
+  "loadingMessage4": "Decoding the symbols...",
+  "@loadingMessage4": {
+    "description": "Loading message shown during transition 4"
+  },
+  "notifications": "Notifications",
+  "@notifications": { "description": "Title for the Notifications settings section" },
+  "allowNotifications": "Allow Notifications",
+  "@allowNotifications": { "description": "Label for the notification toggle switch" },
+  "notificationsEnabledDesc": "Notifications are enabled.",
+  "@notificationsEnabledDesc": { "description": "Subtitle when notifications are on" },
+  "notificationsDisabledDesc": "Tap to enable or manage in settings.",
+  "@notificationsDisabledDesc": { "description": "Subtitle when notifications are off" },
+  "@notificationPermissionDeniedTitle": { "description": "Dialog title when notification permission is denied" },
+  "@notificationPermissionDeniedText": { "description": "Dialog content when notification permission is denied" },
+  "notificationPermissionDeniedTextShort": "Notification permission denied.",
+  "@notificationPermissionDeniedTextShort": { "description": "Snackbar message when notification permission is denied but not permanently" },
+  "disableNotificationsTitle": "Disable Notifications",
+  "@disableNotificationsTitle": { "description": "Dialog title when user tries to turn off notifications" },
+  "disableNotificationsDesc": "To disable notifications, please open the app settings.",
+  "@disableNotificationsDesc": { "description": "Dialog content explaining how to disable notifications" }
 }
