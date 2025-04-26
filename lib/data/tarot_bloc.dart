@@ -15,6 +15,8 @@ import 'package:tarot_fal/data/user_data_manager.dart';
 // Güncellenmiş State/Event dosyasını import ediyoruz
 import 'package:tarot_fal/data/tarot_event_state.dart';
 
+import '../generated/l10n.dart';
+import '../main.dart';
 import '../services/notification_service.dart';
 
 class TarotBloc extends Bloc<TarotEvent, TarotState> {
@@ -25,6 +27,9 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final UserDataManager _userDataManager = UserDataManager();
   SpreadType? _currentSpreadType;
+
+  static const Duration rewardCooldown = Duration(hours: 12); // <-- YENİ: 12 saat
+
 
   // --- Constants ---
   static const double dailyLoginTokens = 20.0;
@@ -75,6 +80,47 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     on<DrawCareerPathSpread>(_onDrawCareerPathSpread);
     on<DrawFullMoonSpread>(_onDrawFullMoonSpread);
     on<DrawCategoryReading>(_onDrawCategoryReading);
+
+
+
+
+    on<ResetDailyRewardForTesting>(_onResetDailyRewardForTesting); // <-- BU SATIRI EKLEYİN
+
+  }
+
+
+  Future<void> _onResetDailyRewardForTesting(
+      ResetDailyRewardForTesting event, Emitter<TarotState> emit) async {
+    if (kDebugMode) { // Sadece debug modunda çalışsın
+      print("TarotBloc: ResetDailyRewardForTesting eventi alındı...");
+      try {
+        // UserDataManager'daki sıfırlama metodunu çağır
+        await _userDataManager.resetLastRewardClaimForTesting();
+
+        // State'i yeniden yükleyerek UI'ın güncellenmesini sağla
+        // _loadUserDataAndCheckRewards metodunu tekrar çağırmak veya
+        // basitçe LoadTarotCards event'i göndermek işe yarayabilir.
+        // En temizi, ödül durumunu yeniden kontrol eden kısmı çağırmak.
+        await _loadUserDataAndCheckRewards(); // Bu metod state'i güncelleyecektir.
+
+        print("TarotBloc: Ödül sıfırlandı ve kullanıcı verileri yeniden yüklendi.");
+
+      } catch (e) {
+        if (kDebugMode) { print("TarotBloc: Ödül sıfırlanırken hata: $e"); }
+        // Hata durumunda mevcut state'i koruyarak bir hata state'i yayınla (opsiyonel)
+        emit(TarotError(
+          "Ödül sıfırlanamadı: ${e.toString()}",
+          userTokens: state.userTokens,
+          isDailyTokenAvailable: state.isDailyTokenAvailable,
+          nextDailyTokenTime: state.nextDailyTokenTime,
+          // ... diğer state özellikleri
+        ));
+      }
+    } else {
+      if (kDebugMode) {
+        print("TarotBloc: ResetDailyRewardForTesting sadece debug modunda çalışır.");
+      }
+    }
   }
 
   // ===========================================================================
@@ -135,28 +181,35 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
   }
 
   Future<void> _loadUserDataAndCheckRewards() async {
-    if (kDebugMode) { print("TarotBloc: Kullanıcı verileri ve ödül durumu kontrol ediliyor..."); }
+    if (kDebugMode) { print("TarotBloc: Kullanıcı verileri ve ödül durumu kontrol ediliyor (12 Saatlik)..."); }
     try {
       final now = DateTime.now();
-      final todayEpochDay = DateTime.utc(now.year, now.month, now.day).millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
-      final lastResetEpochDay = await _userDataManager.getLastReset();
+      final nowMillis = now.millisecondsSinceEpoch;
+
+      // Son ödül alma zaman damgasını al (milisaniye cinsinden)
+      final lastClaimTimestamp = await _userDataManager.getLastReset(); // Bu metod milisaniye döndürecek
+
+      // Bir sonraki ödülün ne zaman uygun olacağını hesapla
+      final nextAvailableMillis = lastClaimTimestamp + rewardCooldown.inMilliseconds;
+
+      // Ödül şu an alınabilir mi?
+      final bool isAvailableNow = nowMillis >= nextAvailableMillis;
+
+      // UI'da gösterilecek bir sonraki ödül zamanı
+      DateTime? nextClaimTimeForUI;
+      if (!isAvailableNow) {
+        // Eğer henüz alınamazsa, ne zaman alınabileceğini hesapla
+        nextClaimTimeForUI = DateTime.fromMillisecondsSinceEpoch(nextAvailableMillis);
+      } else {
+        // Eğer alınabilirse, UI'da sayaç göstermeye gerek yok
+        nextClaimTimeForUI = null;
+      }
+
+
       double currentTokens = await _userDataManager.getTokens();
       bool bonusNeedsSave = false;
 
-      bool isAvailableToday;
-      DateTime? nextClaimTime;
-
-      if (lastResetEpochDay < todayEpochDay) {
-        isAvailableToday = true;
-        nextClaimTime = null;
-        if (kDebugMode) { print("TarotBloc: Günlük token BU GÜN İÇİN alınabilir."); }
-      } else {
-        isAvailableToday = false;
-        final tomorrowLocal = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-        nextClaimTime = tomorrowLocal;
-        if (kDebugMode) { print("TarotBloc: Günlük token bugün zaten alınmış. Sonraki alınabilir zaman: $nextClaimTime (Yerel)"); }
-      }
-
+      // İlk kullanım bonusu kontrolü aynı kalabilir
       final bool bonusAlreadyGiven = await _userDataManager.hasReceivedFirstTimeBonus();
       if (!bonusAlreadyGiven) {
         currentTokens += firstTimeBonusTokens;
@@ -170,64 +223,69 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         if (kDebugMode) { print("TarotBloc: İlk bonus sonrası bakiye kaydedildi: $currentTokens"); }
       }
 
+      // Diğer kullanıcı verilerini yükle (aynı kalır)
       final userName = await _userDataManager.getUserName();
       final userAge = await _userDataManager.getUserAge();
       final userGender = await _userDataManager.getUserGender();
       final userInfoCollected = await _userDataManager.getUserInfoCollected();
 
+      // State'i yeni hesaplanan değerlerle güncelle
       emit(state.copyWith(
         userTokens: currentTokens,
         userName: userName,
         userAge: userAge,
         userGender: userGender,
         userInfoCollected: userInfoCollected,
-        isDailyTokenAvailable: isAvailableToday,
-        nextDailyTokenTime: nextClaimTime,
+        isDailyTokenAvailable: isAvailableNow, // Yeni hesaplanan durum
+        nextDailyTokenTime: nextClaimTimeForUI, // Yeni hesaplanan zaman (veya null)
       ));
 
-      if (kDebugMode) { print("TarotBloc: Kullanıcı verileri yüklendi. Günlük token alınabilir: $isAvailableToday. Tokens=$currentTokens"); }
+      if (kDebugMode) { print("TarotBloc: Kullanıcı verileri yüklendi. Ödül alınabilir: $isAvailableNow. Tokens=$currentTokens. Sonraki zaman: $nextClaimTimeForUI"); }
 
     } catch (e) {
       if (kDebugMode) { print("TarotBloc: Kullanıcı verileri/ödül kontrolü sırasında hata: $e"); }
       emit(TarotError(
         "Kullanıcı verileri yüklenemedi: ${e.toString()}",
         userTokens: state.userTokens,
-        isDailyTokenAvailable: false,
-        nextDailyTokenTime: state.nextDailyTokenTime,
-        userName: state.userName,
-        userAge: state.userAge,
-        userGender: state.userGender,
-        userInfoCollected: state.userInfoCollected,
+        isDailyTokenAvailable: false, // Hata durumunda false varsay
+        nextDailyTokenTime: state.nextDailyTokenTime, // Önceki değeri koru
+        // ... diğer state özellikleri
       ));
     }
   }
+  // --- ÖDÜL DURUMU KONTROL METODU SONU ---
 
-  // ===========================================================================
-  // --- Yeni Event Handler: ClaimDailyToken ---
-  // ===========================================================================
-  // Bu kısımlar önceki cevapta olduğu gibi kalır, değişiklik yok.
+
+
+
   Future<void> _onClaimDailyToken(ClaimDailyToken event, Emitter<TarotState> emit) async {
-    if (kDebugMode) { print("TarotBloc: ClaimDailyToken eventi alındı..."); }
+    if (kDebugMode) { print("TarotBloc: ClaimDailyToken eventi alındı (12 Saatlik)..."); }
 
     final stateBeforeLoading = state;
 
+    // Kontrol 1: State'e göre alınabilir mi?
     if (!stateBeforeLoading.isDailyTokenAvailable) {
       if (kDebugMode) { print("TarotBloc: Token talep edilemez (state.isDailyTokenAvailable=false)."); }
       return;
     }
+
+    // Kontrol 2: Gerçek zaman kontrolü (Double claim engeli)
     final now = DateTime.now();
-    final todayEpochDay = DateTime.utc(now.year, now.month, now.day).millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
-    final lastResetEpochDay = await _userDataManager.getLastReset();
-    if (lastResetEpochDay >= todayEpochDay) {
-      if (kDebugMode) { print("TarotBloc Hata: Token bugün zaten alınmış (double claim engellendi)."); }
-      emit(stateBeforeLoading.copyWith(isDailyTokenAvailable: false));
+    final nowMillis = now.millisecondsSinceEpoch;
+    final lastClaimTimestamp = await _userDataManager.getLastReset();
+    final nextAvailableMillis = lastClaimTimestamp + rewardCooldown.inMilliseconds;
+
+    if (nowMillis < nextAvailableMillis) {
+      if (kDebugMode) { print("TarotBloc Hata: Token henüz alınamaz (double claim engellendi - zaman kontrolü). Kalan süre: ${Duration(milliseconds: nextAvailableMillis - nowMillis)}"); }
+      await _loadUserDataAndCheckRewards();
       return;
     }
 
     emit(TarotLoading(
       userTokens: stateBeforeLoading.userTokens,
-      isDailyTokenAvailable: false,
+      isDailyTokenAvailable: false, // Talep edildi
       nextDailyTokenTime: stateBeforeLoading.nextDailyTokenTime,
+      // copyWith kullanarak diğer state özelliklerini korumak daha iyi olabilir
       lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
       userName: stateBeforeLoading.userName,
       userAge: stateBeforeLoading.userAge,
@@ -239,13 +297,19 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       final currentTokens = stateBeforeLoading.userTokens;
       final newTokens = currentTokens + dailyLoginTokens;
       await _userDataManager.saveTokens(newTokens);
-      await _userDataManager.saveLastReset(todayEpochDay);
-      final nextClaimTime = DateTime(now.year, now.month, now.day).add(const
-      Duration(hours: 8));
 
+      final claimTime = DateTime.now();
+      await _userDataManager.saveLastReset(claimTime.millisecondsSinceEpoch);
+
+      // <<< DEĞİŞİKLİK BURADA: nextClaimTime hesaplandı >>>
+      final nextClaimTime = claimTime.add(rewardCooldown); // 12 saat sonrası
+
+      // Önceki state'in özelliklerini koruyarak success state'i oluştur
       final successState = DailyTokenClaimSuccess(
         userTokens: newTokens,
-        nextDailyTokenTime: nextClaimTime,
+        nextDailyTokenTime: nextClaimTime, // Hesaplanan sonraki zaman
+        isDailyTokenAvailable: false,
+        // Önceki state'den diğer bilgileri kopyala
         lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
         userName: stateBeforeLoading.userName,
         userAge: stateBeforeLoading.userAge,
@@ -255,29 +319,45 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
       emit(successState);
 
       if (kDebugMode) {
-        print("TarotBloc: Günlük token ($dailyLoginTokens) talep edildi. Yeni bakiye: $newTokens. Sonraki alınabilir: $nextClaimTime");
+        print("TarotBloc: 12 Saatlik token ($dailyLoginTokens) talep edildi. Yeni bakiye: $newTokens. Sonraki alınabilir: $nextClaimTime");
       }
 
+      // --- Bildirim Planlama (GÜNCELLENDİ - Normal Süre Kullanılıyor) ---
       try {
-        await NotificationService().scheduleDailyRewardNotification(
-          
-          scheduledTime: nextClaimTime,
-          titleKey: 'dailyRewardNotificationTitle',
-          bodyKey: 'dailyRewardNotificationBody',
-        );
-      } catch (e) {
-        if (kDebugMode) {
-          print("Bildirim planlama çağrısı sırasında hata (BLoC): $e");
+        // Yerelleştirme için context'i al
+        final context = navigatorKey.currentContext;
+
+        // Context geçerli ise yerelleştirilmiş metinleri al ve bildirimi planla
+        if (context != null && context.mounted) { // Context kontrolü
+          final S loc = S.of(context)!;
+          final String localizedTitle = loc.dailyRewardNotificationTitle;
+          final String localizedBody = loc.dailyRewardNotificationBody;
+
+          await NotificationService().scheduleDailyRewardNotification(
+            // <<< DEĞİŞİKLİK BURADA: nextClaimTime kullanılıyor >>>
+            scheduledTime: nextClaimTime, // Hesaplanan doğru zamanı kullanır
+            localizedTitle: localizedTitle, // Yerelleştirilmiş başlığı geçir
+            localizedBody: localizedBody,   // Yerelleştirilmiş içeriği geçir
+            // payload: 'daily_reward_available'
+          );
+          if (kDebugMode) { print("TarotBloc: Bildirim başarıyla planlandı: $nextClaimTime"); } // Log mesajı doğru zamanı gösteriyor
+        } else {
+          if (kDebugMode) { print("TarotBloc: Bildirim planlanamadı, context alınamadı veya mounted değil."); }
         }
+      } catch (e) {
+        if (kDebugMode) { print("Bildirim planlama sırasında Bloc seviyesinde hata: $e"); }
       }
+      // --- Bildirim Planlama Sonu ---
 
     } catch (e) {
       if (kDebugMode) { print("TarotBloc: Token talep edilirken/kaydedilirken hata: $e"); }
+      // Hata yönetimi
       emit(TarotError(
         "Token alınırken bir hata oluştu: ${e.toString()}",
         userTokens: stateBeforeLoading.userTokens,
-        isDailyTokenAvailable: true,
+        isDailyTokenAvailable: stateBeforeLoading.isDailyTokenAvailable,
         nextDailyTokenTime: stateBeforeLoading.nextDailyTokenTime,
+        // Diğer state özelliklerini de koru
         lastSelectedCategory: stateBeforeLoading.lastSelectedCategory,
         userName: stateBeforeLoading.userName,
         userAge: stateBeforeLoading.userAge,
@@ -287,8 +367,7 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
     }
   }
 
-  // ===========================================================================
-  // --- Kaynak Kontrolü ve Yönetimi (Mevcut, Geri Eklendi) ---
+
   // ===========================================================================
   // Bu kısımlar önceki cevapta olduğu gibi kalır, değişiklik yok.
   Future<bool> _checkCreditsAndTokenLimit(Emitter<TarotState> emit, SpreadType spreadType) async {
@@ -457,43 +536,102 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
   }
 
   Future<void> _onRedeemCoupon(RedeemCoupon event, Emitter<TarotState> emit) async {
+    // --- YERELLEŞTİRME İÇİN CONTEXT VE LOC AL ---
+    final context = navigatorKey.currentContext;
+    // Context varsa S nesnesini al, yoksa null bırak (fallback için)
+    final S? loc = (context != null && context.mounted) ? S.of(context) : null;
+    // --- -------------------------------------- ---
+
+    // Mevcut state'i koruyarak Loading state'i yayınla
     emit(TarotLoading(
       userTokens: state.userTokens,
       isDailyTokenAvailable: state.isDailyTokenAvailable,
       nextDailyTokenTime: state.nextDailyTokenTime,
       lastSelectedCategory: state.lastSelectedCategory,
-      userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+      userName: state.userName,
+      userAge: state.userAge,
+      userGender: state.userGender,
+      userInfoCollected: state.userInfoCollected,
     ));
+
     try {
       final couponCode = event.couponCode.trim().toUpperCase();
+
+      // Kupon kodu boş mu kontrolü (Yerelleştirilmiş mesaj)
       if (couponCode.isEmpty) {
-        emit(CouponInvalid("Kupon kodu boş olamaz.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,)); return;
+        final errorMessage = loc?.couponCannotBeEmpty ?? "Coupon code cannot be empty."; // Fallback
+        emit(CouponInvalid(errorMessage,
+          userTokens: state.userTokens,
+          isDailyTokenAvailable: state.isDailyTokenAvailable,
+          nextDailyTokenTime: state.nextDailyTokenTime,
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+        ));
+        return;
       }
+
+      // Kupon daha önce kullanılmış mı kontrolü (Yerelleştirilmiş mesaj)
       final alreadyUsed = await _userDataManager.isCouponUsed(couponCode);
       if (alreadyUsed) {
-        emit(CouponInvalid("Bu kupon kodu zaten kullanılmış.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,)); return;
+        final errorMessage = loc?.couponAlreadyUsed ?? "This coupon has already been used."; // Fallback
+        emit(CouponInvalid(errorMessage,
+          userTokens: state.userTokens,
+          isDailyTokenAvailable: state.isDailyTokenAvailable,
+          nextDailyTokenTime: state.nextDailyTokenTime,
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+        ));
+        return;
       }
-      final Map<String, Map<String, dynamic>> validCoupons = { 'CREDITS': {'type': 'credits', 'value': 1000.0},
+
+      // Geçerli kuponları tanımla (Bu kısım aynı kalabilir)
+      final Map<String, Map<String, dynamic>> validCoupons = {
+        'CREDITS': {'type': 'credits', 'value': 100.0},
         'FREE_READING': {'type': 'credits', 'value': 10.0},
         'WELCOME10': {'type': 'credits', 'value': 10.0},
         'TAROT50': {'type': 'credits', 'value': 50.0},
         'FIRSTFREE': {'type': 'credits', 'value': 25.0},
-        'LOYALTY100': {'type': 'credits', 'value': 1000.0}, };
+        'LOYALTY100': {'type': 'credits', 'value': 100.0},
+      };
 
       if (!validCoupons.containsKey(couponCode)) {
-        emit(CouponInvalid("Geçersiz kupon kodu.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,)); return;
+        // Önce GENEL geçersiz mesajını mevcut dilde al
+        final String genericInvalidMessage = loc?.couponInvalidGenericMessage // Yeni eklenen anahtar
+            ?? "Invalid coupon code"; // loc null ise fallback
+
+        // Sonra bu genel mesajı, couponInvalid METODUNA parametre olarak geç
+        // Böylece hem metot (örn: "Hata: {message}") hem de mesaj ({message}) yerelleşmiş olur.
+        final String finalErrorMessage = loc?.couponInvalid(genericInvalidMessage)
+            ?? genericInvalidMessage; // loc null ise yine fallback
+
+        emit(CouponInvalid(finalErrorMessage, // Son yerelleştirilmiş mesajı state'e gönder
+          userTokens: state.userTokens,
+          isDailyTokenAvailable: state.isDailyTokenAvailable,
+          nextDailyTokenTime: state.nextDailyTokenTime,
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+        ));
+        return; // İşlemi bitir
       }
+
+      // Kuponu işle
       final coupon = validCoupons[couponCode]!;
       final couponType = coupon['type'] as String?;
       final couponValue = coupon['value'];
+
       if (couponType == 'credits' && couponValue is num && couponValue > 0) {
         final creditsToAdd = couponValue.toDouble();
         final currentTokens = await _userDataManager.getTokens();
         final newTokens = currentTokens + creditsToAdd;
         await _userDataManager.saveTokens(newTokens);
         await _userDataManager.markCouponAsUsed(couponCode);
+
+        // Başarılı mesajı (Yerelleştirilmiş - creditsAdded anahtarı varsayıldı)
+        // l10n dosyanızda "creditsAdded": "{count} kredi başarıyla eklendi!" gibi bir anahtar olmalı.
+        final successMessage = loc?.creditsAdded(creditsToAdd.toStringAsFixed(0)) ?? "${creditsToAdd.toStringAsFixed(0)} credits added!"; // Fallback
+
         emit(CouponRedeemed(
-          "${creditsToAdd.toStringAsFixed(0)} kredi eklendi!",
+          successMessage, // Yerelleştirilmiş mesaj
           userTokens: newTokens,
           isDailyTokenAvailable: state.isDailyTokenAvailable,
           nextDailyTokenTime: state.nextDailyTokenTime,
@@ -502,14 +640,29 @@ class TarotBloc extends Bloc<TarotEvent, TarotState> {
         ));
         if (kDebugMode) { print("TarotBloc: Kupon '$couponCode' kullanıldı. $creditsToAdd kredi eklendi. Yeni bakiye: $newTokens"); }
       } else {
-        emit(CouponInvalid("Desteklenmeyen kupon tipi.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,));
+        // Desteklenmeyen tip hatası (Yerelleştirilmiş)
+        final errorMessage = loc?.couponInvalid("Desteklenmeyen kupon tipi.") ?? "Unsupported coupon type."; // Fallback
+        emit(CouponInvalid(errorMessage,
+          userTokens: state.userTokens,
+          isDailyTokenAvailable: state.isDailyTokenAvailable,
+          nextDailyTokenTime: state.nextDailyTokenTime,
+          lastSelectedCategory: state.lastSelectedCategory,
+          userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+        ));
       }
     } catch (e) {
       if (kDebugMode) { print("TarotBloc Kupon işleme hatası: $e"); }
-      emit(CouponInvalid("Kupon kullanılırken bir hata oluştu.", userTokens: state.userTokens, isDailyTokenAvailable: state.isDailyTokenAvailable, nextDailyTokenTime: state.nextDailyTokenTime, lastSelectedCategory: state.lastSelectedCategory, userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,));
+      // Genel hata mesajı (Yerelleştirilmiş - errorMessage anahtarı varsayıldı)
+      final errorMessage = loc?.couponInvalid(loc.errorMessage(e.toString())) ?? "An error occurred while redeeming the coupon."; // Fallback
+      emit(CouponInvalid(errorMessage,
+        userTokens: state.userTokens,
+        isDailyTokenAvailable: state.isDailyTokenAvailable,
+        nextDailyTokenTime: state.nextDailyTokenTime,
+        lastSelectedCategory: state.lastSelectedCategory,
+        userName: state.userName, userAge: state.userAge, userGender: state.userGender, userInfoCollected: state.userInfoCollected,
+      ));
     }
   }
-
   // ===========================================================================
   // --- Okuma Süreci Yönetimi (_handleReadingProcess - GÜNCELLENDİ) ---
   // ===========================================================================

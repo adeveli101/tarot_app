@@ -408,6 +408,9 @@ class SEn extends S {
   }
 
   @override
+  String get couponInvalidGenericMessage => 'Invalid coupon code';
+
+  @override
   String get returnToHome => 'Return to Home';
 
   @override
@@ -995,6 +998,9 @@ class SEn extends S {
 
   @override
   String get fullMoonResultingEnergy => 'Resulting Energy';
+
+  @override
+  String get claimed => 'Already Claimed';
 
   @override
   String get claim => 'Claim';

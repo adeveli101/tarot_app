@@ -14,3 +14,4 @@ key.properties
 /app/build.gradle
 /gradle.properties
 /app/google-services.json
+/app/proguard-rules.pro

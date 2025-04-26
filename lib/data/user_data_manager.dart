@@ -1,5 +1,6 @@
 // lib/data/user_data_manager.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserDataManager {
@@ -111,4 +112,26 @@ class UserDataManager {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_firstTimeBonusGivenKey, true);
   }
+
+
+
+  // lib/data/user_data_manager.dart
+// ... (diğer kodlar)
+
+
+
+  // --- YENİ METOD BAŞLANGIÇ ---
+  /// Test amacıyla son ödül alma zamanını sıfırlar.
+  Future<void> resetLastRewardClaimForTesting() async {
+    final prefs = await SharedPreferences.getInstance();
+    // _lastResetKey değerini 0 yaparak ödülün tekrar alınabilir olmasını sağlar.
+    await prefs.setInt(_lastResetKey, 0);
+    if (kDebugMode) {
+      print("DEBUG: Günlük ödül zamanı sıfırlandı.");
+    }
+  }
+// --- YENİ METOD SON ---
 }
+
+
+

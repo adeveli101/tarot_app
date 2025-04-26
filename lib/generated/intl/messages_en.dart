@@ -286,6 +286,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Claim your daily credits!",
     ),
     "claimYourDailyTokens": m10,
+    "claimed": MessageLookupByLibrary.simpleMessage("Already Claimed"),
     "close": MessageLookupByLibrary.simpleMessage("Close"),
     "confirm": MessageLookupByLibrary.simpleMessage("Confirm"),
     "confirmPurchase": MessageLookupByLibrary.simpleMessage("Confirm Purchase"),
@@ -297,6 +298,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "couponHint": MessageLookupByLibrary.simpleMessage("Enter coupon code"),
     "couponInvalid": m11,
+    "couponInvalidGenericMessage": MessageLookupByLibrary.simpleMessage(
+      "Invalid coupon code",
+    ),
     "couponRedeemed": m12,
     "creditDescription": m13,
     "creditInfoTooltip": MessageLookupByLibrary.simpleMessage(

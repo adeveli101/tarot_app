@@ -143,6 +143,9 @@
       "message": {}
     }
   },
+  "couponInvalidGenericMessage": "Kupon geçersiz.",
+
+
   "unveilTheStars": "Yıldızları Keşfet",
   "returnToHome": "Ana Sayfaya Dön",
   "pleaseWait":"Lütfen Bekleyin.",
@@ -517,6 +520,7 @@
       }
     }
   },
+  "claimed": "Ödül zaten alındı.",
 
   "claim": "Al",
   "dailyRewardClaimedMessage": "Günlük ödül alındı! Sonraki ödüle: {time}",

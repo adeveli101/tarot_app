@@ -8,6 +8,13 @@ abstract class TarotEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+
+
+// --- YENİ EVENT BAŞLANGIÇ ---
+/// Test amacıyla günlük ödül sayacını sıfırlamak için kullanılır.
+class ResetDailyRewardForTesting extends TarotEvent {}
+
+
 // --- Mevcut Eventler (DEĞİŞİKLİK YOK) ---
 class LoadTarotCards extends TarotEvent {}
 class ShuffleDeck extends TarotEvent {}

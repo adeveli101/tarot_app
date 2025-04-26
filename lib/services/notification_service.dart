@@ -1,6 +1,6 @@
 // lib/services/notification_service.dart
 
-// ignore_for_file: depend_on_referenced_packages
+// ignore_for_file: depend_on_referenced_packages, avoid_print
 
 import 'dart:async';
 import 'dart:io'; // Platform kontrolü için
@@ -16,26 +16,30 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 // Projenizdeki ilgili dosyaları import edin
-import 'package:tarot_fal/main.dart'; // navigatorKey için
+import 'package:tarot_fal/main.dart'; // navigatorKey için (GLOBAL OLMALI)
 import 'package:tarot_fal/generated/l10n.dart'; // Yerelleştirme için
 
 // --- Constants ---
-// SharedPreferences Anahtarları
-const String _exactAlarmPermissionRequestedKey = 'exact_alarm_permission_requested_v1'; // İzin daha önce soruldu mu?
-const String _tappedPayloadKey = 'tapped_notification_payload'; // Uygulama kapalıyken tıklanan bildirim payload'ı
+// SharedPreferences Keys
+const String _exactAlarmPermissionRequestedKey =
+    'exact_alarm_permission_requested_v1';
+const String _tappedPayloadKey = 'tapped_notification_payload';
 
-// Bildirim Kanalı Bilgileri (Android)
-const String _androidChannelId = 'tarot_fal_rewards_channel'; // Kanal ID'si (benzersiz olmalı)
-const String _androidChannelName = 'Tarot Fal Rewards'; // Kullanıcının ayarlarda göreceği kanal adı
-const String _androidChannelDescription = 'Notifications for daily rewards and other app events.'; // Kanal açıklaması
+// Notification Channel Info (Android) - Bunları yerelleştirmek başlangıçta zor olabilir.
+// Kanal oluşturma genellikle context olmadan yapılır. Bu yüzden sabit bırakmak daha güvenli olabilir
+// Veya initialize metoduna bir context/S instance geçirin.
+const String _androidChannelId = 'tarot_fal_rewards_channel';
+// TODO: Bu anahtarları l10n dosyanıza ekleyin: 'androidChannelName', 'androidChannelDescription'
+const String _androidChannelNameFallback = 'Tarot Fal Rewards'; // l10n.androidChannelName
+const String _androidChannelDescriptionFallback =
+    'Notifications for daily rewards and other app events.'; // l10n.androidChannelDescription
 
-// Bildirim ID'leri
+// Notification IDs
 const int dailyRewardNotificationId = 0;
-const int genericNotificationId = 1; // Diğer bildirimler için farklı ID'ler kullanılabilir
+const int genericNotificationId = 1;
 
-// Uygulama İkon Adı (mipmap klasöründeki ad - uzantısız)
-// !!! BU DEĞERİ KENDİ UYGULAMA İKONUNUZUN ADIYLA DEĞİŞTİRİN !!!
-const String _appIconName = 'launcher_icon'; // Örn: 'ic_launcher' veya özel ikon adınız
+// App Icon Name (Android)
+const String _appIconName = '@mipmap/launcher_icon';
 
 /// Uygulama genelinde bildirimleri yönetmek için servis sınıfı.
 class NotificationService {
@@ -53,13 +57,13 @@ class NotificationService {
       await _initializeTimeZones();
       await _initializeNotifications();
       if (kDebugMode) {
-        print("NotificationService: Başarıyla başlatıldı. Timezone: ${tz.local.name}");
+        print(
+            "NotificationService: Successfully initialized. Timezone: ${tz.local.name}");
       }
     } catch (e, stackTrace) {
       if (kDebugMode) {
-        print("NotificationService Başlatma Hatası: $e\n$stackTrace");
+        print("NotificationService Initialization Error: $e\n$stackTrace");
       }
-      // Burada daha kapsamlı bir hata loglama mekanizması kullanılabilir.
     }
   }
 
@@ -69,10 +73,9 @@ class NotificationService {
       tz.initializeTimeZones();
       final String timeZoneName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(timeZoneName));
-      if (kDebugMode) print("Timezone başarıyla ayarlandı: $timeZoneName");
+      if (kDebugMode) print("Timezone successfully set: $timeZoneName");
     } catch (e) {
-      if (kDebugMode) print("Timezone başlatma hatası: $e");
-      // Varsayılan bir timezone ayarlanabilir veya hata loglanabilir.
+      if (kDebugMode) print("Timezone initialization error: $e");
       tz.setLocalLocation(tz.getLocation('Etc/UTC')); // Fallback to UTC
     }
   }
@@ -80,64 +83,59 @@ class NotificationService {
   /// FlutterLocalNotifications eklentisini platforma özel ayarlarla başlatır.
   Future<void> _initializeNotifications() async {
     try {
-      // Android Ayarları: Uygulama ikonunu kullanır.
       const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings(_appIconName); // <<< UYGULAMA İKONU ADI
+      AndroidInitializationSettings(_appIconName);
 
-      // iOS Ayarları: İzinler ayrıca istenir.
       final DarwinInitializationSettings initializationSettingsDarwin =
       DarwinInitializationSettings(
-        // Eski iOS sürümleri için foreground bildirimlerini yakalama callback'i
-        requestAlertPermission: false, // İzinleri burada isteme
+        requestAlertPermission: false,
         requestBadgePermission: false,
         requestSoundPermission: false,
+        // Eski iOS < 10 için callback (yeni callback'ler tercih edilir)
+        // onDidReceiveLocalNotification: onDidReceiveLocalNotification, // Genellikle kullanılmaz
       );
-
-      // Linux Ayarları (varsa)
-      // const LinuxInitializationSettings initializationSettingsLinux =
-      //     LinuxInitializationSettings(defaultActionName: 'Open notification');
 
       final InitializationSettings initializationSettings =
       InitializationSettings(
         android: initializationSettingsAndroid,
         iOS: initializationSettingsDarwin,
-        // linux: initializationSettingsLinux,
       );
 
-      // Eklentiyi başlat ve bildirim tıklama callback'lerini ayarla
       await _flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
-        // Bildirime tıklandığında uygulama AÇIKKEN çağrılır
         onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
-        // Bildirime tıklandığında uygulama KAPALIYKEN/ARKA PLANDAYKEN çağrılır
         onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
       );
 
-      // Android için bildirim kanalını oluştur (Android 8.0+)
       await _createAndroidNotificationChannel();
 
-      if (kDebugMode) print("FlutterLocalNotifications başarıyla başlatıldı.");
-
+      if (kDebugMode) print("FlutterLocalNotifications successfully initialized.");
     } catch (e, stackTrace) {
       if (kDebugMode) {
-        print("FlutterLocalNotifications başlatma hatası: $e\n$stackTrace");
+        print("FlutterLocalNotifications initialization error: $e\n$stackTrace");
       }
     }
   }
 
   /// Android 8.0 ve üzeri için bildirim kanalını oluşturur.
+  /// Not: Kanal adı ve açıklaması için yerelleştirme burada zordur, fallback kullanıldı.
   Future<void> _createAndroidNotificationChannel() async {
-    // Sadece Android platformunda çalıştır
     if (!Platform.isAndroid) return;
 
+    // Context burada genellikle olmaz, fallback kullanıyoruz.
+    // Eğer context alabiliyorsanız:
+    // final context = navigatorKey.currentContext;
+    // final S? loc = context != null ? S.of(context) : null;
+    // final channelName = loc?.androidChannelName ?? _androidChannelNameFallback;
+    // final channelDesc = loc?.androidChannelDescription ?? _androidChannelDescriptionFallback;
+
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      _androidChannelId, // Kanal ID'si (sabit)
-      _androidChannelName, // Kullanıcıya gösterilecek kanal adı
-      description: _androidChannelDescription, // Kanal açıklaması
-      importance: Importance.max, // Bildirimin önemi (ses, titreşim vb.)
+      _androidChannelId,
+      _androidChannelNameFallback, // Yerelleştirilmiş adı kullanın (eğer context varsa)
+      description: _androidChannelDescriptionFallback, // Yerelleştirilmiş açıklamayı kullanın
+      importance: Importance.max,
       playSound: true,
       enableVibration: true,
-      // Diğer ayarlar (ışık rengi vb.) eklenebilir
     );
 
     try {
@@ -145,349 +143,351 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(channel);
-      if (kDebugMode) print("Android bildirim kanalı oluşturuldu: $_androidChannelId");
+      if (kDebugMode) {
+        print("Android notification channel created: $_androidChannelId");
+      }
     } catch (e) {
-      if (kDebugMode) print("Android bildirim kanalı oluşturma hatası: $e");
+      if (kDebugMode) {
+        print("Android notification channel creation error: $e");
+      }
     }
   }
 
-  // --- İzin Yönetimi ---
+  // --- Permission Management ---
 
-  /// Gerekli bildirim izinlerini (temel ve isteğe bağlı olarak exact alarm)
-  /// kontrol eder ve kullanıcıdan ister.
-  /// Bu fonksiyon genellikle uygulamanın başlangıcında (örn. Splash Screen) çağrılmalıdır.
-  Future<void> checkAndRequestPermissionsIfNeeded({bool requestExactAlarm = false}) async {
-    if (kDebugMode) print("NotificationService: İzinler kontrol ediliyor (Exact Alarm: $requestExactAlarm)...");
+  /// Gerekli bildirim izinlerini kontrol eder ve ister.
+  Future<void> checkAndRequestPermissionsIfNeeded(
+      {bool requestExactAlarm = false}) async {
+    if (kDebugMode) {
+      print(
+          "NotificationService: Checking permissions (Exact Alarm: $requestExactAlarm)...");
+    }
     try {
-      // 1. Temel Bildirim İzni
-      bool notificationsGranted = await _checkAndRequestBasicNotificationPermission();
+      bool notificationsGranted =
+      await _checkAndRequestBasicNotificationPermission();
       if (!notificationsGranted && kDebugMode) {
-        if (kDebugMode) {
-          print("Temel bildirim izni verilmedi.");
-        }
-        // İzin verilmediyse kullanıcıya bilgi verilebilir (opsiyonel)
-        // _showPermissionDeniedDialog('notification');
+        print("Basic notification permission not granted.");
+        // İzin reddedildiyse _showPermissionDeniedDialog çağrılır (iç kontrol)
       }
 
-      // 2. Tam Zamanlı Alarm İzni (Android)
-      // Sadece istenirse, Android ise ve temel izin verildiyse kontrol et/iste
       if (requestExactAlarm && notificationsGranted && Platform.isAndroid) {
         await _checkAndRequestExactAlarmPermissionWithDialog();
       }
-
-    } catch(e, stackTrace) {
-      if (kDebugMode) print("Bildirim izinlerini isteme/kontrol etme hatası: $e\n$stackTrace");
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print("Error checking/requesting permissions: $e\n$stackTrace");
+      }
     }
   }
 
-  /// Temel bildirim iznini (Android 13+ POST_NOTIFICATIONS, iOS) kontrol eder ve ister.
+  /// Temel bildirim iznini kontrol eder ve ister.
   Future<bool> _checkAndRequestBasicNotificationPermission() async {
-    PermissionStatus status = PermissionStatus.denied; // Başlangıç durumu
+    PermissionStatus status = PermissionStatus.denied;
     bool wasDeniedPreviously = false;
 
     try {
       if (Platform.isIOS) {
         status = await Permission.notification.status;
-        wasDeniedPreviously = status.isDenied || status.isPermanentlyDenied; // iOS'ta ilk seferde sormak yaygın
+        wasDeniedPreviously = status.isDenied || status.isPermanentlyDenied;
         if (status.isDenied || !status.isGranted) {
-          if (kDebugMode) print(">>> iOS Notification Permission isteniyor (mevcut durum: $status)...");
+          if (kDebugMode) print(">>> Requesting iOS Notification Permission (current: $status)...");
           status = await Permission.notification.request();
-          if (kDebugMode) print("<<< iOS bildirim izni sonucu: $status");
+          if (kDebugMode) print("<<< iOS notification permission result: $status");
         }
       } else if (Platform.isAndroid) {
-        // Android 13 (API 33) ve üzeri için kontrol
         status = await Permission.notification.status;
         wasDeniedPreviously = status.isDenied || status.isPermanentlyDenied;
         if (status.isDenied) {
-          if (kDebugMode) print(">>> Android Notifications Permission isteniyor (mevcut durum: $status)...");
+          if (kDebugMode) print(">>> Requesting Android Notifications Permission (current: $status)...");
           status = await Permission.notification.request();
-          if (kDebugMode) print("<<< Android bildirim izni sonucu: $status");
+          if (kDebugMode) print("<<< Android notification permission result: $status");
         }
       } else {
-        status = PermissionStatus.granted; // Diğer platformlar için varsayılan
+        status = PermissionStatus.granted;
       }
 
-      // İzin kalıcı olarak reddedildiyse kullanıcıyı bilgilendir/yönlendir
       if (status.isPermanentlyDenied && wasDeniedPreviously) {
-        if (kDebugMode) print("Temel bildirim izni kalıcı olarak reddedilmiş.");
-        _showPermissionDeniedDialog('notification');
+        if (kDebugMode) print("Basic notification permission permanently denied.");
+        _showPermissionDeniedDialog('notification'); // Kullanıcıyı bilgilendir
       }
-
     } catch (e) {
-      if (kDebugMode) print("Temel bildirim izni istenirken hata: $e");
-      return false; // Hata durumunda izin verilmedi kabul et
+      if (kDebugMode) print("Error requesting basic notification permission: $e");
+      return false;
     }
     return status.isGranted;
   }
 
   /// Tam zamanlı alarm iznini (Android 12+) kontrol eder ve gerekirse diyalogla ister.
   Future<void> _checkAndRequestExactAlarmPermissionWithDialog() async {
-    // Sadece Android'de çalışır
     if (!Platform.isAndroid) return;
 
     PermissionStatus status = PermissionStatus.denied;
-    bool shouldShowRationale = false; // Açıklama göstermek gerekli mi?
+    bool shouldShowRationale = false;
 
     try {
       status = await Permission.scheduleExactAlarm.status;
-      shouldShowRationale = await Permission.scheduleExactAlarm.shouldShowRequestRationale;
-      if (kDebugMode) print("Exact Alarm İzin Durumu (Kontrol): $status, Rationale Gerekli: $shouldShowRationale");
+      // shouldShowRequestRationale Android 12 ve altında false dönebilir,
+      // bu yüzden SharedPreferences ile kendi takibimizi de yapıyoruz.
+      // shouldShowRationale = await Permission.scheduleExactAlarm.shouldShowRequestRationale; // Bu direkt kullanılmayabilir.
 
-      // İzin zaten verilmişse veya platform desteklemiyorsa (shouldShowRequestRationale false dönerse) çık
+      if (kDebugMode) print("Exact Alarm Permission Status (Check): $status");
+
       if (status.isGranted) {
-        if (kDebugMode) print("Exact Alarm izni zaten verilmiş.");
+        if (kDebugMode) print("Exact Alarm permission already granted.");
         return;
       }
       if (status.isPermanentlyDenied) {
-        if (kDebugMode) print("Exact Alarm izni kalıcı olarak reddedilmiş.");
-        _showPermissionDeniedDialog('exact_alarm'); // Kullanıcıyı bilgilendir/yönlendir
+        if (kDebugMode) print("Exact Alarm permission permanently denied.");
+        _showPermissionDeniedDialog('exact_alarm');
         return;
       }
 
-      // İzin reddedilmişse ve daha önce sorulmadıysa veya açıklama gerekiyorsa
+      // İzin reddedilmişse (Denied)
       if (status.isDenied) {
         final prefs = await SharedPreferences.getInstance();
         final bool alreadyRequested = prefs.getBool(_exactAlarmPermissionRequestedKey) ?? false;
 
-        // Daha önce sorulmadıysa VEYA sistem açıklama gösterilmesi gerektiğini söylüyorsa
-        if (!alreadyRequested || shouldShowRationale) {
-          if (kDebugMode) print("Exact Alarm izni için açıklama diyaloğu gösterilecek (alreadyRequested: $alreadyRequested, shouldShowRationale: $shouldShowRationale).");
+        // Daha önce hiç sorulmadıysa veya sistem rationale önermese bile
+        // (çünkü kullanıcı önceden reddetmiş olabilir), bir diyalog gösterelim.
+        if (!alreadyRequested) {
+          if (kDebugMode) print("Showing Exact Alarm explanation dialog (first time asking or previously denied).");
 
           final context = navigatorKey.currentContext;
           if (context != null && context.mounted) {
+            // Kullanıcıya neden bu izne ihtiyaç duyduğumuzu açıklayan bir diyalog göster
             final bool userAgreed = await _showExactAlarmExplanationDialog(context);
-            // Kullanıcı diyalogda ne seçerse seçsin, soruldu olarak işaretle
+            // Diyalog gösterildiği için soruldu olarak işaretle
             await prefs.setBool(_exactAlarmPermissionRequestedKey, true);
 
-            if (userAgreed && context.mounted) { // Tekrar mounted kontrolü
-              if (kDebugMode) print("Kullanıcı kabul etti, sistem izni isteniyor...");
-              status = await Permission.scheduleExactAlarm.request(); // Asıl sistem iznini iste
-              if (kDebugMode) print("Sistem izni sonrası Exact Alarm Durumu: $status");
-              if(status.isPermanentlyDenied){
-                if (kDebugMode) print("Exact Alarm izni sistem tarafından kalıcı reddedildi.");
+            if (userAgreed && context.mounted) { // mounted kontrolü önemli
+              if (kDebugMode) print("User agreed, requesting system permission...");
+              status = await Permission.scheduleExactAlarm.request();
+              if (kDebugMode) print("Exact Alarm Status after system request: $status");
+              if (status.isPermanentlyDenied) {
+                if (kDebugMode) print("Exact Alarm permission permanently denied by system.");
                 _showPermissionDeniedDialog('exact_alarm');
               }
             } else {
-              if (kDebugMode) print("Kullanıcı açıklama diyaloğunda kabul etmedi veya context kayboldu.");
+              if (kDebugMode) print("User did not agree in explanation dialog or context lost.");
             }
           } else {
-            if (kDebugMode) print("Exact Alarm diyaloğu gösterilemedi: Geçerli context bulunamadı.");
+            if (kDebugMode) print("Cannot show Exact Alarm dialog: Valid context not found.");
           }
         } else {
-          if (kDebugMode) print("Exact Alarm izni daha önce sorulmuş ve rationale gerekmiyor, tekrar sorulmuyor.");
+          if (kDebugMode) print("Exact Alarm permission already requested before, not asking again via dialog.");
+          // İsteğe bağlı: Burada direkt sistem iznini tekrar isteyebilirsiniz, ancak önerilmez.
+          // status = await Permission.scheduleExactAlarm.request();
         }
       }
-
     } catch (e, stackTrace) {
-      if (kDebugMode) print("Exact Alarm izni istenirken hata: $e\n$stackTrace");
+      if (kDebugMode) print("Error requesting Exact Alarm permission: $e\n$stackTrace");
     }
   }
 
-  /// Kullanıcı izni reddettiğinde veya kalıcı olarak reddettiğinde gösterilecek diyalog.
-  /// Kullanıcıyı uygulama ayarlarına yönlendirmeyi teklif eder.
+  /// Kullanıcı izni reddettiğinde gösterilecek diyalog (Yerelleştirilmiş).
   Future<void> _showPermissionDeniedDialog(String permissionType) async {
+    // Global navigatorKey kullanarak context alınıyor
     final context = navigatorKey.currentContext;
     if (context == null || !context.mounted) {
-      if (kDebugMode) print("İzin reddedildi diyaloğu için context bulunamadı.");
+      if (kDebugMode) print("Cannot show permission denied dialog: Context is null or not mounted.");
       return;
     }
 
-    final loc = S.of(context);
+    // Yerelleştirme nesnesini al (null check ile)
+    final S loc = S.of(context)!; // ! Kullanımı istendi
     String title;
     String content;
 
     if (permissionType == 'notification') {
-      title = loc!.notificationPermissionDeniedTitle;
+      title = loc.notificationPermissionDeniedTitle;
       content = loc.notificationPermissionDeniedText;
     } else if (permissionType == 'exact_alarm') {
-      title = loc!.exactAlarmPermissionDeniedTitle;
+      title = loc.exactAlarmPermissionDeniedTitle;
       content = loc.exactAlarmPermissionDeniedText;
     } else {
-      return; // Bilinmeyen izin tipi
+      if (kDebugMode) print("Unknown permission type for dialog: $permissionType");
+      return;
     }
 
+    // Yerelleştirilmiş metinlerle diyalog göster
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.grey[900]?.withOpacity(0.95),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Row(children: [const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent), const SizedBox(width: 10), Expanded(child: Text(title, style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold)))]),
-        content: Text(content, style: GoogleFonts.cabin(color: Colors.white70, fontSize: 15)),
+        title: Row(children: [
+          const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent),
+          const SizedBox(width: 10),
+          Expanded(
+              child: Text(title,
+                  style: GoogleFonts.cinzel(
+                      color: Colors.white, fontWeight: FontWeight.bold)))
+        ]),
+        content: Text(content,
+            style: GoogleFonts.cabin(color: Colors.white70, fontSize: 15)),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white70),
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(loc.later, style: GoogleFonts.cinzel(fontWeight: FontWeight.w600)),
+            child: Text(loc.later, // Yerelleştirilmiş "Later"
+                style: GoogleFonts.cinzel(fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent[100], foregroundColor: Colors.black87, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orangeAccent[100],
+                foregroundColor: Colors.black87,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8))),
             onPressed: () {
               Navigator.pop(dialogContext);
               openAppSettings(); // Kullanıcıyı uygulama ayarlarına yönlendir
             },
-            child: Text(loc.settings, style: GoogleFonts.cinzel(fontWeight: FontWeight.bold)), // Ayarlar butonu
+            child: Text(loc.settings, // Yerelleştirilmiş "Settings"
+                style: GoogleFonts.cinzel(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-
-  /// Exact alarm izni için açıklama diyaloğunu gösterir.
+  /// Exact alarm izni için açıklama diyaloğunu gösterir (Yerelleştirilmiş).
   Future<bool> _showExactAlarmExplanationDialog(BuildContext context) async {
-    final loc = S.of(context);
-    final String titleText = loc!.exactAlarmPermissionTitle;
-    final String explanationText = loc.exactAlarmPermissionExplanation;
-    final String laterText = loc.later;
-    final String allowText = loc.allow;
+    // Context zaten parametre olarak geliyor
+    if (!context.mounted) return false; // Ekstra güvenlik kontrolü
+    final S loc = S.of(context)!; // ! Kullanımı istendi
 
+    // Diyalog göster ve sonucunu dön (true/false)
     return await showDialog<bool>(
       context: context,
-      barrierDismissible: false, // Kullanıcı dışarı tıklayarak kapatamasın
+      barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.deepPurple[900]?.withOpacity(0.95),
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
-            side: BorderSide(color: Colors.cyanAccent.withOpacity(0.5)) // Kenarlık rengi
-        ),
+            side: BorderSide(color: Colors.cyanAccent.withOpacity(0.5))),
         title: Row(
           children: [
             const Icon(Icons.alarm_add_rounded, color: Colors.cyanAccent),
             const SizedBox(width: 10),
-            Expanded(child: Text(titleText, style: GoogleFonts.cinzel(color: Colors.white, fontWeight: FontWeight.bold))),
+            Expanded(
+                child: Text(loc.exactAlarmPermissionTitle, // Yerelleştirilmiş Title
+                    style: GoogleFonts.cinzel(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold))),
           ],
         ),
-        content: Text(explanationText, style: GoogleFonts.cabin(color: Colors.white70, fontSize: 15)),
+        content: Text(loc.exactAlarmPermissionExplanation, // Yerelleştirilmiş Açıklama
+            style: GoogleFonts.cabin(color: Colors.white70, fontSize: 15)),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white70),
-            onPressed: () => Navigator.pop(dialogContext, false), // Kullanıcı "Sonra" dedi
-            child: Text(laterText, style: GoogleFonts.cinzel(fontWeight: FontWeight.w600)),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(loc.later, // Yerelleştirilmiş "Later"
+                style: GoogleFonts.cinzel(fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.cyanAccent[100],
               foregroundColor: Colors.black87,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
-            onPressed: () => Navigator.pop(dialogContext, true), // Kullanıcı "İzin Ver" dedi
-            child: Text(allowText, style: GoogleFonts.cinzel(fontWeight: FontWeight.bold)),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(loc.allow, // Yerelleştirilmiş "Allow"
+                style: GoogleFonts.cinzel(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
-    ) ?? false; // Dialog bir şekilde kapanırsa false döndür
+    ) ??
+        false; // Diyalog kapatılırsa false dön
   }
 
+  // --- Notification Scheduling ---
 
-  // --- Bildirim Planlama ---
-
-  /// Belirtilen zamanda günlük ödül bildirimini planlar.
-  /// Başlık ve içerik için yerelleştirme anahtarları alır.
+  /// Belirtilen zamanda günlük ödül bildirimini planlar (Yerelleştirilmiş).
+  /// Artık `titleKey` ve `bodyKey` yerine doğrudan yerelleştirilmiş metinler beklenir.
   Future<void> scheduleDailyRewardNotification({
     required DateTime scheduledTime,
-    required String titleKey, // Örn: "dailyRewardNotificationTitle"
-    required String bodyKey,  // Örn: "dailyRewardNotificationBody"
-    String payload = 'daily_reward_available', // Bildirime tıklanınca kullanılacak payload
+    // GÜNCELLENDİ: Artık yerelleştirme anahtarları yerine doğrudan metinler alınır
+    required String localizedTitle,
+    required String localizedBody,
+    String payload = 'daily_reward_available',
   }) async {
-    // Geçmiş bir zamana bildirim planlama
+    // Geçmiş zaman kontrolü aynı kalır
     if (scheduledTime.isBefore(DateTime.now())) {
-      if (kDebugMode) print("Geçmiş zamana bildirim planlanamaz: $scheduledTime");
+      if (kDebugMode) {
+        print("Cannot schedule notification for a past time: $scheduledTime");
+      }
       return;
     }
 
-    // Yerelleştirilmiş metinleri al
-    final context = navigatorKey.currentContext;
-    if (context == null) {
-      if (kDebugMode) print("Günlük ödül bildirimi için context alınamadı.");
-      // Context yoksa belki varsayılan İngilizce metinler kullanılabilir
-      // veya işlem iptal edilebilir. Şimdilik iptal edelim.
-      return;
-    }
-    final loc = S.of(context);
-    // Sınıfınızın bu anahtarları desteklediğinden emin olun
-    final String title = _getLocalizedValue(loc!, titleKey, "Ödül Hazır!"); // Fallback eklendi
-    final String body = _getLocalizedValue(loc, bodyKey, "Günlük ödülünü almayı unutma!"); // Fallback eklendi
+    // Yerelleştirilmiş metinler zaten parametre olarak geldiği için
+    // context'e veya S sınıfına burada gerek yok.
 
     try {
-      // Android Bildirim Detayları
       final AndroidNotificationDetails androidNotificationDetails =
       AndroidNotificationDetails(
-        _androidChannelId, // Oluşturulan kanalın ID'si
-        _androidChannelName, // Kanal adı
-        channelDescription: _androidChannelDescription, // Kanal açıklaması
-        importance: Importance.max, // En yüksek önem seviyesi
-        priority: Priority.high, // En yüksek öncelik
-        ticker: title, // Bildirim geldiğinde durum çubuğunda kısa süre görünen metin
-        icon: _appIconName, // <<< UYGULAMA İKONU ADI
-        // largeIcon: FilePathAndroidBitmap('drawable/app_logo_large'), // İsteğe bağlı büyük ikon
+        _androidChannelId,
+        _androidChannelNameFallback, // Kanal adı (init'te sabit kalabilir)
+        channelDescription: _androidChannelDescriptionFallback, // Kanal açıklaması
+        importance: Importance.max,
+        priority: Priority.high,
+        ticker: localizedTitle, // Yerelleştirilmiş başlık ticker'a da eklendi
+        icon: _appIconName,
         playSound: true,
         enableVibration: true,
-        // Bildirim rengi (isteğe bağlı)
-        // color: Colors.purpleAccent,
-        // Style bilgisi (varsayılan)
-        styleInformation: DefaultStyleInformation(true, true),
+        styleInformation: const DefaultStyleInformation(true, true),
       );
 
-      // iOS Bildirim Detayları
       const DarwinNotificationDetails darwinNotificationDetails =
       DarwinNotificationDetails(
-        presentAlert: true, // Bildirim gösterilsin mi?
-        presentBadge: true, // Uygulama ikonu üzerinde sayı gösterilsin mi?
-        presentSound: true, // Ses çalınsın mı?
-        // threadIdentifier: 'daily_reward', // Bildirimleri gruplamak için (isteğe bağlı)
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
       );
 
       // Bildirimi planla
       await _flutterLocalNotificationsPlugin.zonedSchedule(
-        dailyRewardNotificationId, // Bildirim ID'si (aynı ID ile planlanırsa eskisi güncellenir)
-        title, // Yerelleştirilmiş başlık
-        body, // Yerelleştirilmiş içerik
-        tz.TZDateTime.from(scheduledTime, tz.local), // Yerel saate göre planla
+        dailyRewardNotificationId,
+        localizedTitle, // <<< Yerelleştirilmiş başlık kullanıldı
+        localizedBody, // <<< Yerelleştirilmiş içerik kullanıldı
+        tz.TZDateTime.from(scheduledTime, tz.local),
         NotificationDetails(
           android: androidNotificationDetails,
           iOS: darwinNotificationDetails,
         ),
-        payload: payload, // Tıklanınca gönderilecek veri
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Cihaz uyku modundayken bile tam zamanında tetikle (izin gerektirir)
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime, // Zamanı mutlak olarak yorumla
+        payload: payload,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime,
       );
-      if (kDebugMode) { print("Günlük ödül bildirimi planlandı: $scheduledTime"); }
-    } catch (e, stackTrace) {
-      if (kDebugMode) { print("Günlük ödül bildirimi planlama hatası: $e\n$stackTrace"); }
-    }
-  }
-
-  /// Basit bir yerelleştirme anahtarı alma yardımcısı (fallback ile).
-  String _getLocalizedValue(S loc, String key, String fallback) {
-    try {
-      // Yerelleştirme sınıfında anahtarın var olup olmadığını kontrol etmek
-      // veya doğrudan çağırmak yerine daha güvenli bir yöntem kullanmak iyi olabilir.
-      // Şimdilik doğrudan çağırıyoruz. Hata durumunda fallback dönecek.
-      // Örneğin: loc.lookup(key) gibi bir metot varsa o kullanılabilir.
-      // Veya S sınıfının generate ettiği yapıya göre dinamik erişim:
-      switch (key) {
-        case 'dailyRewardNotificationTitle': return loc.dailyRewardNotificationTitle;
-        case 'dailyRewardNotificationBody': return loc.dailyRewardNotificationBody;
-      // Diğer anahtarlar için case'ler eklenebilir...
-        default: return fallback;
+      if (kDebugMode) {
+        print("Daily reward notification scheduled for: $scheduledTime");
       }
-    } catch (e) {
-      if (kDebugMode) print("Yerelleştirme anahtarı '$key' alınamadı: $e");
-      return fallback;
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print("Error scheduling daily reward notification: $e\n$stackTrace");
+      }
     }
   }
 
-  // --- Bildirim İptal Etme ---
+  /*
+  // GÜNCELLENDİ: Bu yardımcı metoda artık gerek yok, kaldırıldı.
+  /// Basit bir yerelleştirme anahtarı alma yardımcısı (fallback ile).
+  String _getLocalizedValue(S loc, String key, String fallback) { ... }
+  */
+
+  // --- Notification Cancellation ---
 
   /// Belirtilen ID'ye sahip planlanmış bildirimi iptal eder.
   Future<void> cancelNotification(int id) async {
     try {
       await _flutterLocalNotificationsPlugin.cancel(id);
-      if (kDebugMode) print("Bildirim iptal edildi: ID $id");
+      if (kDebugMode) print("Notification cancelled: ID $id");
     } catch (e) {
-      if (kDebugMode) print("Bildirim iptal etme hatası (ID: $id): $e");
+      if (kDebugMode) print("Error cancelling notification (ID: $id): $e");
     }
   }
 
@@ -495,29 +495,35 @@ class NotificationService {
   Future<void> cancelAllNotifications() async {
     try {
       await _flutterLocalNotificationsPlugin.cancelAll();
-      if (kDebugMode) print("Tüm bildirimler iptal edildi.");
+      if (kDebugMode) print("All notifications cancelled.");
     } catch (e) {
-      if (kDebugMode) print("Tüm bildirimleri iptal etme hatası: $e");
+      if (kDebugMode) print("Error cancelling all notifications: $e");
     }
   }
 
-  // --- Bildirim Callback'leri ---
+  // --- Notification Callbacks ---
 
-  /// iOS < 10 için foreground'da bildirim alındığında tetiklenir.
+  /// iOS < 10 için foreground'da bildirim alındığında tetiklenir (Yerelleştirilmiş Dialog).
   /// Genellikle modern uygulamalarda çok kullanılmaz.
   void onDidReceiveLocalNotification(
       int id, String? title, String? body, String? payload) async {
-    // Burada kullanıcıya bir dialog veya başka bir UI elemanı gösterilebilir.
-    if (kDebugMode) print('Foreground iOS (<10) bildirimi alındı: $id, Payload: $payload');
-    // Örnek: Dialog gösterme
+    if (kDebugMode) {
+      print('Foreground iOS (<10) notification received: $id, Payload: $payload');
+    }
     final context = navigatorKey.currentContext;
     if (context != null && context.mounted && title != null) {
-      showDialog(
+      final S loc = S.of(context)!; // Yerelleştirme
+      await showDialog(
         context: context,
         builder: (BuildContext context) => AlertDialog(
-          title: Text(title),
-          content: Text(body ?? ''),
-          actions: [ TextButton( child: const Text('Ok'), onPressed: () => Navigator.of(context).pop(),)],
+          title: Text(title), // Bildirimden gelen başlık
+          content: Text(body ?? ''), // Bildirimden gelen içerik
+          actions: [
+            TextButton(
+              child: Text(loc.close), // Yerelleştirilmiş "Close"
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
         ),
       );
     }
@@ -526,93 +532,88 @@ class NotificationService {
   /// Bildirime tıklandığında uygulama AÇIKKEN veya ARKA PLANDAYKEN tetiklenir.
   void onDidReceiveNotificationResponse(NotificationResponse response) async {
     final String? payload = response.payload;
-    if (kDebugMode) print('Bildirim tıklandı (App Açık/Arka Plan): ID ${response.id}, Payload: $payload');
-
+    if (kDebugMode) {
+      print(
+          'Notification tapped (App Open/Background): ID ${response.id}, Payload: $payload');
+    }
     if (payload != null) {
-      // Payload'a göre yönlendirme yap
       _handlePayloadNavigation(payload);
     }
   }
 
   /// Bildirime tıklandığında uygulama KAPALIYKEN tetiklenir.
-  /// Bu fonksiyon main isolate dışında çalışır, UI işlemleri yapılamaz.
   @pragma('vm:entry-point')
   static void notificationTapBackground(NotificationResponse response) {
-    // Uygulama kapalıyken çalışır.
-    // Karmaşık işlemler veya UI güncellemeleri YAPILAMAZ.
-    // Payload'ı kaydedip uygulama açıldığında kontrol etmek en iyi yöntemdir.
-    if (kDebugMode) print('Bildirim tıklandı (App Kapalı): ID ${response.id}, Payload: ${response.payload}');
+    if (kDebugMode) {
+      print(
+          'Notification tapped (App Closed): ID ${response.id}, Payload: ${response.payload}');
+    }
     if (response.payload != null) {
-      // Payload'ı SharedPreferences'a kaydet
+      // Payload'ı SharedPreferences'a kaydet (UI işlemi yok)
       NotificationPayloadHandler.saveTappedPayload(response.payload!);
     }
   }
 
   /// Payload değerine göre ilgili ekrana yönlendirme yapar.
   void _handlePayloadNavigation(String payload) {
-    if (kDebugMode) print("Payload yönlendirmesi işleniyor: $payload");
+    if (kDebugMode) print("Handling payload navigation for: $payload");
+    // Context ve Navigator'ı global key ile al
     final context = navigatorKey.currentContext;
     final navigator = navigatorKey.currentState;
 
+    // Context veya navigator null ise veya widget ağaçtan kaldırıldıysa işlem yapma
     if (context == null || navigator == null || !context.mounted) {
-      if (kDebugMode) print("Payload yönlendirmesi için geçerli context/navigator bulunamadı.");
+      if (kDebugMode) {
+        print(
+            "Cannot handle payload navigation: Valid context/navigator not found or widget not mounted.");
+      }
       return;
     }
 
     try {
       if (payload == 'daily_reward_available') {
-        // Örnek: Ana ekrana git ve ödül sekmesini/alanını açtır
-        // (Ana ekranınızda bu argümanı kontrol eden bir mantık olmalı)
-        if (kDebugMode) print("Günlük ödül sayfasına yönlendiriliyor...");
-        navigator.pushNamedAndRemoveUntil('/home', (route) => false, arguments: {'openRewardSection': true});
-      } else if (payload.startsWith('reading_ready:')) {
-        // Örnek: Belirli bir okuma detayına git
-        // final readingId = payload.split(':')[1];
-        // navigator.pushNamed(context, '/readingDetail', arguments: readingId);
-        if (kDebugMode) print("Okuma detay sayfasına yönlendiriliyor (ID: ...)");
-        // navigator.push(context, MaterialPageRoute(builder: (_) => ReadingDetailScreen(readingId: readingId)));
+        if (kDebugMode) print("Navigating to home screen for daily reward...");
+        navigator.pushNamedAndRemoveUntil('/home', (route) => false,
+            arguments: {'openRewardSection': true});
       }
-      // Diğer payload türleri için else if blokları...
+      // Diğer payload türleri için yönlendirmeler buraya eklenebilir
+      // else if (payload.startsWith('some_other_action:')) { ... }
       else {
-        if (kDebugMode) print("Bilinmeyen payload, ana ekrana yönlendiriliyor: $payload");
+        if (kDebugMode) {
+          print("Unknown payload, navigating to home screen: $payload");
+        }
         navigator.pushNamedAndRemoveUntil('/home', (route) => false);
       }
     } catch (e, stackTrace) {
-      if (kDebugMode) print("Payload yönlendirme hatası: $e\n$stackTrace");
+      if (kDebugMode) print("Payload navigation error: $e\n$stackTrace");
     }
   }
-
 } // NotificationService sonu
 
-// --- Bildirim Payload İşleyici Yardımcı Sınıfı ---
-
-/// Uygulama kapalıyken tıklanan bildirim payload'ını SharedPreferences'a
-/// kaydetmek ve okumak için basit bir yardımcı sınıf.
+// --- Notification Payload Handler Helper Class ---
+// Bu sınıf UI veya yerelleştirme içermediği için aynı kalır.
 class NotificationPayloadHandler {
-
-  /// Uygulama kapalıyken tıklanan son payload'ı kaydeder.
   static Future<void> saveTappedPayload(String payload) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_tappedPayloadKey, payload);
-      if (kDebugMode) print("Kaydedilen tıklanmış payload: $payload");
+      if (kDebugMode) print("Saved tapped payload: $payload");
     } catch (e) {
-      if (kDebugMode) print("Payload kaydetme hatası: $e");
+      if (kDebugMode) print("Error saving payload: $e");
     }
   }
 
-  /// Kaydedilmiş payload'ı alır ve SİLEREK döndürür (tek seferlik kullanım için).
   static Future<String?> getAndClearTappedPayload() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? payload = prefs.getString(_tappedPayloadKey);
       if (payload != null) {
         await prefs.remove(_tappedPayloadKey); // Aldıktan sonra sil
-        if (kDebugMode) print("Alınan ve temizlenen payload: $payload");
+        if (kDebugMode) print("Retrieved and cleared payload: $payload");
         return payload;
       }
     } catch (e) {
-      if (kDebugMode) print("Payload alma/temizleme hatası: $e");
+      if (kDebugMode) print("Error retrieving/clearing payload: $e");
     }
     return null;
   }

@@ -797,6 +797,12 @@ abstract class S {
   /// **'{message}'**
   String couponInvalid(Object message);
 
+  /// No description provided for @couponInvalidGenericMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid coupon code'**
+  String get couponInvalidGenericMessage;
+
   /// No description provided for @returnToHome.
   ///
   /// In en, this message translates to:
@@ -1942,6 +1948,12 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Resulting Energy'**
   String get fullMoonResultingEnergy;
+
+  /// No description provided for @claimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Already Claimed'**
+  String get claimed;
 
   /// No description provided for @claim.
   ///

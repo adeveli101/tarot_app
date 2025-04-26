@@ -46,6 +46,10 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
   final String _clickSoundPath = 'sounds/click.mp3';           // Örnek yol
   final String _startButtonSoundPath = 'sounds/start_button.mp3'; // Örnek yol
 
+
+  late AnimationController _dailyRewardGlowController; // <-- YENİ: Günlük ödül butonu için animasyon kontrolcüsü
+// <-- YENİ: Ödül hazır sesi (varsa)
+
   @override
   void initState() {
     super.initState();
@@ -66,6 +70,17 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     // Efektler için ID belirleyerek aynı anda çalmasını engelleme (isteğe bağlı)
     // _soundEffectPlayer.setPlayerId('sound_effects');
 
+    _dailyRewardGlowController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    // Bloc state'i dinleyerek animasyonu başlat/durdur
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateRewardGlowAnimation(context.read<TarotBloc>().state.isDailyTokenAvailable);
+    });
+
+
+
     // Ses efektleri için durdurma modunu ayarla (tekrar çalmadan önce bitmesini sağla)
     _soundEffectPlayer.setReleaseMode(ReleaseMode.loop);
 
@@ -85,7 +100,97 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     _backgroundMusicPlayer.dispose();
     _soundEffectPlayer.stop(); // Efektler anlık olduğu için stop yeterli olabilir
     _soundEffectPlayer.dispose();
+
+    _dailyRewardGlowController.dispose();
+
     super.dispose();
+  }
+
+
+  void _updateRewardGlowAnimation(bool isAvailable) {
+    if (!mounted) return; // Widget ağaçtan kaldırıldıysa işlem yapma
+    if (isAvailable) {
+      if (!_dailyRewardGlowController.isAnimating) {
+        _dailyRewardGlowController.repeat(reverse: true);
+        // _playSound(_rewardReadySoundPath); // Ödül hazır olduğunda ses çal (opsiyonel)
+      }
+    } else {
+      if (_dailyRewardGlowController.isAnimating) {
+        _dailyRewardGlowController.stop();
+        _dailyRewardGlowController.value = 0; // Animasyonu başa sar
+      }
+    }
+  }
+
+
+  void _showClaimTokenPopup(BuildContext context) {
+    final loc = S.of(context)!;
+    // _playSound(_clickSoundPath); // Popup açma sesi (opsiyonel)
+
+    showDialog(
+      context: context,
+      barrierDismissible: true, // Dışarı tıklayarak kapatılabilir
+      builder: (BuildContext dialogContext) {
+        // Dialog içinde Bloc erişimi gerekiyorsa BlocProvider.value kullanılabilir
+        // Ancak burada sadece event göndereceğimiz için BuildContext yeterli.
+        return AlertDialog(
+          backgroundColor: Colors.deepPurple[900]?.withOpacity(0.95),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+            side: BorderSide(color: Colors.purpleAccent.withOpacity(0.5)),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.card_giftcard_rounded, color: Colors.amber[300], size: 28),
+              const SizedBox(width: 10),
+              Text(
+                loc.dailyRewardNotificationTitle, // l10n: "Günlük Ödül" (eklenmeli)
+                style: GoogleFonts.cinzel(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Text(
+            // l10n: "Günlük {tokenAmount} kredinizi almak için butona tıklayın!" (eklenmeli)
+            // Sabit değeri veya BLoC'tan gelen değeri kullanabilirsiniz.
+            loc.rewardNotificationBody(TarotBloc.dailyLoginTokens.toStringAsFixed(0)),
+            style: GoogleFonts.cinzel(color: Colors.white.withOpacity(0.9), fontSize: 14),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                loc.cancel, // l10n: "İptal"
+                style: GoogleFonts.cinzel(color: Colors.white70),
+              ),
+              onPressed: () {
+                // _playSound(_clickSoundPath); // İptal sesi (opsiyonel)
+                Navigator.of(dialogContext).pop(); // Dialog'u kapat
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber[600],
+                foregroundColor: Colors.black87,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              child: Text(
+                loc.claim, // l10n: "Ödülü Al" (eklenmeli)
+                style: GoogleFonts.cinzel(fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                // _playSound(_claimRewardSoundPath); // Ödül alma sesi (opsiyonel)
+                HapticFeedback.lightImpact();
+                // Dialog'u kapatmadan ÖNCE event'i gönderiyoruz
+                context.read<TarotBloc>().add(ClaimDailyToken());
+                Navigator.of(dialogContext).pop(); // Dialog'u kapat
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // --- Arka Plan Müziği Başlatma ---
@@ -203,7 +308,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final loc = S.of(context)!; // Yerelleştirme için build başında al
     return Scaffold(
@@ -215,26 +319,36 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           BlocConsumer<TarotBloc, TarotState>(
             // BlocConsumer state değişikliklerini dinler ve UI'ı günceller
             listener: (context, state) {
+
+              // ------------ YENİ EKLEMELER BAŞLANGIÇ ------------
+              // Günlük ödül butonu animasyonunu state değişikliğine göre güncelle
+              _updateRewardGlowAnimation(state.isDailyTokenAvailable);
+              // ------------ YENİ EKLEMELER SON ------------
+
               // --- Ödül Alındı Popup Gösterimi ---
-              // Not: Bu kısmın çalışması için BLoC'un DailyTokenClaimSuccess state'i yayınlaması gerekir.
-              if (state is DailyTokenClaimSuccess) { // Varsayımsal state kontrolü
-                // Bir sonraki ödül zamanı null değilse devam et
+              if (state is DailyTokenClaimSuccess) {
+                // SnackBar gösterimi mevcut haliyle kalıyor, iyi çalışıyor.
                 if (state.nextDailyTokenTime != null) {
                   final remainingDuration = state.nextDailyTokenTime!.difference(DateTime.now());
-                  // Negatif süre kontrolü
                   final displayDuration = remainingDuration.isNegative ? Duration.zero : remainingDuration;
-                  final formattedTime = formatTimeDuration(displayDuration); // Yardımcı fonksiyonu kullan
+                  final formattedTime = formatTimeDuration(displayDuration);
 
-                  // l10n dosyasında 'dailyRewardClaimedMessage' anahtarı ve {time} parametresi olmalı.
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(loc.dailyRewardClaimedMessage(formattedTime)), // Yerelleştirilmiş mesaj
-                      duration: const Duration(seconds: 3), // 3 saniye göster
-                      backgroundColor: Colors.green[700], // Başarı rengi
-                      behavior: SnackBarBehavior.floating, // Yukarıda göster
+                      content: Text(loc.dailyRewardClaimedMessage(formattedTime)),
+                      duration: const Duration(seconds: 4), // Biraz daha uzun gösterilebilir
+                      backgroundColor: Colors.green[700],
+                      behavior: SnackBarBehavior.floating,
                       margin: const EdgeInsets.fromLTRB(15.0, 5.0, 15.0, 10.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      action: SnackBarAction(
+                        label: loc.close, // l10n: "Kapat" (veya Tamam)
+                        textColor: Colors.white,
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                        },
                       ),
                     ),
                   );
@@ -246,21 +360,28 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
               } else if (state is CouponInvalid) {
                 ScaffoldMessenger.of(context).showSnackBar( SnackBar( content: Text(loc.couponInvalid(state.message)), backgroundColor: Colors.orange[800]),);
               } else if (state is TarotError) {
-                // Siyah ekran sorununu çözerken hata mesajını geçici olarak yorumlayabilirsin
                 if (kDebugMode) {
                   print("TarotError Listener: ${state.message}");
                 } // Konsola yazdır
                 // ScaffoldMessenger.of(context).showSnackBar( SnackBar( content: Text(loc.errorMessage(state.message)), backgroundColor: Colors.redAccent),);
               }
+              // --- InsufficientResources için Listener ---
+              else if (state is InsufficientResources) {
+                // Ödeme dialogunu göster (Mevcut PaymentManager kullanımı)
+                PaymentManager.showPaymentDialog(context, onSuccess: () {
+                  // Başarılı olursa belki kullanıcı verilerini yeniden çekmek gerekebilir
+                  context.read<TarotBloc>().add(LoadTarotCards()); // Veya özel bir event
+                  if (kDebugMode) print("Ödeme başarılı, UI güncellenebilir.");
+                });
+              }
             },
             builder: (context, state) {
               // State'e göre ana içeriği veya yükleme göstergesini oluştur
-              if (state is TarotLoading && state is! TarotInitial) {
-                // Yükleme durumunda yükleme widget'ını göster
+              if (state is TarotLoading && state is! TarotInitial && state is! DailyTokenClaimSuccess && state is! CouponRedeemed && state is! CouponInvalid) {
+                // Sadece belirli durumlarda yükleme göster
                 return _buildLoadingWidget();
               }
               // Diğer durumlarda ana içeriği göster
-              // (Siyah ekran sorunu çözüldüyse, burası artık çalışmalı)
               return _buildMainContent(context, state);
             },
           ),
@@ -269,9 +390,37 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           _buildTopBar(context),
 
 
-        ],
+          // if (kDebugMode) // Sadece debug modunda göster
+          //   Positioned(
+          //     bottom: 10, // Konumunu ayarlayabilirsiniz
+          //     right: 10,
+          //     child: FloatingActionButton(
+          //       mini: true, // Küçük buton
+          //       tooltip: 'Reset Daily Reward (DEBUG)',
+          //       backgroundColor: Colors.redAccent.withOpacity(0.7),
+          //       onPressed: () {
+          //         // Sıfırlama event'ini gönder
+          //         context.read<TarotBloc>().add(ResetDailyRewardForTesting());
+          //         // Kullanıcıya geri bildirim ver (opsiyonel)
+          //         ScaffoldMessenger.of(context).showSnackBar(
+          //           const SnackBar(
+          //             content: Text("DEBUG: Günlük Ödül Sıfırlandı!"),
+          //             duration: Duration(seconds: 1),
+          //           ),
+          //         );
+          //       },
+          //       child: const Icon(Icons.refresh, size: 20),
+          //     ),
+          //   ),
+          // --- YENİ TEST BUTONU SON ---
+
+
+
+         ],
       ),
-    );
+     );
+
+
   }
   // ===========================================================================
   // --- Yardımcı Widget'lar ---
@@ -428,7 +577,6 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
                   mainAxisAlignment: MainAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // <<< Tooltipler Geri Eklendi >>>
                     _buildAppBarButton( context: context, icon: Icons.person_outline_rounded, tooltip: loc.profile, onPressed: () { _navigateToProfilePage(context); },),
                     _buildAppBarButton( context: context, icon: Icons.settings_outlined, tooltip: loc.settings, onPressed: () { _playSound(_clickSoundPath); widget.onSettingsTap?.call(); },),
                   ],
@@ -440,11 +588,12 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
       ),
     );
   }
-
+  /// Üst barın sol tarafını oluşturur (Token, Kupon, Ödül).
   /// Üst barın sol tarafını oluşturur (Token, Kupon, Ödül).
   Widget _buildLeftTopBar(BuildContext context) {
     final loc = S.of(context)!;
     return BlocBuilder<TarotBloc, TarotState>(
+      // buildWhen state'i aynı kalabilir, gösterilecek widget'ı etkileyen state'leri dinler
       buildWhen: (prev, curr) =>
       prev.userTokens != curr.userTokens ||
           prev.isDailyTokenAvailable != curr.isDailyTokenAvailable ||
@@ -461,63 +610,59 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
             runSpacing: 4.0,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              // --- Token Göstergesi (Tıklanabilir) ---
-              Tooltip( // <<< Tooltip Eklendi >>>
+              // --- Token Göstergesi ---
+              Tooltip(
                 message: loc.creditInfoTooltip,
-                child: GestureDetector( // <<< Tıklama Eklendi >>>
-                  onTap: () {
-                    _playSound(_clickSoundPath);
-                    PaymentManager.showPaymentDialog(context, onSuccess: () {
-                      // Başarılı satın alma sonrası BLoC'u güncellemek için event gönderilebilir
-                      // context.read<TarotBloc>().add(FetchUserDataEvent()); // Örnek event
-                      if (kDebugMode) print("Ödeme başarılı, UI güncellenebilir.");
-                    });
+                child: GestureDetector(
+                  onTap: () {          PaymentManager.showPaymentDialog(context);
                   },
                   child: _buildTokenDisplay(context, state.userTokens),
                 ),
               ),
               // --- Kupon Kullan Butonu ---
-              Tooltip( // <<< Tooltip Eklendi >>>
+              Tooltip(
                 message: loc.redeemCouponTooltip,
                 child: _buildCompactRedeemButton(context),
               ),
-              // --- Günlük Ödül/Sayaç ---
+
+              // --- GÜNCELLENMİŞ GÜNLÜK ÖDÜL GÖSTERİM MANTIĞI ---
               if (state.isDailyTokenAvailable)
-                Tooltip( // <<< Tooltip Eklendi >>>
+              // 1. Durum: Ödül alınabilir -> Aktif Buton
+                Tooltip(
                   message: loc.claimDailyRewardTooltip,
-                  child: _buildCompactClaimButton(context),
+                  child: _buildCompactClaimButton(context), // Aktif, animasyonlu buton
                 )
-              else if (state.nextDailyTokenTime != null && state.nextDailyTokenTime!.isAfter(DateTime.now()))
-              // <<< Sayaç da Tıklanabilir ve Tooltip Eklendi >>>
+              else if (state.nextDailyTokenTime != null &&
+                  state.nextDailyTokenTime!.isAfter(DateTime.now()))
+              // 2. Durum: Ödül alınamaz & Sonraki zaman gelecek bir tarih -> Sayaç
                 GestureDetector(
-                  onTap: () {
-                    _playSound(_clickSoundPath);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(loc.dailyRewardInfo), // Yerelleştirilmiş bilgi
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  },
+                  onTap: () { Tooltip(
+                    message: loc.claimDailyRewardTooltip,
+                    child: _buildCompactClaimButton(context), // Aktif, animasyonlu buton
+                  ); },
+
+
+
                   child: DailyTokenCountdownTimerCompact(
-                    key: ValueKey(state.nextDailyTokenTime), // Key önemli
+                    key: ValueKey(state.nextDailyTokenTime),
                     targetTime: state.nextDailyTokenTime!,
-                    localization: loc, // Yerelleştirme objesi geçildi
+                    localization: loc,
                   ),
                 )
               else
-                const SizedBox.shrink(), // Hiçbir şey gösterme
+              // 3. Durum: Ödül alınamaz & Sonraki zaman gelecek bir tarih DEĞİL -> İnaktif Buton
+              // Bu durum genellikle ödülün o gün içinde alındığı anlamına gelir.
+                _buildInactiveClaimedButton(context), // Yeni inaktif butonumuz
+              // --- GÜNCELLENMİŞ GÜNLÜK ÖDÜL GÖSTERİM MANTIĞI SONU ---
+
             ],
           ),
         );
       },
     );
   }
-
-
   /// Token ikonunu ve miktarını gösterir (Yatay taşma düzeltmeli).
   Widget _buildTokenDisplay(BuildContext context, double userTokens) {
-    // Tokena tıklandığında satın alma ekranını açmak için GestureDetector ile sarıldı
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -539,14 +684,13 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
         ],
       ),
     );
-
   }
 
   /// Kompakt kupon butonu (ikon). Tooltip kaldırıldı.
   Widget _buildCompactRedeemButton(BuildContext context) {
     return TapAnimatedScale(
       onTap: () {
-        _playSound(_clickSoundPath); // <<< Tıklama sesi eklendi
+        _playSound(_clickSoundPath);
         _showCouponSheet(context);
       },
       child: Container(
@@ -561,52 +705,125 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
     );
   }
 
-  /// Kompakt günlük ödül alma butonu (ikon). Tooltip kaldırıldı.
-  /// Kompakt günlük ödül alma butonu (YAZI).
   Widget _buildCompactClaimButton(BuildContext context) {
     final loc = S.of(context)!; // Yerelleştirme için
 
+    // Orijinal buton içeriği burada kalacak (Text widget'ı)
+    final buttonContent = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          gradient: LinearGradient( colors: [Colors.amber[500]!, Colors.orange[700]!], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          boxShadow: [ BoxShadow( color: Colors.yellow.withOpacity(0.5), blurRadius: 8, spreadRadius: 1)], // Statik parlama
+          border: Border.all(color: Colors.white.withOpacity(0.7), width: 0.8)
+      ),
+      child: Text(
+        loc.claim,
+        style: GoogleFonts.cinzel(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+
     return TapAnimatedScale(
       onTap: () {
-        // _playSound(_clickSoundPath); // İstersen sesi tekrar aktif edebilirsin
-        HapticFeedback.lightImpact();
-        context.read<TarotBloc>().add(ClaimDailyToken());
+        // Tıklanınca popup'ı göster
+        _showClaimTokenPopup(context);
+        // Haptic feedback popup içinde verildiği için burada gerek yok
+        // HapticFeedback.lightImpact();
       },
+      child: AnimatedBuilder( // Animasyonlu parlama ve ölçek için
+        animation: _dailyRewardGlowController,
+        builder: (context, child) {
+          // Animasyon değerine göre bir parlama efekti (örneğin shadow rengi)
+          final glowValue = sin(_dailyRewardGlowController.value * pi); // 0-1 arası sinüs dalgası
+          final glowColor = Colors.yellowAccent.withOpacity(0.3 + glowValue * 0.5); // 0.3 ile 0.8 arası opaklık
+          final scaleValue = 1.0 + glowValue * 0.05; // Hafif boyut animasyonu
+
+          return Transform.scale( // Boyut animasyonu
+            scale: scaleValue,
+            child: Container(
+              // AnimatedBuilder'ın shadow'u Container üzerine uygulaması için
+              // iç içe Container kullanıyoruz. Dış Container sadece shadow içindir.
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15), // Gölgenin de köşeleri yuvarlak olsun
+                boxShadow: [
+                  BoxShadow( color: glowColor, blurRadius: 10 + glowValue * 6, spreadRadius: 1 + glowValue * 2),
+                ],
+              ),
+              child: child, // Orijinal buton içeriği (buttonContent)
+            ),
+          );
+        },
+        child: buttonContent, // AnimatedBuilder'a orijinal içeriği veriyoruz
+      ),
+    );
+  }
+
+  // --- YENİ WIDGET BAŞLANGIÇ ---
+  /// Günlük ödül alındığında gösterilecek inaktif buton.
+// --- DÜZELTİLMİŞ WIDGET ---
+  /// Günlük ödül alındığında gösterilecek inaktif buton.
+  Widget _buildInactiveClaimedButton(BuildContext context) {
+    final loc = S.of(context)!; // Yerelleştirme için
+
+    return Tooltip(
+      // Hata 1 Düzeltildi: Doğru anahtar kullanıldı ve parametre kaldırıldı.
+      message: loc.dailyRewardInfo, // l10n: "Günlük ödül zaten alındı"
       child: Container(
-        // Padding'i ayarlayarak yazıya uygun hale getir
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Daha geniş yatay padding
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          // shape: BoxShape.circle, // Daire şeklini kaldır
-            borderRadius: BorderRadius.circular(15), // Yuvarlak köşeler ekle
-            gradient: LinearGradient( colors: [Colors.amber[500]!, Colors.orange[700]!], begin: Alignment.topLeft, end: Alignment.bottomRight),
-            boxShadow: [ BoxShadow( color: Colors.yellow.withOpacity(0.5), blurRadius: 8, spreadRadius: 1)],
-            border: Border.all(color: Colors.white.withOpacity(0.7), width: 0.8)
+            borderRadius: BorderRadius.circular(15),
+            gradient: LinearGradient(
+              colors: [Colors.grey[700]!, Colors.grey[800]!],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1))
+            ],
+            border: Border.all(color: Colors.grey[600]!, width: 0.8)
         ),
-        // Icon yerine Text kullan
-        child: Text(
-          loc.claim,
-          style: GoogleFonts.cinzel( // Stili ayarla
-            color: Colors.white,
-            fontSize: 11, // Boyutu ayarla
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle_outline_rounded, size: 12, color: Colors.grey[400]),
+            const SizedBox(width: 5),
+            Text(
+              // Hata 2 Düzeltildi: Doğru anahtar kullanıldı ve parametre kaldırıldı.
+              loc.claim, // l10n: "Alındı"
+              style: GoogleFonts.cinzel(
+                color: Colors.grey[400],
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+  // --- DÜZELTİLMİŞ WIDGET SONU ---  // --- YENİ WIDGET SON ---
+
   /// Üst bar butonları (Tooltip Geri Eklendi).
   Widget _buildAppBarButton({
     required BuildContext context,
     required IconData icon,
-    required String tooltip, // <<< Tooltip parametresi geri eklendi
+    required String tooltip,
     required VoidCallback onPressed,})
   {
-    return Tooltip( // <<< Tooltip widget'ı eklendi
+    return Tooltip(
       message: tooltip,
       child: IconButton(
         icon: Icon(icon, color: Colors.white.withOpacity(0.85), size: 24),
-        onPressed: onPressed, // Ses efekti onPressed içinde çağrılacak
+        onPressed: onPressed,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         splashRadius: 18,

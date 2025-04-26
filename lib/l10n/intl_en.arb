@@ -146,6 +146,9 @@
     }
   },
 
+  "couponInvalidGenericMessage": "Invalid coupon code",
+
+
   "returnToHome": "Return to Home",
 
   "pleaseWait": "Please wait.",
@@ -506,6 +509,7 @@
   "fullMoonAction": "Action / Integration",
   "fullMoonResultingEnergy": "Resulting Energy",
 
+  "claimed": "Already Claimed",
 
   "claim": "Claim",
   "dailyRewardClaimedMessage": "Daily reward claimed! Next reward in {time}",
@@ -633,4 +637,9 @@
   "@disableNotificationsTitle": { "description": "Dialog title when user tries to turn off notifications" },
   "disableNotificationsDesc": "To disable notifications, please open the app settings.",
   "@disableNotificationsDesc": { "description": "Dialog content explaining how to disable notifications" }
+
+
+
+
+
 }

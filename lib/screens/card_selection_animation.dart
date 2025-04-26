@@ -1668,8 +1668,13 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
 
 
 
+
+
+
+
+/// Kullanıcının kartları çekmek için yatay olarak kaydırması gereken buton.
 class SlideToDrawButton extends StatefulWidget {
-  final VoidCallback onDrawComplete;
+  final VoidCallback onDrawComplete; // Kaydırma tamamlandığında tetiklenir
 
   const SlideToDrawButton({
     super.key,
@@ -1681,92 +1686,82 @@ class SlideToDrawButton extends StatefulWidget {
 }
 
 class SlideToDrawButtonState extends State<SlideToDrawButton> with TickerProviderStateMixin {
-  double _dragValue = 0.0;
-  bool _isDragging = false;
+  // --- State ve Animasyon Değişkenleri ---
+  double _dragValue = 0.0; // 0.0 (başlangıç) ile 1.0 (bitiş) arası kaydırma değeri
+  bool _isDragging = false; // Kullanıcı şu anda butonu kaydırıyor mu?
 
-  late AnimationController _pulseController;
-  late AnimationController _resetController;
-  late AnimationController _successController;
+  // Animasyon kontrolcüleri
+  late AnimationController _pulseController; // Bekleme durumundaki hafif parlama efekti için
+  late AnimationController _resetController; // Başarısız kaydırma sonrası geri dönüş animasyonu için
+  late AnimationController _successController; // Başarılı kaydırma sonrası efekt için
+
+  // Animasyonlar
   late Animation<double> _pulseAnimation;
-  late Animation<double> _resetAnimation; // Bu artık _startResetAnimation içinde tanımlanacak
-  late Animation<double> _successScaleAnimation;
-  late Animation<double> _successGlowAnimation;
+  late Animation<double> _resetAnimation;
+  late Animation<double> _successScaleAnimation; // Başarıda hafif büyüme
+  late Animation<double> _successGlowAnimation; // Başarıda parlama
 
-  late final AudioPlayer _audioPlayer = AudioPlayer();
-  bool _isAudioPlayerInitialized = false;
-  bool _isSoundPlaying = false;
-  final String _slideSoundPath = 'audios/transitional-swipe.mp3'; // Ses dosyasının yolu
-
-  static const double _buttonWidth = 280.0;
-  static const double _handleSize = 60.0;
-  static const Duration _resetDuration = Duration(milliseconds: 350);
-  static const Duration _successDuration = Duration(milliseconds: 500);
-  static const Duration _pulseDuration = Duration(milliseconds: 1500);
-  final double _draggableWidth = _buttonWidth - _handleSize;
+  // Buton boyutları ve animasyon süreleri
+  final double _buttonWidth = 280.0; // Buton genişliği
+  final double _handleSize = 60.0; // Kaydırılan dairenin boyutu
+  final Duration _resetDuration = const Duration(milliseconds: 350); // Geri dönüş süresi
+  final Duration _successDuration = const Duration(milliseconds: 500); // Başarı animasyon süresi
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-    _initializeAudioPlayer();
-  }
 
-  void _initializeAnimations() {
-    _pulseController = AnimationController(duration: _pulseDuration, vsync: this)
-      ..repeat(reverse: true);
+    // Pulse Animasyonu (bekleme durumu)
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500), // Daha yavaş bir pulse
+      vsync: this,
+    )..repeat(reverse: true);
     _pulseAnimation = CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut);
 
-    _resetController = AnimationController(duration: _resetDuration, vsync: this)
-    // Listener'ı _startResetAnimation içinde ekleyeceğiz
-      ..addStatusListener(_handleResetStatus);
-
-    _successController = AnimationController(duration: _successDuration, vsync: this);
-    _successScaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-        CurvedAnimation(parent: _successController, curve: Curves.elasticOut)
-    );
-    _successGlowAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.8), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 0.8, end: 0.0), weight: 60),
-    ]).animate(CurvedAnimation(parent: _successController, curve: Curves.easeOut))
-      ..addStatusListener(_handleSuccessStatus);
-  }
-
-  Future<void> _initializeAudioPlayer() async {
-    try {
-      // Gerekirse player ayarları (örn. low latency mode) burada yapılabilir
-      _isAudioPlayerInitialized = true;
-      if (kDebugMode) print("AudioPlayer initialized for SlideToDrawButton.");
-    } catch (e) {
-      if (kDebugMode) print("Error initializing AudioPlayer: $e");
-      _isAudioPlayerInitialized = false;
-    }
-  }
-
-  // Reset animasyonu tamamlandığında çağrılır
-  void _handleResetStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed) {
-      if (mounted && !_isDragging) {
-        // Reset tamamlandığında _dragValue'nun 0 olduğundan emin ol
-        // _startResetAnimation listener'ı zaten değeri güncelliyor olmalı
-        // setState(() { _dragValue = 0.0; }); // Bu satır gereksiz olabilir
-        _tryRepeatPulse(); // Pulse animasyonunu tekrar başlatmayı dene
-      }
-    }
-  }
-
-  // Başarı animasyonu tamamlandığında çağrılır
-  void _handleSuccessStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed) {
-      widget.onDrawComplete(); // Ana callback'i tetikle
-      // Kısa bir gecikme sonrası butonu eski haline getir
-      Future.delayed(const Duration(milliseconds: 100), () {
+    // Reset Animasyonu (başarısız kaydırma)
+    _resetController = AnimationController(duration: _resetDuration, vsync: this);
+    // _resetAnimation, _onDragEnd içinde dinamik olarak oluşturulur (başlangıç değeri için)
+    _resetAnimation = CurvedAnimation(parent: _resetController, curve: Curves.easeOutCirc)
+      ..addListener(() {
         if (mounted) {
-          // 1.0'dan başlayarak reset animasyonunu başlat
-          _startResetAnimation(fromValue: 1.0);
-          _successController.reset(); // Başarı kontrolcüsünü sıfırla
+          // Geri dönüş animasyonu sırasında _dragValue'yu güncelle
+          setState(() => _dragValue = lerpDouble(_resetAnimation.value, 0.0, _resetController.value)!);
+        }
+      })
+      ..addStatusListener((status) {
+        // Reset bittiğinde ve sürüklenmiyorsa pulse animasyonunu tekrar başlat
+        if (status == AnimationStatus.completed) {
+          if (mounted && !_isDragging) _pulseController.repeat(reverse: true);
         }
       });
-    }
+
+    // Success Animasyonu (başarılı kaydırma)
+    _successController = AnimationController(duration: _successDuration, vsync: this);
+    _successScaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate( // Biraz daha belirgin büyüme
+        CurvedAnimation(parent: _successController, curve: Curves.elasticOut) // Elastik efekt
+    );
+    _successGlowAnimation = TweenSequence<double>([ // Parlama efekti (hızlı artıp yavaş sönme)
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 0.8), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 0.8, end: 0.0), weight: 60),
+    ]).animate(CurvedAnimation(parent: _successController, curve: Curves.easeOut));
+
+    // Başarı animasyonu bittiğinde onDrawComplete callback'ini çağır ve resetle
+    _successController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        widget.onDrawComplete();
+        // Kısa bir bekleme sonrası reset animasyonunu başlat
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            _resetAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+                CurvedAnimation(parent: _resetController, curve: Curves.easeOutCirc)
+            );
+            _resetController.forward(from: 0.0);
+            // Başarı animasyonunu sıfırla
+            _successController.reset();
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -1774,163 +1769,252 @@ class SlideToDrawButtonState extends State<SlideToDrawButton> with TickerProvide
     _pulseController.dispose();
     _resetController.dispose();
     _successController.dispose();
-    _stopSlideSound(); // Sesi durdur
-    _audioPlayer.dispose(); // Player'ı serbest bırak
     super.dispose();
   }
 
-  // Kaydırma başladığında
+  // --- Sürükleme Olay Yöneticileri ---
+
   void _onDragStart(DragStartDetails details) {
-    // Eğer başka bir animasyon çalışıyorsa veya zaten sürükleniyorsa işlem yapma
+    // Eğer zaten sürükleniyorsa veya animasyonlar aktifse yeni sürüklemeyi başlatma
     if (_isDragging || _resetController.isAnimating || _successController.isAnimating) return;
     if (mounted) {
       setState(() {
         _isDragging = true;
-        // Çalışan animasyonları durdur
-        if (_resetController.isAnimating) _resetController.stop();
-        if (_pulseController.isAnimating) _pulseController.stop();
+        _resetController.stop(); // Reset animasyonunu durdur
+        _pulseController.stop(); // Pulse animasyonunu durdur
       });
-      HapticFeedback.lightImpact(); // Hafif titreşim
-      _startSlideSound(); // Kaydırma sesini başlat
     }
+    HapticFeedback.lightImpact(); // Hafif titreşim
   }
 
-  // Kaydırma devam ederken
   void _onDragUpdate(DragUpdateDetails details) {
     if (!_isDragging || !mounted) return;
     setState(() {
-      // Mevcut sürükleme değerini güncelle
-      final currentDragPixels = _dragValue * _draggableWidth;
-      // Yeni pozisyonu hesapla ve 0 ile sürükleme alanı genişliği arasında sınırla
-      final newDragPixels = (currentDragPixels + details.delta.dx).clamp(0.0, _draggableWidth);
-      // Yeni değeri 0.0 ile 1.0 arasına normalize et
-      _dragValue = newDragPixels / _draggableWidth;
+      // Sürükleme mesafesini hesapla ve _dragValue'yu güncelle (0.0 - 1.0 arasında)
+      final currentDragPixels = _dragValue * (_buttonWidth - _handleSize);
+      final newDragPixels = (currentDragPixels + details.delta.dx).clamp(0.0, _buttonWidth - _handleSize);
+      _dragValue = newDragPixels / (_buttonWidth - _handleSize);
     });
   }
 
-  // Kaydırma bittiğinde
   void _onDragEnd(DragEndDetails details) {
     if (!_isDragging || !mounted) return;
-    // Belirli bir eşiği (%85) geçtiyse başarılı say
-    final bool isSuccess = _dragValue > 0.85;
-    _stopSlideSound(); // Kaydırma sesini durdur
 
-    if (isSuccess) {
-      HapticFeedback.heavyImpact(); // Başarılı titreşim
-      // Başarı animasyonunu başlat
-      _successController.forward(from: 0.0);
+    // Başarı eşiğini kontrol et (%85'ten fazla kaydırıldıysa başarılı say)
+    final bool success = _dragValue > 0.85;
+
+    if (success) {
+      HapticFeedback.heavyImpact(); // Başarıda güçlü titreşim
+      setState(() { _dragValue = 1.0; }); // Tamamla
+      _successController.forward(from: 0.0); // Başarı animasyonunu başlat
     } else {
-      HapticFeedback.lightImpact(); // Başarısız titreşim
-      // Mevcut pozisyondan sıfıra dönme animasyonunu başlat
-      _startResetAnimation(fromValue: _dragValue);
+      // Başarısızsa, mevcut pozisyondan başa dönme animasyonunu başlat
+      HapticFeedback.lightImpact();
+      // Reset animasyonunu mevcut _dragValue'dan başlatacak şekilde ayarla
+      _resetAnimation = Tween<double>(begin: _dragValue, end: 0.0).animate(
+          CurvedAnimation(parent: _resetController, curve: Curves.easeOutCirc)
+      );
+      _resetController.forward(from: 0.0);
     }
-    // Sürükleme bitti olarak işaretle
-    setState(() => _isDragging = false);
+    setState(() => _isDragging = false); // Sürükleme bitti
   }
 
-  // Reset animasyonunu BAŞLATIRKEN tween'i ve listener'ı oluştur/güncelle
-  void _startResetAnimation({required double fromValue}) {
-    if (!mounted) return;
-
-    // Mevcut listener'ları temizle (önceki animasyondan kalmış olabilir)
-    _resetAnimation.removeListener(_updateDragValueFromReset);
-    _resetAnimation = Tween<double>(begin: fromValue, end: 0.0).animate(
-        CurvedAnimation(parent: _resetController, curve: Curves.easeOutCirc)
-    )
-    // Yeni listener'ı ekle
-      ..addListener(_updateDragValueFromReset);
-    // Status listener zaten initState'te eklenmişti, tekrar eklemeye gerek yok
-
-    _resetController.forward(from: 0.0); // Animasyonu başlat
-  }
-
-  // Reset animasyonu sırasında _dragValue'yu güncelleyen listener
-  void _updateDragValueFromReset() {
-    if (mounted) {
-      setState(() {
-        // Animasyonun mevcut değerini doğrudan _dragValue'ya ata
-        _dragValue = _resetAnimation.value;
-      });
-    }
-  }
-
-
-  // Pulse animasyonunu güvenli bir şekilde tekrar başlatmayı dener
-  void _tryRepeatPulse() {
-    // Eğer widget hala ekranda ise, pulse animasyonu çalışmıyorsa,
-    // sürükleme veya diğer animasyonlar aktif değilse başlat
-    if (mounted && !_pulseController.isAnimating && !_isDragging && !_resetController.isAnimating && !_successController.isAnimating) {
-      _pulseController.repeat(reverse: true);
-    }
-  }
-
-  // Kaydırma sesini başlatır
-  Future<void> _startSlideSound() async {
-    if (!_isAudioPlayerInitialized || _isSoundPlaying) return;
-    try {
-      // Sadece durmuş veya tamamlanmışsa yeniden başlat
-      if (_audioPlayer.state == PlayerState.stopped || _audioPlayer.state == PlayerState.completed ) {
-        await _audioPlayer.setSource(AssetSource(_slideSoundPath)); // Kaynağı ayarla
-        await _audioPlayer.play(AssetSource(_slideSoundPath), volume: 0.6, mode: PlayerMode.lowLatency);
-        if (mounted) setState(() => _isSoundPlaying = true);
-        if (kDebugMode) print("Slide sound started.");
-      } else if (_audioPlayer.state == PlayerState.paused) {
-        await _audioPlayer.resume();
-        if (mounted) setState(() => _isSoundPlaying = true);
-        if (kDebugMode) print("Slide sound resumed.");
-      }
-    } catch (e) {
-      if (kDebugMode) print("Error starting slide sound: $e");
-      if (mounted) setState(() => _isSoundPlaying = false);
-    }
-  }
-
-  // Kaydırma sesini durdurur
-  Future<void> _stopSlideSound() async {
-    if (!_isAudioPlayerInitialized || _audioPlayer.state == PlayerState.stopped || _audioPlayer.state == PlayerState.completed) return;
-    try {
-      await _audioPlayer.stop(); // Stop kullanmak genellikle daha güvenli
-      if (mounted) setState(() => _isSoundPlaying = false);
-      if (kDebugMode) print("Slide sound stopped.");
-    } catch (e) {
-      if (kDebugMode) print("Error stopping slide sound: $e");
-      if (mounted) setState(() => _isSoundPlaying = false);
-    }
-  }
+  // --- Build Metodu ---
 
   @override
   Widget build(BuildContext context) {
-    // Build metodu içinde yerelleştirme nesnesini al
-    final loc = S.of(context);
+    final loc = S.of(context); // Yerelleştirme
+    // Kaydırılan dairenin anlık yatay pozisyonu
+    final handlePosition = _dragValue * (_buttonWidth - _handleSize);
+
+    // Başlangıçtaki "Kaydır..." metninin opaklığı ve pozisyonu (kaydırdıkça kaybolur)
+    final initialTextOpacity = math.max(0.0, 1.0 - _dragValue * 3.5); // Daha hızlı kaybolsun
+    final initialTextOffset = lerpDouble(0, -50, _dragValue)!; // Biraz daha fazla kaysın
+    final initialTextLeftPadding = _handleSize + 15.0; // Daireden sonraki boşluk
+
+    // Ortaya çıkan "Mistik..." metninin opaklığı (belirli bir noktadan sonra görünür olur)
+    final mysticTextOpacity = math.max(0.0, (_dragValue - 0.3) * 2.0).clamp(0.0, 1.0); // Daha belirgin geçiş
+
+    // Ana Buton Widget'ı
     return GestureDetector(
       onHorizontalDragStart: _onDragStart,
       onHorizontalDragUpdate: _onDragUpdate,
       onHorizontalDragEnd: _onDragEnd,
       child: AnimatedBuilder(
-        // Dinlenecek kontrolcüleri birleştir
-        animation: Listenable.merge([_successController, _resetController, _pulseController]),
+        animation: _successController, // Başarı animasyonunu dinle
         builder: (context, child) {
-          // Animasyon değerlerini al
-          final successScale = _successScaleAnimation.value;
-          final successGlow = _successGlowAnimation.value;
-          // Handle pozisyonunu state'den al
-          final handlePosition = _dragValue * _draggableWidth;
+          final successScale = _successScaleAnimation.value; // Başarıdaki ölçek değeri
+          final successGlow = _successGlowAnimation.value; // Başarıdaki parlama değeri
 
-          // Başarı animasyonu için ölçeklendirme uygula
+          // Başarı animasyonu için Transform.scale
           return Transform.scale(
             scale: successScale,
             child: Container(
               width: _buttonWidth,
               height: _handleSize,
-              clipBehavior: Clip.antiAlias, // Taşmaları engelle
-              decoration: _buildBackgroundDecoration(successGlow), // Arka planı oluştur
+              // Kenarlardan taşan efektleri gizle (özellikle gradient geçişi için)
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                // Arka plan gradient'i (kaydırmaya göre renk değiştirir)
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.deepPurple.shade800.withOpacity(0.8),
+                      // Renk geçişi (mordan pembeye)
+                      Color.lerp(Colors.deepPurple.shade800, Colors.pinkAccent.shade400, _dragValue)!
+                    ],
+                    stops: [0.0, _dragValue + 0.1], // Gradient'in nerede biteceğini ayarla
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(_handleSize / 2), // Yuvarlak kenarlar
+                  boxShadow: [ // Gölge (kaydırmaya ve başarıya göre değişir)
+                    BoxShadow(
+                      color: Color.lerp(Colors.purple, Colors.pinkAccent, _dragValue)!.withOpacity(lerpDouble(0.2, 0.5, _dragValue)!),
+                      blurRadius: lerpDouble(8, 15, _dragValue)!,
+                      offset: const Offset(0, 4),
+                    ),
+                    // Başarı parlaması
+                    BoxShadow(
+                      color: Colors.pinkAccent.withOpacity(successGlow * 0.8),
+                      blurRadius: 25 * successGlow,
+                      spreadRadius: 8 * successGlow,
+                    ),
+                  ],
+                  // Kenarlık (başarıda daha belirgin)
+                  border: Border.all(color: Colors.purpleAccent.withOpacity(0.3 + successGlow * 0.5), width: 1.5)
+              ),
+              // İçerik Katmanları (Stack ile)
               child: Stack(
                 alignment: Alignment.centerLeft,
                 children: [
-                  // Metin katmanlarını oluştur (loc parametresi ile)
-                  _buildTextOverlays(context, loc!),
-                  // Sürüklenen handle'ı oluştur
-                  _buildHandle(handlePosition),
+                  // 1. Katman: Başlangıç metni ("Kaydır...")
+                  Positioned(
+                    left: initialTextLeftPadding,
+                    right: _handleSize * 0.05, // Sağdan hafif boşluk
+                    top: 0, bottom: 0, // Dikeyde ortala
+                    child: Center(
+                      child: Opacity(
+                        opacity: initialTextOpacity, // Kaydırdıkça kaybolur
+                        child: Transform.translate(
+                          offset: Offset(initialTextOffset, 0), // Sola doğru kayar
+                          child: Text(
+                            loc?.slideToDrawCards ?? 'Kart Çekmek İçin Kaydır', // Yerelleştirme
+                            style: GoogleFonts.cinzel(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1,
+                                decoration: TextDecoration.none // Önemli: Stack içinde alt çizgi olmasın
+                            ),
+                            overflow: TextOverflow.clip, // Taşmayı engelle
+                            maxLines: 1,
+                            softWrap: false,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 2. Katman: Kaydırma alanının dolgu efekti ve ortaya çıkan metin
+                  Positioned.fill(
+                    child: ClipRect(
+                      // Sadece kaydırılan alan kadarını göster
+                      clipper: _SlideAreaClipper(
+                          clipAmount: handlePosition + (_handleSize * 0.6), // Dairenin biraz ötesine kadar
+                          handleSize: _handleSize
+                      ),
+                      child: Container(
+                        // Dolgu efekti gradient'i
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.purpleAccent.withOpacity(0.3),
+                              Colors.pinkAccent.withOpacity(0.5),
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(_handleSize / 2),
+                        ),
+                        alignment: Alignment.center,
+                        // Ortaya çıkan metin ("Mistik...")
+                        child: Padding(
+                          padding: EdgeInsets.only(right: _handleSize * 0.4), // Dairenin üzerine gelmesin
+                          child: Opacity(
+                            opacity: mysticTextOpacity, // Belirli bir noktadan sonra görünür olur
+                            child: Text(
+                              // loc.unveilTheStars gibi bir anahtar kullanın
+                              loc?.unveilTheStars ?? 'Yıldızları Açığa Çıkar',
+                              style: GoogleFonts.cinzelDecorative(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                  decoration: TextDecoration.none
+                              ),
+                              overflow: TextOverflow.clip,
+                              maxLines: 1,
+                              softWrap: false,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // 3. Katman: Kaydırılan Daire (Handle) ve Pulse Efekti
+                  AnimatedBuilder(
+                    animation: _pulseAnimation, // Pulse animasyonunu dinle
+                    builder: (context, child) {
+                      // Sadece bekleme durumunda pulse efekti uygula
+                      final bool canPulse = !_isDragging && !_resetController.isAnimating && !_successController.isAnimating;
+                      final double pulseScale = canPulse ? (1.0 + (_pulseAnimation.value * 0.08)) : 1.0; // Biraz daha belirgin pulse scale
+                      final double pulseGlow = canPulse ? (_pulseAnimation.value * 0.25) : 0.0; // Biraz daha belirgin pulse glow
+
+                      // Dairenin anlık pozisyonu
+                      return Positioned(
+                        left: handlePosition,
+                        child: Transform.scale(
+                          scale: pulseScale, // Pulse ölçeklemesi
+                          child: Container(
+                            width: _handleSize,
+                            height: _handleSize,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              // Daire gradient'i
+                              gradient: RadialGradient(
+                                colors: [
+                                  Colors.pinkAccent.shade100, // İç renk
+                                  Colors.purpleAccent.shade400, // Dış renk
+                                ],
+                                stops: const [0.2, 1.0],
+                                radius: 0.7,
+                              ),
+                              // Gölge (kaydırma ve pulse'a göre değişir)
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Color.lerp(Colors.purpleAccent, Colors.pinkAccent, _dragValue)!.withOpacity(
+                                        lerpDouble(0.5, 0.8, _dragValue)! + pulseGlow // Parlama ekle
+                                    ),
+                                    blurRadius: lerpDouble(10, 16, _dragValue)! + (pulseGlow * 12),
+                                    spreadRadius: lerpDouble(2, 4, _dragValue)! + (pulseGlow * 3)
+                                )
+                              ],
+                            ),
+                            // Daire içindeki ikon
+                            child: Center(
+                              child: Icon(
+                                Icons.auto_awesome, // Yıldız ikonu
+                                // İkon rengi ve boyutu kaydırmaya göre değişir
+                                color: Color.lerp(Colors.deepPurple.shade900, Colors.white, _dragValue * 1.8)!.withOpacity(0.9),
+                                size: lerpDouble(28, 34, _dragValue)!,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -1939,166 +2023,24 @@ class SlideToDrawButtonState extends State<SlideToDrawButton> with TickerProvide
       ),
     );
   }
-
-  // Butonun arka planını oluşturan yardımcı metot
-  BoxDecoration _buildBackgroundDecoration(double successGlow) {
-    return BoxDecoration(
-      // Soldan sağa değişen gradient
-      gradient: LinearGradient(
-        colors: [
-          Colors.deepPurple.shade800.withOpacity(0.8),
-          // Renk, sürükleme miktarına göre deepPurple ile pinkAccent arasında değişir
-          Color.lerp(Colors.deepPurple.shade800, Colors.pinkAccent.shade400, _dragValue)!,
-        ],
-        // Gradient'in durma noktaları sürüklemeye göre ayarlanır
-        stops: [0.0, (_dragValue + 0.1).clamp(0.0, 1.0)],
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-      ),
-      // Yuvarlak köşeler
-      borderRadius: BorderRadius.circular(_handleSize / 2),
-      // Gölgeler
-      boxShadow: [
-        // Normal gölge (sürüklemeye göre rengi ve boyutu değişir)
-        BoxShadow(
-          color: Color.lerp(Colors.purple, Colors.pinkAccent, _dragValue)!.withOpacity(lerpDouble(0.2, 0.5, _dragValue)!),
-          blurRadius: lerpDouble(8, 15, _dragValue)!,
-          offset: const Offset(0, 4),
-        ),
-        // Başarı durumunda parlama efekti
-        BoxShadow(
-          color: Colors.pinkAccent.withOpacity(successGlow * 0.8),
-          blurRadius: 25 * successGlow,
-          spreadRadius: 8 * successGlow,
-        ),
-      ],
-      // Kenarlık
-      border: Border.all(color: Colors.purpleAccent.withOpacity(0.3 + successGlow * 0.5), width: 1.5),
-    );
-  }
-
-  // Buton üzerindeki metin katmanlarını oluşturan yardımcı metot
-  Widget _buildTextOverlays(BuildContext context, S loc) {
-    // Handle pozisyonu ve metin opaklık/konum hesaplamaları
-    final handlePosition = _dragValue * _draggableWidth;
-    final initialTextOpacity = math.max(0.0, 1.0 - _dragValue * 3.5);
-    final initialTextOffset = lerpDouble(0, -50, _dragValue)!;
-    final initialTextLeftPadding = _handleSize + 15.0; // Handle'ın sağından başla
-    final mysticTextOpacity = math.max(0.0, (_dragValue - 0.3) * 2.0).clamp(0.0, 1.0);
-
-    return Stack(
-      children: [
-        // Başlangıç metni ("Slide to Draw Cards")
-        Positioned(
-          left: initialTextLeftPadding,
-          right: _handleSize * 0.05, // Sağdan hafif boşluk
-          top: 0, bottom: 0,
-          child: Center(
-            child: Opacity(
-              opacity: initialTextOpacity, // Sürükledikçe kaybolur
-              child: Transform.translate(
-                offset: Offset(initialTextOffset, 0), // Sola doğru kayar
-                child: Text(
-                  loc.slideToDrawCards, // Yerelleştirilmiş metin
-                  style: GoogleFonts.cinzel( color: Colors.white.withOpacity(0.7), fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 1, decoration: TextDecoration.none),
-                  overflow: TextOverflow.clip, maxLines: 1, softWrap: false,
-                ),
-              ),
-            ),
-          ),
-        ),
-        // Kaydırma alanı üzerinde görünen metin ("Unveil the Stars")
-        Positioned.fill(
-          child: ClipRect(
-            // Sadece handle'ın kapladığı alanı gösteren kırpıcı
-            clipper: _SlideAreaClipper( clipAmount: handlePosition + (_handleSize * 0.6), handleSize: _handleSize ),
-            child: Container(
-              // Kırpılan alanın arka planı (gradient)
-              decoration: BoxDecoration(
-                gradient: LinearGradient( colors: [ Colors.purpleAccent.withOpacity(0.3), Colors.pinkAccent.withOpacity(0.5),], begin: Alignment.centerLeft, end: Alignment.centerRight,),
-                borderRadius: BorderRadius.circular(_handleSize / 2),
-              ),
-              alignment: Alignment.center,
-              child: Padding(
-                // Metni handle'ın ortasına denk getirmek için padding
-                padding: EdgeInsets.only(right: _handleSize * 0.4),
-                child: Opacity(
-                  opacity: mysticTextOpacity, // Sürükledikçe belirginleşir
-                  child: Text(
-                    loc.unveilTheStars, // Yerelleştirilmiş metin
-                    style: GoogleFonts.cinzelDecorative( color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.2, decoration: TextDecoration.none),
-                    overflow: TextOverflow.clip, maxLines: 1, softWrap: false,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Sürüklenen handle (yuvarlak ikon) widget'ını oluşturan yardımcı metot
-  Widget _buildHandle(double handlePosition) {
-    // Pulse animasyonunun sadece dururken aktif olup olmadığını kontrol et
-    final bool canPulse = !_isDragging && !_resetController.isAnimating && !_successController.isAnimating;
-    // Pulse animasyon değerlerini hesapla
-    final double pulseScale = canPulse ? (1.0 + (_pulseAnimation.value * 0.08)) : 1.0;
-    final double pulseGlow = canPulse ? (_pulseAnimation.value * 0.25) : 0.0;
-
-    // Handle'ı doğru pozisyonda konumlandır
-    return Positioned(
-      left: handlePosition,
-      child: Transform.scale( // Pulse ölçeklendirmesi
-        scale: pulseScale,
-        child: Container(
-          width: _handleSize,
-          height: _handleSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle, // Yuvarlak şekil
-            // İç gradient
-            gradient: RadialGradient( colors: [ Colors.pinkAccent.shade100, Colors.purpleAccent.shade400, ], stops: const [0.2, 1.0], radius: 0.7,),
-            // Gölge (sürüklemeye ve pulse'a göre değişir)
-            boxShadow: [
-              BoxShadow( color: Color.lerp(Colors.purpleAccent, Colors.pinkAccent, _dragValue)!.withOpacity( lerpDouble(0.5, 0.8, _dragValue)! + pulseGlow ), blurRadius: lerpDouble(10, 16, _dragValue)! + (pulseGlow * 12), spreadRadius: lerpDouble(2, 4, _dragValue)! + (pulseGlow * 3))
-            ],
-          ),
-          // Ortadaki ikon
-          child: Center(
-            child: Icon( Icons.auto_awesome, // Yıldız ikonu
-              // İkon rengi ve boyutu sürüklemeye göre değişir
-              color: Color.lerp(Colors.deepPurple.shade900, Colors.white, _dragValue * 1.8)!.withOpacity(0.9),
-              size: lerpDouble(28, 34, _dragValue)!,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-
 // --- Custom Clipper (Alan Kırpıcı - Slide Butonu İçin Gerekli) ---
-// Belirtilen genişlik kadar olan alanı görünür kılar.
 class _SlideAreaClipper extends CustomClipper<Rect> {
   final double clipAmount; // Ne kadar alanın gösterileceği (piksel)
-  final double handleSize; // Handle boyutu (kırpma buna göre ayarlanır)
+  final double handleSize; // Dairenin boyutu (kırpma buna göre ayarlanır)
 
   _SlideAreaClipper({required this.clipAmount, required this.handleSize});
 
   @override
   Rect getClip(Size size) {
-    // Soldan başlayarak 'clipAmount' genişliğinde bir dikdörtgen alanı görünür kıl.
-    // clipAmount'ın 0 ile size.width arasında kalmasını sağla.
+    // Soldan başlayarak 'clipAmount' genişliğinde bir dikdörtgen alanı görünür kıl
     return Rect.fromLTWH(0, 0, clipAmount.clamp(0.0, size.width), size.height);
   }
 
   @override
   bool shouldReclip(covariant CustomClipper<Rect> oldClipper) {
-    // Sadece clipAmount veya handleSize değiştiğinde tekrar kırpma yap (performans için)
-    return oldClipper is! _SlideAreaClipper ||
-        oldClipper.clipAmount != clipAmount ||
-        oldClipper.handleSize != handleSize;
+    // Sadece clipAmount değiştiğinde tekrar kırpma yap
+    return oldClipper is! _SlideAreaClipper || oldClipper.clipAmount != clipAmount;
   }
 }
-

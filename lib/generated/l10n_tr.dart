@@ -408,6 +408,9 @@ class STr extends S {
   }
 
   @override
+  String get couponInvalidGenericMessage => 'Kupon geçersiz.';
+
+  @override
   String get returnToHome => 'Ana Sayfaya Dön';
 
   @override
@@ -995,6 +998,9 @@ class STr extends S {
 
   @override
   String get fullMoonResultingEnergy => 'Sonuç Enerjisi';
+
+  @override
+  String get claimed => 'Ödül zaten alındı.';
 
   @override
   String get claim => 'Al';

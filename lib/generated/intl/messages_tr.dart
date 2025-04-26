@@ -274,6 +274,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Günlük kredini al!",
     ),
     "claimYourDailyTokens": m10,
+    "claimed": MessageLookupByLibrary.simpleMessage("Ödül zaten alındı."),
     "close": MessageLookupByLibrary.simpleMessage("Kapat"),
     "confirm": MessageLookupByLibrary.simpleMessage("Onayla"),
     "confirmPurchase": MessageLookupByLibrary.simpleMessage(
@@ -287,6 +288,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "couponHint": MessageLookupByLibrary.simpleMessage("Kupon kodunu girin"),
     "couponInvalid": m11,
+    "couponInvalidGenericMessage": MessageLookupByLibrary.simpleMessage(
+      "Kupon geçersiz.",
+    ),
     "couponRedeemed": m12,
     "creditDescription": m13,
     "creditInfoTooltip": MessageLookupByLibrary.simpleMessage(

@@ -2,8 +2,8 @@ name: tarot_fal
 description: "Tarot falı uygulaması."
 publish_to: 'none'
 
-# app bundle version "4"
-version: 1.0.0+4
+# app bundle version "7.1"
+version: 1.0.0+7.1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -81,12 +81,10 @@ flutter:
     - .env
     - assets/
     - assets/animations/
-    - assets/audios/classic-atmospheric.mp3
     - assets/audios/flip_card.mp3
     - assets/audios/ritualistic3.mp3
     - assets/audios/shuffle_cards.mp3
     - assets/audios/transitional-swipe.mp3
-    - assets/image_fx_a.jpg
     - assets/image_fx_c.jpg
     - assets/tarot_card_images/
     - assets/tarot_card_images/card_back.png
@@ -100,45 +98,63 @@ flutter_intl:
   enabled: true
 
 flutter_launcher_icons:
+  # Android ikon dosyalarının temel adı 'launcher_icon' olacak.
+  # Bu, mipmap klasörlerinde launcher_icon.png dosyaları oluşturacak.
+  # Önceki bildirim hatasıyla ilgili olarak, eğer bildirim ikonunu
+  # @mipmap/launcher_icon olarak ayarlarsanız bu isimle eşleşir.
   android: "launcher_icon"
   ios: true
-  image_path: "assets/image_fx_c.jpg"
+  image_path: "assets/logo_1.png"
+
+  # İkonlar bu görselden oluşturulacak
+  # adaptive_icon_background: "#2c1f4a" # İsteğe bağlı: Adaptif ikonlar için arka plan rengi
+  # adaptive_icon_foreground: "assets/logo_foreground.png" # İsteğe bağlı: Adaptif ikonlar için ön plan katmanı (daha iyi sonuç verir)
 
 flutter_native_splash:
-  # Arka plan rengi (görselden bir ton seçilebilir veya tema renginiz olabilir)
-  # image_fx_c.jpg'den koyu mor/mavi bir ton deneyelim:
-  color: "#2c1f4a" # Koyu mor/mavi tonu (tırnak içinde)
+  # Splash ekranının genel arka plan rengi
+  color: "#2c1f4a"
 
-  # Ana splash görseli olarak diğer asset'i kullanalım
-  image: assets/image_fx_c.jpg
+  # Splash ekranında gösterilecek ana görsel (Android 12 öncesi ve iOS için)
+  image: assets/logo_1.png
 
   android: true
   ios: true
-  fullscreen: true # Tam ekran modu aktif kalsın
+  fullscreen: true # Tam ekran splash
 
-  # Görseli Android < 12'de ekrana yaymaya çalışalım ('fill' esnetebilir!)
-  android_gravity: fill
-  # Görseli iOS'te en boy oranını koruyarak ekrana yayalım (kırpılabilir)
-  ios_content_mode: scaleAspectFill
+  # --- Android < 12 Ayarları ---
+  # 'fill' yerine 'center' kullanmak genellikle logonun bozulmasını önler.
+  # Logo ekranın ortasında, orijinal boyutunda veya sığacak şekilde görünür.
+  android_gravity: center # <-- ÖNERİLEN DEĞİŞİKLİK: 'fill' yerine 'center'
+
+  # --- iOS Ayarları ---
+  # 'scaleAspectFill' logonun bazı kısımlarını kırpabilir.
+  # 'scaleAspectFit' logonun tamamını gösterir, kenarlarda boşluk kalabilir.
+  # 'center' ise orijinal boyutunda ortalar. Logo tasarımınıza göre seçin.
+  ios_content_mode: scaleAspectFit # <-- ÖNERİLEN DEĞİŞİKLİK: 'scaleAspectFill' yerine 'scaleAspectFit' veya 'center'
 
   # --- Android 12 ve Sonrası Ayarları ---
-  # BU BÖLÜM ZORUNLUDUR ve ORTADA BİR İKON GÖSTERİR.
-  # Arka plan görselini tam ekran yapmaz.
+  # Bu bölüm, Android 12+ cihazlarda sistem tarafından yönetilen splash ekranını ayarlar.
+  # Ortada bir ikon gösterilir, tam ekran görsel DEĞİLDİR.
   android_12:
-    # BURAYA MUTLAKA UYGULAMANIZIN GERÇEK İKON DOSYASININ YOLUNU GİRİN!
-    # Örnek: assets/icons/app_icon.png
-    # 'image_fx_c.jpg' veya 'tarot_card_silhouette.jpg' KULLANMAYIN!
-    image: assets/image_fx_c.jpg # <-- KENDİ İKON DOSYA YOLUNUZU YAZIN
+    # Android 12 splash ekranında ORTADA görünecek ikon.
+    # BURASI ÖNEMLİ: Genellikle uygulamanın launcher ikonuyla aynı olur.
+    # Ancak 'logo_1.png' gibi tam bir logo görseli burada genellikle
+    # iyi görünmez, sistem tarafından küçültülüp kırpılabilir.
+    # İDEAL olan, özel olarak bu ekran için hazırlanmış, kenarlarında boşlukları olan
+    # (adaptive icon safe zone'a uygun) bir ikon dosyası kullanmaktır.
+    # Şimdilik logo_1.png kalabilir, ancak görünümünü test edin.
+    # Alternatif: adaptive_icon_foreground kullanarak launcher icon oluşturduysanız onu kullanın.
+    image: assets/logo_1.png # <-- TEST EDİN, gerekirse özel bir splash ikonu oluşturun (örn: assets/icons/splash_icon_android12.png)
 
-    # Android 12'de ikonun arkasındaki alanın rengi
-    icon_background_color: "#2c1f4a" # Ana renk ile aynı olabilir
+    # Android 12'de ikonun arkasındaki dairenin veya şeklin rengi.
+    icon_background_color: "#2c1f4a" # Ana renk ile uyumlu olması iyi bir başlangıç.
 
-    # İsteğe Bağlı: Koyu tema için farklı ayarlar
+    # Opsiyonel Koyu Tema Ayarları (Yorumları kaldırıp değerleri ayarlayabilirsiniz)
     # color_dark: "#1a112a"
-    # image_dark: assets/icons/app_icon_dark.png
+    # image_dark: assets/logo_1_dark.png # Android 12 için koyu tema ikonu
     # icon_background_color_dark: "#1a112a"
 
-    # İsteğe Bağlı: İkonun altına marka logosu ekleyebilirsiniz
-    # branding: assets/images/branding_logo.png
-    # branding_dark: assets/images/branding_logo_dark.png
+    # Opsiyonel Marka Logosu (Splash ekranının altında küçük bir logo)
+    # branding: assets/branding_logo.png
+    # branding_dark: assets/branding_logo_dark.png
     # branding_mode: bottom # veya center
