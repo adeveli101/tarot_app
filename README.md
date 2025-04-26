@@ -32,19 +32,4 @@ This application is designed to offer users in-depth guidance and insight into l
 * **permission_handler:** For managing notification permissions.
 * **(Likely) in_app_purchase:** For handling in-app purchases.
 
-## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-* [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-* [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
----
-
-*Note: This README content is based on the code snippets and discussions from our conversation. You can add or remove sections based on the exact details of your project.*
