@@ -55,3 +55,4 @@ app.*.map.json
 /lib/firebase_options.dart
 /your-keystore.jks
 /mykeystore.jks
+/.metadata
