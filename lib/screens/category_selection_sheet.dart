@@ -59,7 +59,7 @@ class CategorySelectionSheet extends StatelessWidget {
       child: Column( mainAxisSize: MainAxisSize.min,
         children: [
           Container( width: 50, height: 5, decoration: BoxDecoration( color: Colors.white.withOpacity(0.4), borderRadius: BorderRadius.circular(2.5),),), const SizedBox(height: 20),
-          Text( title, style: GoogleFonts.cinzelDecorative( fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.5,),), const SizedBox(height: 8),
+          Text( title, style: GoogleFonts.cabin( fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1.5,),), const SizedBox(height: 8),
           Text( subtitle, textAlign: TextAlign.center, style: GoogleFonts.cinzel( fontSize: 15, color: Colors.white.withOpacity(0.7),),),
           Divider(color: Colors.purpleAccent.withOpacity(0.2), height: 30, thickness: 1),
         ],),);

@@ -235,9 +235,9 @@ class SpreadSelectionSheetState extends State<SpreadSelectionSheet> {
                     const SizedBox(width: 4),
                     Text(
                       '${cost.toStringAsFixed(1)} ${loc.mysticalTokens}',
-                      style: GoogleFonts.orbitron(
+                      style: GoogleFonts.cabin(
                         color: Colors.white.withOpacity(0.8),
-                        fontSize: 10,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                         decoration: TextDecoration.none, // <-- EKLENDİ
                       ),

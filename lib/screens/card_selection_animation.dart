@@ -1054,7 +1054,6 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
   }
 
   Widget _buildCardBack() {
-    // ... (Bu fonksiyon aynı kalır)
     const double cardWidth = 100;
     const double cardHeight = 170;
 
@@ -1320,9 +1319,9 @@ class CardSelectionAnimationScreenState extends State<CardSelectionAnimationScre
     final double stackWidth = crossVisualWidth;
     final double stackHeight = crossVisualHeight;
 
-    final double totalContentWidth = stackWidth + staffLeftMargin + cardWidth;
+    final double totalContentWidth = 1.1*stackWidth + staffLeftMargin + cardWidth;
 
-    final double totalContentHeight = math.max(staffHeight, stackHeight);
+    final double totalContentHeight = 1.155* math.max(staffHeight, stackHeight);
 
     const double horizontalPadding = 20.0;
     const double verticalPadding = 20.0;

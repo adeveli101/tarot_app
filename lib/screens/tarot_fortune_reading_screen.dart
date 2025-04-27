@@ -677,7 +677,7 @@ class _TarotReadingScreenState extends State<TarotReadingScreen> with TickerProv
           Flexible(
             child: Text(
               userTokens.toStringAsFixed(userTokens.truncateToDouble() == userTokens ? 0 : 1),
-              style: GoogleFonts.orbitron( color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+              style: GoogleFonts.cinzel( color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis, maxLines: 1, softWrap: false,
             ),
           ),
